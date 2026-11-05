@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sales Forecaster</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f5f6fa;
+  color: #1a1a2e;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ── NAV ── */
+nav {
+  background: #fff;
+  border-bottom: 1px solid #e8eaf0;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 58px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-brand span { color: #5c6bc0; }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+.hamburger div { width: 22px; height: 2px; background: #1a1a2e; border-radius: 2px; transition: all .3s; }
+.hamburger.open div:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open div:nth-child(2) { opacity: 0; }
+.hamburger.open div:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.mob-nav {
+  display: none;
+  position: fixed;
+  top: 58px; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.98);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  z-index: 99;
+}
+.mob-nav.open { display: flex; }
+.mob-nav a { font-size: 1.4rem; font-weight: 600; color: #1a1a2e; text-decoration: none; }
+.mob-nav a:hover { color: #5c6bc0; }
+
+/* ── LAYOUT ── */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+/* ── STEP INDICATOR ── */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 36px;
+  justify-content: center;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .82rem;
+  font-weight: 500;
+  color: #aaa;
+}
+.step.active { color: #5c6bc0; }
+.step.done { color: #43a047; }
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step.active .step-num { border-color: #5c6bc0; background: #5c6bc0; color: #fff; }
+.step.done .step-num { border-color: #43a047; background: #43a047; color: #fff; }
+.step-line { width: 40px; height: 2px; background: #e0e0e0; margin: 0 4px; }
+.step-line.done { background: #43a047; }
+
+/* ── CARD ── */
+.card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e8eaf0;
+  padding: 28px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-sub {
+  font-size: .84rem;
+  color: #777;
+  margin-bottom: 20px;
+}
+
+/* ── UPLOAD ── */
+.drop-zone {
+  border: 2px dashed #c5cae9;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: #fafbff;
+}
+.drop-zone:hover, .drop-zone.over {
+  border-color: #5c6bc0;
+  background: #eef0fd;
+}
+.drop-icon { font-size: 2.4rem; margin-bottom: 12px; }
+.drop-text { font-size: .95rem; color: #444; margin-bottom: 14px; }
+.drop-hint { font-size: .8rem; color: #999; margin-top: 10px; }
+.btn-browse {
+  display: inline-block;
+  padding: 10px 24px;
+  background: #5c6bc0;
+  color: #fff;
+  border-radius: 8px;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background .2s;
+}
+.btn-browse:hover { background: #3f51b5; }
+
+/* ── CSV FORMAT HELP ── */
+.format-box {
+  background: #f5f6fa;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-top: 20px;
+  font-size: .82rem;
+  color: #555;
+}
+.format-box strong { color: #1a1a2e; display: block; margin-bottom: 8px; }
+.format-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .8rem;
+  margin-top: 8px;
+}
+.format-table th {
+  background: #e8eaf0;
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+}
+.format-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #eee;
+  color: #555;
+}
+.format-table tr:last-child td { border: none; }
+
+/* ── FILE STATUS ── */
+.file-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: .88rem;
+  color: #2e7d32;
+  margin-top: 14px;
+}
+.file-status-icon { font-size: 1.3rem; }
+.file-status-name { font-weight: 600; }
+.file-status-meta { font-size: .78rem; color: #555; margin-top: 2px; }
+
+/* ── LOADING ── */
+.loading-box {
+  text-align: center;
+  padding: 28px;
+  display: none;
+}
+.spinner {
+  width: 38px; height: 38px;
+  border: 3px solid #e8eaf0;
+  border-top-color: #5c6bc0;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: .9rem; color: #555; }
+
+/* ── KPI GRID ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.kpi {
+  background: #fff;
+  border: 1px solid #e8eaf0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  border-left: 4px solid #5c6bc0;
+}
+.kpi-label {
+  font-size: .75rem;
+  color: #888;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 6px;
+}
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.kpi-sub { font-size: .78rem; color: #888; }
+.kpi.green { border-left-color: #43a047; }
+.kpi.orange { border-left-color: #fb8c00; }
+.kpi.red { border-left-color: #e53935; }
+.kpi.purple { border-left-color: #8e24aa; }
+
+/* ── SECTION TITLE ── */
+.sec-title {
+  font-size: .88rem;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin: 24px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e8eaf0;
+}
+
+/* ── CHART ── */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+
+/* ── TABLE ── */
+.data-table-wrap { overflow-x: auto; }
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+}
+.data-table th {
+  background: #f5f6fa;
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 700;
+  color: #444;
+  border-bottom: 2px solid #e8eaf0;
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid #f0f0f5;
+  color: #333;
+  white-space: nowrap;
+}
+.data-table tr:last-child td { border: none; }
+.data-table tr:hover td { background: #fafbff; }
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: .73rem;
+  font-weight: 600;
+}
+.badge-up { background: #e8f5e9; color: #2e7d32; }
+.badge-down { background: #ffebee; color: #c62828; }
+.badge-neutral { background: #f3f4ff; color: #3f51b5; }
+
+/* ── FORECAST TABLE ── */
+.fc-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f5; }
+.fc-row:last-child { border: none; }
+.fc-month { font-weight: 600; width: 110px; flex-shrink: 0; font-size: .88rem; }
+.fc-bar-wrap { flex: 1; background: #f0f0f5; border-radius: 4px; height: 8px; overflow: hidden; }
+.fc-bar { height: 100%; border-radius: 4px; background: #5c6bc0; transition: width 1s ease; }
+.fc-val { font-weight: 700; font-size: .88rem; width: 110px; text-align: right; flex-shrink: 0; color: #1a1a2e; }
+
+/* ── INSIGHT CARDS ── */
+.insight-list { display: flex; flex-direction: column; gap: 10px; }
+.insight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f5f6fa;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: .87rem;
+}
+.insight-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+.insight-text strong { display: block; color: #1a1a2e; margin-bottom: 2px; font-size: .9rem; }
+.insight-text span { color: #666; font-size: .83rem; }
+
+/* ── PRODUCT TABLE ── */
+.prod-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f5;
+  gap: 10px;
+}
+.prod-row:last-child { border: none; }
+.prod-name { font-weight: 600; font-size: .9rem; flex: 1; }
+.prod-rev { font-weight: 700; font-size: .9rem; color: #1a1a2e; }
+.prod-bar-wrap { width: 100px; background: #f0f0f5; border-radius: 4px; height: 6px; overflow: hidden; }
+.prod-bar { height: 100%; border-radius: 4px; }
+
+/* ── EMPTY STATE ── */
+#results { display: none; }
+.empty-hint {
+  text-align: center;
+  padding: 52px 20px;
+  color: #aaa;
+  font-size: .92rem;
+}
+.empty-hint .big { font-size: 2.8rem; margin-bottom: 12px; }
+.empty-hint p { max-width: 300px; margin: 0 auto; line-height: 1.6; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .hamburger { display: flex; }
+  .card { padding: 20px 16px; }
+  .fc-month { width: 80px; font-size: .8rem; }
+  .fc-val { width: 90px; font-size: .8rem; }
+  .prod-bar-wrap { width: 60px; }
+}
+@media (max-width: 400px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .steps { gap: 0; }
+  .step-line { width: 20px; }
+  .step span { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    📊 <span>Sales</span>Forecast
+  </div>
+  <div class="nav-right">
+    <button class="hamburger" id="hbg" onclick="toggleMob()" aria-label="Menu">
+      <div></div><div></div><div></div>
+    </button>
+  </div>
+</nav>
+<div class="mob-nav" id="mob-nav">
+  <a href="#upload-card" onclick="closeMob()">Upload</a>
+  <a href="#results" onclick="closeMob()">Results</a>
+</div>
+
+<main>
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <span>Upload CSV</span>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      <span>Analyse</span>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <span>Forecast</span>
+    </div>
+  </div>
+
+  <!-- UPLOAD CARD -->
+  <div class="card" id="upload-card">
+    <div class="card-title">📂 Upload Your Sales File</div>
+    <div class="card-sub">Upload a CSV file with your sales data. The app will read it and show you a full forecast instantly.</div>
+
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-in').click()">
+      <div class="drop-icon">📁</div>
+      <div class="drop-text">Click here to choose your CSV file</div>
+      <div class="drop-hint">or drag and drop it anywhere here</div>
+      <br/>
+      <button class="btn-browse" onclick="event.stopPropagation(); document.getElementById('csv-in').click()">Browse File</button>
+    </div>
+    <input type="file" id="csv-in" accept=".csv" hidden/>
+
+    <div id="file-status" style="display:none" class="file-status">
+      <div class="file-status-icon">✅</div>
+      <div>
+        <div class="file-status-name" id="fs-name"></div>
+        <div class="file-status-meta" id="fs-meta"></div>
+      </div>
+    </div>
+
+    <!-- FORMAT GUIDE -->
+    <div class="format-box">
+      <strong>📋 What should my CSV look like?</strong>
+      Your CSV needs at least these columns (names can vary):
+      <table class="format-table">
+        <tr><th>Column</th><th>Example Values</th><th>What it means</th></tr>
+        <tr><td>date</td><td>2024-01-15, Jan 2024</td><td>Date of the sale</td></tr>
+        <tr><td>product</td><td>Shirt, Phone, Rice</td><td>Product name</td></tr>
+        <tr><td>sales / quantity</td><td>10, 25, 100</td><td>Units sold</td></tr>
+        <tr><td>revenue / amount</td><td>5000, 12000</td><td>Money earned (₹)</td></tr>
+      </table>
+      <div style="margin-top:10px; color:#888; font-size:.78rem;">
+        💡 Tip: You can export directly from Excel or Google Sheets as CSV.
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-box" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">Reading your file...</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <!-- KPIs -->
+    <div class="sec-title">📈 Overview</div>
+    <div class="kpi-grid">
+      <div class="kpi green">
+        <div class="kpi-label">Total Revenue</div>
+        <div class="kpi-value" id="kpi-rev">—</div>
+        <div class="kpi-sub" id="kpi-rev-sub">from all sales</div>
+      </div>
+      <div class="kpi purple">
+        <div class="kpi-label">Total Units Sold</div>
+        <div class="kpi-value" id="kpi-units">—</div>
+        <div class="kpi-sub" id="kpi-units-sub">across all products</div>
+      </div>
+      <div class="kpi orange">
+        <div class="kpi-label">Best Product</div>
+        <div class="kpi-value" id="kpi-best-prod" style="font-size:1rem">—</div>
+        <div class="kpi-sub" id="kpi-best-prod-sub">highest revenue</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Date Range</div>
+        <div class="kpi-value" id="kpi-range" style="font-size:.95rem">—</div>
+        <div class="kpi-sub" id="kpi-range-sub">in your data</div>
+      </div>
+    </div>
+
+    <!-- REVENUE CHART -->
+    <div class="card">
+      <div class="card-title">💰 Revenue Over Time</div>
+      <div class="card-sub">How much money was earned each month from your data.</div>
+      <div class="chart-wrap"><canvas id="rev-chart"></canvas></div>
+    </div>
+
+    <!-- SALES CHART -->
+    <div class="card">
+      <div class="card-title">📦 Units Sold Over Time</div>
+      <div class="card-sub">How many items were sold each month.</div>
+      <div class="chart-wrap"><canvas id="sales-chart"></canvas></div>
+    </div>
+
+    <!-- PRODUCT BREAKDOWN -->
+    <div class="card">
+      <div class="card-title">🏷️ Revenue by Product</div>
+      <div class="card-sub">Which products are earning the most for you.</div>
+      <div id="prod-list"></div>
+    </div>
+
+    <!-- DATA TABLE -->
+    <div class="card">
+      <div class="card-title">📋 Your Sales Data (Preview)</div>
+      <div class="card-sub">First 20 rows from your uploaded file.</div>
+      <div class="data-table-wrap">
+        <table class="data-table" id="raw-table">
+          <thead id="raw-thead"></thead>
+          <tbody id="raw-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FORECAST -->
+    <div class="card">
+      <div class="card-title">🔮 Sales Forecast — Next 3 Months</div>
+      <div class="card-sub">Based on your past sales trend, here is an estimated forecast for the coming months.</div>
+      <div id="fc-list"></div>
+      <div style="margin-top:14px; background:#fff8e1; border-radius:8px; padding:12px 16px; font-size:.8rem; color:#795548;">
+        ⚠️ This forecast is estimated using your average monthly growth rate. Actual sales may vary.
+      </div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="card">
+      <div class="card-title">💡 Key Insights</div>
+      <div class="card-sub">Simple takeaways from your data.</div>
+      <div class="insight-list" id="insight-list"></div>
+    </div>
+
+  </div><!-- /results -->
+
+  <!-- EMPTY HINT (shown before upload) -->
+  <div class="empty-hint" id="empty-hint">
+    <div class="big">⬆️</div>
+    <p>Upload your sales CSV file above to see your forecast, charts, and insights.</p>
+  </div>
+
+</main>
+
+<script>
+// ── Helpers ──────────────────────────────────────────────────────
+function rupees(n) {
+  if (n >= 10000000) return '₹' + (n / 10000000).toFixed(1) + 'Cr';
+  if (n >= 100000)   return '₹' + (n / 100000).toFixed(1) + 'L';
+  if (n >= 1000)     return '₹' + (n / 1000).toFixed(1) + 'K';
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+function rupeesLong(n) {
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+// ── Mobile nav ───────────────────────────────────────────────────
+function toggleMob() {
+  document.getElementById('hbg').classList.toggle('open');
+  document.getElementById('mob-nav').classList.toggle('open');
+}
+function closeMob() {
+  document.getElementById('hbg').classList.remove('open');
+  document.getElementById('mob-nav').classList.remove('open');
+}
+
+// ── Drag and drop ────────────────────────────────────────────────
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+document.getElementById('csv-in').addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+// ── CSV parser ───────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) throw new Error('File has no data rows.');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+  return lines.slice(1).map(line => {
+    // handle quoted commas
+    const vals = [];
+    let cur = '', inQ = false;
+    for (let ch of line + ',') {
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || '').trim());
+    return obj;
+  }).filter(r => Object.values(r).some(v => v !== ''));
+}
+
+// Find the right column regardless of exact name
+function findCol(headers, ...candidates) {
+  for (const c of candidates) {
+    const found = headers.find(h => h.includes(c));
+    if (found) return found;
+  }
+  return null;
+}
+
+// Parse a date string into {year, month} for grouping
+function parseDate(str) {
+  if (!str) return null;
+  // try yyyy-mm-dd or dd/mm/yyyy or mm/dd/yyyy or "Jan 2024" etc
+  let d = new Date(str);
+  if (!isNaN(d)) return { year: d.getFullYear(), month: d.getMonth() };
+  // dd/mm/yyyy
+  const dmy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (dmy) {
+    d = new Date(+dmy[3] < 100 ? 2000 + +dmy[3] : +dmy[3], +dmy[2] - 1, +dmy[1]);
+    if (!isNaN(d)) return { year: d.getFullYear(), month: d.getMonth() };
+  }
+  return null;
+}
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function monthKey(y, m) { return `${y}-${String(m+1).padStart(2,'0')}`; }
+function monthLabel(y, m) { return `${MONTHS[m]} ${y}`; }
+
+// ── Main file handler ────────────────────────────────────────────
+let charts = {};
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function handleFile(file) {
+  if (!file.name.toLowerCase().endsWith('.csv')) {
+    alert('Please upload a .csv file.');
+    return;
+  }
+
+  // Show loading
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('loading-text').textContent = 'Reading your file...';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('empty-hint').style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const rows = parseCSV(e.target.result);
+      if (rows.length === 0) throw new Error('No data found in file.');
+      processData(rows, file.name);
+    } catch(err) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('empty-hint').style.display = 'block';
+      alert('❌ Could not read file: ' + err.message + '\n\nMake sure it is a valid CSV with headers.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function processData(rows, fileName) {
+  document.getElementById('loading-text').textContent = 'Analysing your data...';
+
+  const headers = Object.keys(rows[0]);
+
+  // Detect columns
+  const dateCol    = findCol(headers, 'date', 'day', 'month', 'time', 'period', 'week');
+  const productCol = findCol(headers, 'product', 'item', 'name', 'goods', 'category', 'service');
+  const revenueCol = findCol(headers, 'revenue', 'amount', 'price', 'income', 'total', 'sales_amount', 'value', 'earning');
+  const qtyCol     = findCol(headers, 'qty', 'quantity', 'units', 'sales', 'count', 'sold', 'volume', 'pieces');
+
+  // Validate — need at least one numeric column
+  if (!revenueCol && !qtyCol) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('empty-hint').style.display = 'block';
+    alert('❌ Could not find a revenue or quantity column.\n\nMake sure your CSV has columns like: revenue, amount, sales, quantity, units.');
+    return;
+  }
+
+  // Parse each row
+  const parsed = rows.map(r => {
+    const dateStr = dateCol ? r[dateCol] : '';
+    const dt = parseDate(dateStr);
+    const rev = revenueCol ? parseFloat(r[revenueCol].replace(/[₹,\s]/g,'')) || 0 : 0;
+    const qty = qtyCol     ? parseFloat(r[qtyCol].replace(/[,\s]/g,''))    || 0 : 0;
+    const prod = productCol ? r[productCol] : 'Unknown';
+    return { dateStr, dt, rev, qty, prod, raw: r };
+  });
+
+  // ── Aggregate by month ───────────────────────────────────────
+  const monthMap = {};
+  parsed.forEach(p => {
+    if (!p.dt) return;
+    const k = monthKey(p.dt.year, p.dt.month);
+    if (!monthMap[k]) monthMap[k] = { label: monthLabel(p.dt.year, p.dt.month), rev: 0, qty: 0, year: p.dt.year, month: p.dt.month };
+    monthMap[k].rev += p.rev;
+    monthMap[k].qty += p.qty;
+  });
+
+  const months = Object.keys(monthMap).sort().map(k => monthMap[k]);
+
+  // ── Aggregate by product ─────────────────────────────────────
+  const prodMap = {};
+  parsed.forEach(p => {
+    const name = p.prod || 'Unknown';
+    if (!prodMap[name]) prodMap[name] = { rev: 0, qty: 0 };
+    prodMap[name].rev += p.rev;
+    prodMap[name].qty += p.qty;
+  });
+  const products = Object.entries(prodMap)
+    .sort((a, b) => b[1].rev - a[1].rev)
+    .slice(0, 10); // top 10
+
+  // ── KPIs ────────────────────────────────────────────────────
+  const totalRev   = parsed.reduce((s, p) => s + p.rev, 0);
+  const totalUnits = parsed.reduce((s, p) => s + p.qty, 0);
+  const bestProd   = products[0];
+  const allDates   = parsed.filter(p => p.dt).map(p => new Date(p.dt.year, p.dt.month));
+  const minDate    = allDates.length ? new Date(Math.min(...allDates)) : null;
+  const maxDate    = allDates.length ? new Date(Math.max(...allDates)) : null;
+
+  document.getElementById('kpi-rev').textContent   = rupees(totalRev);
+  document.getElementById('kpi-rev-sub').textContent = rupeesLong(totalRev) + ' total';
+  document.getElementById('kpi-units').textContent  = totalUnits > 0 ? totalUnits.toLocaleString('en-IN') : rows.length.toLocaleString('en-IN');
+  document.getElementById('kpi-units-sub').textContent = totalUnits > 0 ? 'items sold' : 'total rows';
+  document.getElementById('kpi-best-prod').textContent = bestProd ? bestProd[0] : '—';
+  document.getElementById('kpi-best-prod-sub').textContent = bestProd ? rupees(bestProd[1].rev) + ' earned' : '';
+  document.getElementById('kpi-range').textContent  = minDate && maxDate
+    ? MONTHS[minDate.getMonth()] + ' ' + minDate.getFullYear() + ' – ' + MONTHS[maxDate.getMonth()] + ' ' + maxDate.getFullYear()
+    : rows.length + ' rows';
+  document.getElementById('kpi-range-sub').textContent = 'in your data';
+
+  // ── File status ──────────────────────────────────────────────
+  document.getElementById('fs-name').textContent = fileName;
+  document.getElementById('fs-meta').textContent = rows.length + ' rows · ' + headers.length + ' columns detected';
+  document.getElementById('file-status').style.display = 'flex';
+
+  // ── Steps ────────────────────────────────────────────────────
+  setStep(3);
+
+  // ── Charts ──────────────────────────────────────────────────
+  const chartColors = {
+    blue:   '#5c6bc0',
+    green:  '#43a047',
+    orange: '#fb8c00',
+    purple: '#8e24aa',
+    red:    '#e53935',
+  };
+
+  // Revenue chart
+  destroyChart('rev');
+  if (months.length > 0) {
+    charts.rev = new Chart(document.getElementById('rev-chart'), {
+      type: 'bar',
+      data: {
+        labels: months.map(m => m.label),
+        datasets: [{
+          label: 'Revenue (₹)',
+          data: months.map(m => m.rev),
+          backgroundColor: chartColors.blue + 'cc',
+          borderColor: chartColors.blue,
+          borderWidth: 1.5,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' ' + rupeesLong(ctx.parsed.y) } }
+        },
+        scales: {
+          x: { ticks: { font: { size: 11 }, maxRotation: 40 }, grid: { display: false } },
+          y: { ticks: { callback: v => rupees(v), font: { size: 11 } }, grid: { color: '#f0f0f5' } }
+        }
+      }
+    });
+  } else {
+    document.getElementById('rev-chart').parentElement.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:.88rem;">No date column found — cannot draw monthly chart.</div>';
+  }
+
+  // Sales / qty chart
+  destroyChart('sales');
+  if (months.length > 0 && months.some(m => m.qty > 0)) {
+    charts.sales = new Chart(document.getElementById('sales-chart'), {
+      type: 'line',
+      data: {
+        labels: months.map(m => m.label),
+        datasets: [{
+          label: 'Units Sold',
+          data: months.map(m => m.qty),
+          borderColor: chartColors.green,
+          backgroundColor: chartColors.green + '20',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.3,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.y.toLocaleString('en-IN') + ' units' } }
+        },
+        scales: {
+          x: { ticks: { font: { size: 11 }, maxRotation: 40 }, grid: { display: false } },
+          y: { ticks: { font: { size: 11 } }, grid: { color: '#f0f0f5' } }
+        }
+      }
+    });
+  } else {
+    document.getElementById('sales-chart').parentElement.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:.88rem;">No quantity/sales column found — cannot draw units chart.</div>';
+  }
+
+  // ── Product breakdown ────────────────────────────────────────
+  const prodList = document.getElementById('prod-list');
+  if (products.length > 0) {
+    const maxRev = products[0][1].rev || 1;
+    const colors = ['#5c6bc0','#43a047','#fb8c00','#8e24aa','#e53935','#00897b','#d81b60','#f4511e','#039be5','#7cb342'];
+    prodList.innerHTML = products.map(([name, data], i) => `
+      <div class="prod-row">
+        <div class="prod-name">${name || 'Unknown'}</div>
+        <div class="prod-bar-wrap">
+          <div class="prod-bar" style="width:${Math.round(data.rev/maxRev*100)}%;background:${colors[i%colors.length]}"></div>
+        </div>
+        <div class="prod-rev">${rupees(data.rev)}</div>
+        ${data.qty > 0 ? `<div style="font-size:.78rem;color:#888;min-width:60px;text-align:right">${data.qty.toLocaleString('en-IN')} units</div>` : ''}
+      </div>
+    `).join('');
+  } else {
+    prodList.innerHTML = '<div style="color:#aaa;font-size:.88rem;text-align:center;padding:20px">No product column found.</div>';
+  }
+
+  // ── Raw data table ───────────────────────────────────────────
+  const thead = document.getElementById('raw-thead');
+  const tbody = document.getElementById('raw-tbody');
+  thead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+  tbody.innerHTML = rows.slice(0, 20).map(r =>
+    '<tr>' + headers.map(h => `<td>${r[h] || ''}</td>`).join('') + '</tr>'
+  ).join('');
+
+  // ── Forecast ────────────────────────────────────────────────
+  const fcList = document.getElementById('fc-list');
+  if (months.length >= 2) {
+    // Simple linear trend: average month-over-month growth
+    const revValues = months.map(m => m.rev).filter(v => v > 0);
+    let growthRate = 0;
+    if (revValues.length >= 2) {
+      const rates = [];
+      for (let i = 1; i < revValues.length; i++) {
+        if (revValues[i-1] > 0) rates.push((revValues[i] - revValues[i-1]) / revValues[i-1]);
+      }
+      growthRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+      // Cap between -30% and +50% to avoid wild swings
+      growthRate = Math.max(-0.3, Math.min(0.5, growthRate));
+    }
+
+    const lastMonth = months[months.length - 1];
+    const lastRev   = lastMonth.rev || (revValues[revValues.length - 1] || 0);
+    let lastY = lastMonth.year;
+    let lastM = lastMonth.month;
+
+    const forecasts = [];
+    let baseRev = lastRev;
+    for (let i = 1; i <= 3; i++) {
+      lastM++;
+      if (lastM > 11) { lastM = 0; lastY++; }
+      const projected = baseRev * (1 + growthRate);
+      forecasts.push({ label: monthLabel(lastY, lastM), rev: projected, growth: growthRate * 100 });
+      baseRev = projected;
+    }
+
+    const maxFc = Math.max(...forecasts.map(f => f.rev), 1);
+    const gLabel = growthRate >= 0 ? `+${growthRate.toFixed(1)*100/100 | 0}%` : `${(growthRate*100).toFixed(1)}%`;
+
+    fcList.innerHTML = forecasts.map(f => `
+      <div class="fc-row">
+        <div class="fc-month">${f.label}</div>
+        <div class="fc-bar-wrap">
+          <div class="fc-bar" style="width:${Math.round(f.rev/maxFc*100)}%"></div>
+        </div>
+        <div class="fc-val">${rupees(f.rev)}</div>
+        <div class="badge ${growthRate >= 0 ? 'badge-up' : 'badge-down'}" style="flex-shrink:0">${growthRate >= 0 ? '↑' : '↓'} ${Math.abs(growthRate*100).toFixed(1)}%</div>
+      </div>
+    `).join('');
+  } else {
+    fcList.innerHTML = '<div style="color:#aaa;font-size:.88rem;text-align:center;padding:20px">Need at least 2 months of data to generate a forecast.</div>';
+  }
+
+  // ── Insights ────────────────────────────────────────────────
+  const insightList = document.getElementById('insight-list');
+  const insightItems = [];
+
+  if (months.length > 0) {
+    const maxMonthRev = months.reduce((a, b) => b.rev > a.rev ? b : a);
+    const minMonthRev = months.reduce((a, b) => b.rev < a.rev ? b : a);
+    insightItems.push({
+      icon: '🏆',
+      title: 'Best Month: ' + maxMonthRev.label,
+      desc: 'Highest revenue of ' + rupeesLong(maxMonthRev.rev) + ' earned in this month.'
+    });
+    if (months.length > 1) {
+      insightItems.push({
+        icon: '📉',
+        title: 'Lowest Month: ' + minMonthRev.label,
+        desc: 'Revenue was lowest at ' + rupeesLong(minMonthRev.rev) + '. Consider running promotions in this period.'
+      });
+    }
+  }
+
+  if (bestProd) {
+    insightItems.push({
+      icon: '⭐',
+      title: 'Top Product: ' + bestProd[0],
+      desc: 'This product brought in ' + rupeesLong(bestProd[1].rev) + ' — your biggest earner. Focus on keeping it stocked.'
+    });
+    if (products.length > 1) {
+      const worst = products[products.length - 1];
+      insightItems.push({
+        icon: '🔻',
+        title: 'Lowest Product: ' + worst[0],
+        desc: 'Earned only ' + rupeesLong(worst[1].rev) + '. Consider reviewing pricing or promotion for this product.'
+      });
+    }
+  }
+
+  if (months.length >= 2) {
+    const first = months[0].rev, last = months[months.length - 1].rev;
+    const overallGrowth = first > 0 ? ((last - first) / first * 100).toFixed(1) : null;
+    if (overallGrowth !== null) {
+      const up = parseFloat(overallGrowth) >= 0;
+      insightItems.push({
+        icon: up ? '📈' : '📉',
+        title: (up ? 'Revenue grew by ' : 'Revenue dropped by ') + Math.abs(overallGrowth) + '%',
+        desc: 'Comparing your first month (' + rupees(first) + ') to your latest month (' + rupees(last) + ').'
+      });
+    }
+  }
+
+  insightList.innerHTML = insightItems.map(i => `
+    <div class="insight-item">
+      <div class="insight-icon">${i.icon}</div>
+      <div class="insight-text">
+        <strong>${i.title}</strong>
+        <span>${i.desc}</span>
+      </div>
+    </div>
+  `).join('');
+
+  // ── Show results ─────────────────────────────────────────────
+  setTimeout(() => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 600);
+}
+
+// ── Step indicator ───────────────────────────────────────────────
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('step'+i);
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  });
+  [1,2].forEach(i => {
+    const el = document.getElementById('line'+i);
+    el.classList.toggle('done', i < n);
+  });
+}
+</script>
+</body>
+</html>

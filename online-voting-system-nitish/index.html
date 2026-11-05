@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ElectVote — Online Voting System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ════════════════════════════════════════════════════════════
+   ELECTVOTE — DESIGN SYSTEM
+   Aesthetic: Dark-first election dashboard with amber accents
+   Font: Syne (display) + DM Sans (body)
+════════════════════════════════════════════════════════════ */
+:root {
+  /* Dark theme (default) */
+  --bg:          #0a0a0f;
+  --bg2:         #111118;
+  --bg3:         #1a1a24;
+  --bg4:         #22222f;
+  --surface:     #1e1e2a;
+  --surface2:    #252535;
+  --border:      rgba(255,255,255,.08);
+  --border2:     rgba(255,255,255,.14);
+  --text:        #f0f0f8;
+  --text2:       #9898b8;
+  --text3:       #5a5a7a;
+  --gold:        #f5a623;
+  --gold2:       #ffc145;
+  --gold3:       rgba(245,166,35,.12);
+  --green:       #22c55e;
+  --green-bg:    rgba(34,197,94,.12);
+  --red:         #ef4444;
+  --red-bg:      rgba(239,68,68,.12);
+  --blue:        #3b82f6;
+  --blue-bg:     rgba(59,130,246,.12);
+  --purple:      #a855f7;
+  --glow:        0 0 40px rgba(245,166,35,.15);
+  --shadow:      0 8px 32px rgba(0,0,0,.4);
+  --shadow-sm:   0 2px 12px rgba(0,0,0,.3);
+  --r:           14px;
+  --r-sm:        8px;
+  --r-lg:        20px;
+  --r-xl:        28px;
+  --ease:        cubic-bezier(.4,0,.2,1);
+  --bot-h:       68px;
+  --top-h:       64px;
+}
+[data-theme="light"] {
+  --bg:          #f4f4f8;
+  --bg2:         #eaeaf0;
+  --bg3:         #e0e0ea;
+  --bg4:         #d5d5e2;
+  --surface:     #ffffff;
+  --surface2:    #f8f8fc;
+  --border:      rgba(0,0,0,.08);
+  --border2:     rgba(0,0,0,.14);
+  --text:        #111118;
+  --text2:       #44445a;
+  --text3:       #88889a;
+  --gold3:       rgba(245,166,35,.08);
+  --green-bg:    rgba(34,197,94,.08);
+  --red-bg:      rgba(239,68,68,.08);
+  --blue-bg:     rgba(59,130,246,.08);
+  --glow:        0 0 40px rgba(245,166,35,.08);
+  --shadow:      0 8px 32px rgba(0,0,0,.10);
+  --shadow-sm:   0 2px 12px rgba(0,0,0,.07);
+}
+
+/* ─── RESET ──────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;font-size:16px;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  padding-bottom:var(--bot-h);
+  transition:background .35s var(--ease),color .35s var(--ease);
+}
+@media(min-width:768px){body{padding-bottom:0;}}
+img{max-width:100%;height:auto;display:block;}
+button{font-family:inherit;cursor:pointer;}
+input,textarea,select{font-family:inherit;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:99px;}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:4px;}
+:focus:not(:focus-visible){outline:none;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+
+/* ─── LAYOUT ─────────────────────────────────────────────── */
+.page{display:none;animation:fadeUp .3s var(--ease);}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.container{width:100%;max-width:1200px;margin:0 auto;padding:0 1rem;}
+@media(min-width:640px){.container{padding:0 1.5rem;}}
+@media(min-width:1024px){.container{padding:0 2rem;}}
+.section{padding:2rem 0;}
+@media(min-width:768px){.section{padding:3.5rem 0;}}
+
+/* ─── TYPOGRAPHY ─────────────────────────────────────────── */
+.font-display{font-family:'Syne',sans-serif;}
+h1,h2,h3{font-family:'Syne',sans-serif;line-height:1.15;letter-spacing:-.02em;}
+
+/* ─── TOP NAV ────────────────────────────────────────────── */
+.topnav{
+  position:sticky;top:0;z-index:800;
+  height:var(--top-h);
+  background:rgba(10,10,15,.88);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+[data-theme="light"] .topnav{background:rgba(244,244,248,.9);}
+.topnav-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  height:100%;max-width:1200px;margin:0 auto;padding:0 1rem;
+}
+@media(min-width:640px){.topnav-inner{padding:0 1.5rem;}}
+.nav-brand{display:flex;align-items:center;gap:.5rem;cursor:pointer;}
+.nav-brand-icon{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,#f5a623,#ff6b35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;
+  box-shadow:0 4px 12px rgba(245,166,35,.35);
+}
+.nav-brand-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;color:var(--text);}
+.nav-brand-name span{color:var(--gold);}
+
+/* Desktop nav links */
+.nav-links{display:none;list-style:none;gap:.25rem;}
+@media(min-width:768px){.nav-links{display:flex;}}
+.nav-link{
+  background:none;border:none;padding:.45rem .9rem;
+  border-radius:99px;font-size:.875rem;font-weight:500;
+  color:var(--text2);transition:all .2s;cursor:pointer;
+}
+.nav-link:hover{color:var(--text);background:var(--bg3);}
+.nav-link.active{color:var(--gold);background:var(--gold3);}
+
+.nav-actions{display:flex;align-items:center;gap:.6rem;}
+.theme-btn{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;cursor:pointer;
+}
+.theme-btn:hover{color:var(--gold);border-color:var(--gold);}
+.admin-btn{
+  display:flex;align-items:center;gap:.4rem;
+  padding:.4rem .85rem;border-radius:99px;
+  border:1px solid var(--border2);background:var(--bg3);
+  color:var(--text2);font-size:.8rem;font-weight:600;
+  transition:all .2s;cursor:pointer;
+}
+.admin-btn:hover{color:var(--gold);border-color:var(--gold);}
+
+/* ─── BOTTOM NAV (mobile) ────────────────────────────────── */
+.botnav{
+  display:flex;position:fixed;bottom:0;left:0;right:0;
+  height:var(--bot-h);
+  background:rgba(10,10,15,.95);
+  backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  z-index:800;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+[data-theme="light"] .botnav{background:rgba(244,244,248,.96);}
+@media(min-width:768px){.botnav{display:none;}}
+.bnav{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;background:none;border:none;
+  color:var(--text3);font-family:inherit;cursor:pointer;
+  padding:.4rem .25rem;transition:color .2s;
+  -webkit-tap-highlight-color:transparent;position:relative;
+}
+.bnav:active{transform:scale(.93);}
+.bnav.active{color:var(--gold);}
+.bnav.active::before{content:'';position:absolute;top:7px;width:5px;height:5px;background:var(--gold);border-radius:50%;}
+.bnav-ico{font-size:1.25rem;line-height:1;transition:transform .2s;}
+.bnav.active .bnav-ico{transform:translateY(-1px);}
+.bnav-lbl{font-size:10px;font-weight:600;letter-spacing:.03em;}
+
+/* ─── BUTTONS ────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+  padding:.65rem 1.4rem;border-radius:99px;border:none;
+  font-family:inherit;font-size:.875rem;font-weight:600;
+  cursor:pointer;transition:all .2s var(--ease);white-space:nowrap;
+}
+.btn:active{transform:scale(.97);}
+.btn-gold{background:linear-gradient(135deg,#f5a623,#ff8c42);color:#fff;box-shadow:0 4px 16px rgba(245,166,35,.35);}
+.btn-gold:hover{box-shadow:0 6px 24px rgba(245,166,35,.5);transform:translateY(-1px);}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);background:var(--gold3);}
+.btn-green{background:var(--green);color:#fff;box-shadow:0 4px 14px rgba(34,197,94,.3);}
+.btn-green:hover{box-shadow:0 6px 20px rgba(34,197,94,.4);transform:translateY(-1px);}
+.btn-red{background:var(--red);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.3);}
+.btn-red:hover{box-shadow:0 6px 20px rgba(239,68,68,.4);transform:translateY(-1px);}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--bg4);color:var(--text);}
+.btn-sm{padding:.4rem .9rem;font-size:.78rem;}
+.btn-lg{padding:.9rem 2.2rem;font-size:1rem;}
+.btn-full{width:100%;}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;}
+
+/* ─── CARDS ──────────────────────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:1.5rem;
+  transition:all .25s var(--ease);
+}
+.card:hover{border-color:var(--border2);box-shadow:var(--shadow);}
+.card-glass{
+  background:rgba(30,30,42,.6);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--r-lg);
+}
+[data-theme="light"] .card-glass{background:rgba(255,255,255,.8);}
+
+/* ─── FORM ELEMENTS ──────────────────────────────────────── */
+.form-group{display:flex;flex-direction:column;gap:.4rem;}
+.form-label{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);}
+.form-input{
+  width:100%;padding:.7rem 1rem;
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r-sm);color:var(--text);
+  font-family:inherit;font-size:.9rem;
+  transition:border-color .2s,box-shadow .2s;
+}
+.form-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.15);}
+.form-input::placeholder{color:var(--text3);}
+textarea.form-input{resize:vertical;min-height:80px;}
+.form-grid{display:grid;grid-template-columns:1fr;gap:1rem;}
+@media(min-width:560px){.form-grid{grid-template-columns:1fr 1fr;}}
+.form-error{font-size:.78rem;color:var(--red);}
+
+/* ─── BADGE ──────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:.3rem;padding:3px .6rem;border-radius:99px;font-size:.72rem;font-weight:700;letter-spacing:.04em;}
+.badge-gold  {background:rgba(245,166,35,.15);color:var(--gold);}
+.badge-green {background:var(--green-bg);color:var(--green);}
+.badge-red   {background:var(--red-bg);color:var(--red);}
+.badge-blue  {background:var(--blue-bg);color:var(--blue);}
+.badge-purple{background:rgba(168,85,247,.12);color:var(--purple);}
+
+/* ─── TOAST ──────────────────────────────────────────────── */
+.toast-wrap{
+  position:fixed;bottom:calc(var(--bot-h) + .75rem);right:.85rem;
+  z-index:9999;display:flex;flex-direction:column;gap:.4rem;
+  pointer-events:none;max-width:320px;
+}
+@media(min-width:768px){.toast-wrap{bottom:1.5rem;right:1.5rem;}}
+.toast{
+  display:flex;align-items:center;gap:.7rem;
+  padding:.8rem 1.1rem;border-radius:var(--r);
+  box-shadow:var(--shadow);pointer-events:all;
+  font-size:.84rem;font-weight:500;color:#fff;
+  animation:toastIn .3s var(--ease);border-left:3px solid transparent;
+}
+.toast-success{background:#1a2e22;border-color:var(--green);color:#a7f3d0;}
+.toast-error  {background:#2e1a1a;border-color:var(--red);color:#fca5a5;}
+.toast-info   {background:#1a1e2e;border-color:var(--gold);color:var(--gold2);}
+.toast-warning{background:#2e2a1a;border-color:var(--gold);color:#fde68a;}
+[data-theme="light"] .toast-success{background:#ecfdf5;}
+[data-theme="light"] .toast-error  {background:#fef2f2;}
+[data-theme="light"] .toast-info   {background:#fffbeb;}
+.toast-ico{font-size:1.1rem;flex-shrink:0;}
+@keyframes toastIn {from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(100%)}}
+.toast.removing{animation:toastOut .3s var(--ease) forwards;}
+
+/* ─── MODAL ──────────────────────────────────────────────── */
+.modal-bg{
+  position:fixed;inset:0;z-index:2000;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  padding:1rem;animation:fadeIn .2s;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r-xl);box-shadow:var(--shadow);
+  width:100%;max-width:440px;padding:2rem;
+  animation:slideUp .25s var(--ease);text-align:center;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-ico{font-size:3rem;margin-bottom:1rem;animation:popIn .4s var(--ease);}
+@keyframes popIn{0%{transform:scale(0)}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+.modal-title{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:700;margin-bottom:.5rem;}
+.modal-body{color:var(--text2);font-size:.9rem;margin-bottom:1.5rem;}
+.modal-acts{display:flex;gap:.75rem;justify-content:center;}
+.modal-acts .btn{flex:1;}
+
+/* ────────────────────────────────────────────────────────────
+   PAGE: HOME / HERO
+──────────────────────────────────────────────────────────── */
+.hero{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#0a0a0f 0%,#111128 50%,#0a0f1a 100%);
+  padding:5rem 0 4rem;min-height:90vh;
+  display:flex;align-items:center;
+}
+@media(min-width:768px){.hero{padding:6rem 0 5rem;}}
+[data-theme="light"] .hero{background:linear-gradient(135deg,#eef0ff 0%,#f4f4ff 50%,#eff0ff 100%);}
+.hero-glow{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;}
+.hero-glow-1{width:600px;height:600px;background:rgba(245,166,35,.08);top:-200px;right:-200px;animation:glow1 8s ease-in-out infinite;}
+.hero-glow-2{width:400px;height:400px;background:rgba(59,130,246,.06);bottom:-100px;left:-100px;animation:glow1 10s ease-in-out infinite reverse;}
+@keyframes glow1{0%,100%{transform:scale(1) translate(0,0)}50%{transform:scale(1.1) translate(20px,-20px)}}
+.hero-grid{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:1fr;
+  gap:3rem;align-items:center;
+}
+@media(min-width:900px){.hero-grid{grid-template-columns:1fr 1fr;}}
+
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:var(--gold3);border:1px solid rgba(245,166,35,.25);
+  padding:.3rem .85rem;border-radius:99px;
+  font-size:.75rem;font-weight:700;color:var(--gold);
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:1.25rem;
+}
+.hero-dot{width:6px;height:6px;background:var(--gold);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,.7)}70%{box-shadow:0 0 0 8px rgba(245,166,35,0)}}
+.hero-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(2.2rem,7vw,4rem);
+  font-weight:900;letter-spacing:-.04em;
+  line-height:1.0;margin-bottom:1.25rem;
+}
+.hero-title .accent{color:var(--gold);}
+.hero-subtitle{font-size:1.05rem;color:var(--text2);max-width:480px;margin-bottom:2rem;line-height:1.7;}
+.hero-actions{display:flex;flex-wrap:wrap;gap:.75rem;}
+@media(max-width:380px){.hero-actions{flex-direction:column;} .hero-actions .btn{width:100%;}}
+
+.hero-stats{display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:2.5rem;}
+.hero-stat{display:flex;flex-direction:column;}
+.hero-stat-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--text);line-height:1;}
+.hero-stat-lbl{font-size:.75rem;color:var(--text3);font-weight:500;margin-top:2px;}
+
+/* Hero right — floating cards */
+.hero-visual{position:relative;height:340px;display:none;}
+@media(min-width:900px){.hero-visual{display:block;}}
+.float-card{
+  position:absolute;background:var(--surface);
+  border:1px solid var(--border2);border-radius:var(--r-lg);
+  padding:1rem 1.25rem;box-shadow:var(--shadow);
+  animation:float1 6s ease-in-out infinite;
+}
+.float-card-1{top:20px;left:20px;width:200px;animation-delay:0s;}
+.float-card-2{top:80px;right:10px;width:180px;animation-delay:-2s;}
+.float-card-3{bottom:20px;left:50%;transform:translateX(-50%);width:220px;animation-delay:-4s;}
+@keyframes float1{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.float-card-3{animation:float2 6s ease-in-out infinite -4s;}
+@keyframes float2{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-10px)}}
+.fc-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:.35rem;}
+.fc-big{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:.25rem;}
+.fc-bar-wrap{height:5px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:.25rem;}
+.fc-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),#ff8c42);}
+.fc-sub{font-size:.72rem;color:var(--text2);}
+
+/* ────────────────────────────────────────────────────────────
+   SECTION HEADERS
+──────────────────────────────────────────────────────────── */
+.sec-eyebrow{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:.5rem;}
+.sec-title{font-family:'Syne',sans-serif;font-size:clamp(1.5rem,4vw,2.2rem);font-weight:800;margin-bottom:.5rem;}
+.sec-sub{color:var(--text2);font-size:.95rem;max-width:500px;}
+.sec-hdr{margin-bottom:2rem;}
+.sec-hdr-row{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;}
+
+/* ────────────────────────────────────────────────────────────
+   VOTING PAGE — CANDIDATE CARDS
+──────────────────────────────────────────────────────────── */
+.vote-toolbar{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;align-items:center;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-ico{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--text3);font-size:.9rem;pointer-events:none;}
+.search-inp{
+  width:100%;padding:.65rem 1rem .65rem 2.4rem;
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:99px;color:var(--text);font-family:inherit;
+  font-size:.875rem;transition:border-color .2s;
+}
+.search-inp:focus{outline:none;border-color:var(--gold);}
+.search-inp::placeholder{color:var(--text3);}
+.party-filter{
+  padding:.55rem 1rem;background:var(--bg3);
+  border:1px solid var(--border2);border-radius:99px;
+  color:var(--text);font-family:inherit;font-size:.84rem;
+  cursor:pointer;min-width:140px;
+}
+.party-filter:focus{outline:none;border-color:var(--gold);}
+
+.candidates-grid{display:grid;grid-template-columns:1fr;gap:1.25rem;}
+@media(min-width:540px){.candidates-grid{grid-template-columns:repeat(2,1fr);}}
+@media(min-width:1024px){.candidates-grid{grid-template-columns:repeat(3,1fr);}}
+
+.cand-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-xl);overflow:hidden;
+  transition:all .3s var(--ease);display:flex;flex-direction:column;
+}
+.cand-card:hover{border-color:var(--border2);box-shadow:var(--shadow);transform:translateY(-3px);}
+.cand-card.voted-yes{border-color:rgba(34,197,94,.4);box-shadow:0 4px 20px rgba(34,197,94,.1);}
+.cand-card.voted-no {border-color:rgba(239,68,68,.35);box-shadow:0 4px 20px rgba(239,68,68,.08);}
+
+.cand-banner{
+  height:90px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--bg3),var(--bg4));
+}
+.cand-banner-pattern{
+  position:absolute;inset:0;opacity:.3;
+  background-image:radial-gradient(circle at 2px 2px,var(--border2) 1px,transparent 0);
+  background-size:24px 24px;
+}
+.cand-avatar{
+  position:absolute;bottom:-28px;left:1.25rem;
+  width:64px;height:64px;border-radius:50%;
+  border:3px solid var(--surface);
+  overflow:hidden;object-fit:cover;
+  background:var(--bg4);display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;
+}
+.cand-avatar img{width:100%;height:100%;object-fit:cover;}
+.cand-party-badge{
+  position:absolute;top:.75rem;right:.75rem;
+  display:flex;align-items:center;gap:.35rem;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.12);
+  padding:.25rem .6rem;border-radius:99px;
+}
+.cand-party-logo{width:16px;height:16px;border-radius:4px;object-fit:contain;background:#fff;padding:1px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;}
+.cand-party-name{font-size:.7rem;font-weight:700;color:#fff;}
+
+.cand-body{padding:2.25rem 1.25rem 1.25rem;flex:1;display:flex;flex-direction:column;}
+.cand-name{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:.15rem;}
+.cand-meta{font-size:.78rem;color:var(--text3);margin-bottom:.75rem;}
+.cand-desc{font-size:.83rem;color:var(--text2);line-height:1.6;margin-bottom:1rem;flex:1;}
+
+.vote-counts{display:flex;gap:.75rem;margin-bottom:1rem;}
+.vc{flex:1;background:var(--bg3);border-radius:var(--r-sm);padding:.5rem .6rem;text-align:center;}
+.vc-num{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;}
+.vc-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);}
+.vc.yes .vc-num{color:var(--green);}
+.vc.no  .vc-num{color:var(--red);}
+
+.vote-bar{height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:1rem;}
+.vote-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--green),#86efac);transition:width .6s var(--ease);}
+
+.vote-btns{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.voted-badge{
+  display:flex;align-items:center;justify-content:center;gap:.4rem;
+  padding:.65rem;border-radius:99px;font-size:.84rem;font-weight:700;
+  width:100%;text-align:center;
+}
+.voted-badge.yes{background:var(--green-bg);color:var(--green);}
+.voted-badge.no {background:var(--red-bg);color:var(--red);}
+
+.no-candidates{
+  grid-column:1/-1;text-align:center;
+  padding:4rem 1rem;color:var(--text3);
+}
+.no-candidates-ico{font-size:3rem;margin-bottom:.75rem;}
+
+/* ────────────────────────────────────────────────────────────
+   ADMIN PAGE
+──────────────────────────────────────────────────────────── */
+.admin-grid{display:grid;grid-template-columns:1fr;gap:1.5rem;}
+@media(min-width:900px){.admin-grid{grid-template-columns:420px 1fr;}}
+
+.admin-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1.75rem;}
+.admin-panel h3{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:1.25rem;}
+
+/* Image upload */
+.img-upload-area{
+  border:2px dashed var(--border2);border-radius:var(--r);
+  padding:1.5rem;text-align:center;cursor:pointer;
+  transition:all .2s;margin-bottom:1rem;
+}
+.img-upload-area:hover{border-color:var(--gold);background:var(--gold3);}
+.img-upload-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto .75rem;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:2rem;}
+.img-upload-preview img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.img-upload-lbl{font-size:.82rem;color:var(--text2);}
+.img-upload-sub{font-size:.72rem;color:var(--text3);}
+input[type="file"]{display:none;}
+
+/* Admin candidate list */
+.admin-cand-list{display:flex;flex-direction:column;gap:.75rem;}
+.admin-cand{
+  display:flex;align-items:center;gap:.85rem;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);padding:.85rem 1rem;
+  transition:all .2s;
+}
+.admin-cand:hover{border-color:var(--border2);}
+.admin-cand-ava{width:42px;height:42px;border-radius:50%;overflow:hidden;background:var(--bg4);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.admin-cand-ava img{width:100%;height:100%;object-fit:cover;}
+.admin-cand-info{flex:1;min-width:0;}
+.admin-cand-name{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-cand-sub{font-size:.75rem;color:var(--text3);}
+.admin-del-btn{
+  background:var(--red-bg);border:none;color:var(--red);
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;cursor:pointer;flex-shrink:0;
+  transition:all .2s;
+}
+.admin-del-btn:hover{background:var(--red);color:#fff;}
+
+/* ────────────────────────────────────────────────────────────
+   RESULTS PAGE
+──────────────────────────────────────────────────────────── */
+.results-stats{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:1rem;margin-bottom:1.5rem;
+}
+@media(min-width:640px){.results-stats{grid-template-columns:repeat(4,1fr);}}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:1.25rem;
+}
+.stat-card-ico{font-size:1.5rem;margin-bottom:.6rem;}
+.stat-card-num{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;line-height:1;margin-bottom:.25rem;}
+.stat-card-lbl{font-size:.75rem;color:var(--text3);font-weight:500;}
+
+.winner-card{
+  background:linear-gradient(135deg,rgba(245,166,35,.1),rgba(255,140,66,.05));
+  border:1px solid rgba(245,166,35,.25);
+  border-radius:var(--r-xl);padding:1.75rem;
+  display:flex;align-items:center;gap:1.5rem;
+  flex-wrap:wrap;margin-bottom:1.5rem;
+}
+.winner-ico{font-size:2.5rem;flex-shrink:0;}
+.winner-info h3{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;margin-bottom:.2rem;}
+.winner-info p{font-size:.85rem;color:var(--text2);}
+
+.charts-grid{display:grid;grid-template-columns:1fr;gap:1.25rem;margin-bottom:1.5rem;}
+@media(min-width:768px){.charts-grid{grid-template-columns:1fr 1fr;}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1.5rem;}
+.chart-card h3{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:1.25rem;}
+.chart-wrap{position:relative;height:240px;}
+
+.results-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;}
+.results-table-head{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;}
+.results-table-head h3{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;}
+.results-row{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr 80px;
+  gap:1rem;align-items:center;
+  padding:.9rem 1.5rem;border-bottom:1px solid var(--border);
+  transition:background .15s;font-size:.875rem;
+}
+@media(max-width:640px){
+  .results-row{grid-template-columns:1fr 1fr;gap:.5rem .75rem;}
+  .results-row .hide-sm{display:none;}
+}
+.results-row:last-child{border-bottom:none;}
+.results-row:hover{background:var(--bg3);}
+.results-row-head{background:var(--bg3);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);}
+.results-row-head:hover{background:var(--bg3);}
+.rr-cand{display:flex;align-items:center;gap:.6rem;}
+.rr-ava{width:32px;height:32px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:.85rem;overflow:hidden;flex-shrink:0;}
+.rr-ava img{width:100%;height:100%;object-fit:cover;}
+.rr-name{font-weight:600;}
+.rr-party{font-size:.75rem;color:var(--text3);}
+.rr-bar-wrap{height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-top:.2rem;}
+.rr-bar{height:100%;border-radius:99px;transition:width .8s var(--ease);}
+.yes-bar{background:linear-gradient(90deg,var(--green),#86efac);}
+.no-bar {background:linear-gradient(90deg,var(--red),#fca5a5);}
+.rr-pct{font-weight:700;}
+.rank-1{color:var(--gold);}
+.rank-2{color:var(--text2);}
+.rank-3{color:var(--text3);}
+
+.export-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.25rem;}
+
+/* ────────────────────────────────────────────────────────────
+   HOME — FEATURES SECTION
+──────────────────────────────────────────────────────────── */
+.features-grid{display:grid;grid-template-columns:1fr;gap:1rem;}
+@media(min-width:560px){.features-grid{grid-template-columns:1fr 1fr;}}
+@media(min-width:1024px){.features-grid{grid-template-columns:repeat(4,1fr);}}
+.feat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:1.4rem;
+  transition:all .25s var(--ease);
+}
+.feat-card:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:var(--glow);}
+.feat-ico{font-size:1.8rem;margin-bottom:.85rem;}
+.feat-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:.4rem;}
+.feat-desc{font-size:.82rem;color:var(--text2);line-height:1.6;}
+
+/* ────────────────────────────────────────────────────────────
+   ANIMATIONS & MISC
+──────────────────────────────────────────────────────────── */
+.counter{display:inline-block;transition:all .3s;}
+.animate-in{animation:slideIn .4s var(--ease) both;}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.stagger-1{animation-delay:.05s;}
+.stagger-2{animation-delay:.1s;}
+.stagger-3{animation-delay:.15s;}
+.stagger-4{animation-delay:.2s;}
+
+/* scroll-top */
+.scroll-top{
+  position:fixed;bottom:calc(var(--bot-h) + .85rem);left:.85rem;
+  width:40px;height:40px;background:var(--bg3);
+  border:1px solid var(--border2);color:var(--text2);
+  border-radius:12px;font-size:1.1rem;
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:var(--shadow-sm);
+  transition:all .2s;z-index:500;
+}
+@media(min-width:768px){.scroll-top{bottom:1.5rem;}}
+.scroll-top.show{display:flex;}
+.scroll-top:hover{color:var(--gold);border-color:var(--gold);}
+
+/* divider */
+.divider{border:none;border-top:1px solid var(--border);margin:0;}
+</style>
+</head>
+<body>
+
+<!-- ══ SKIP LINK ══════════════════════════════════════════ -->
+<a href="#main" style="position:absolute;top:-100px;left:1rem;background:var(--gold);color:#000;padding:.5rem 1rem;border-radius:8px;font-weight:700;z-index:9999;transition:top .2s" onfocus="this.style.top='1rem'" onblur="this.style.top='-100px'">Skip to content</a>
+
+<!-- ══ TOP NAV ════════════════════════════════════════════ -->
+<header class="topnav" role="banner">
+  <div class="topnav-inner">
+    <div class="nav-brand" onclick="go('home')" role="button" tabindex="0" aria-label="ElectVote Home">
+      <div class="nav-brand-icon" aria-hidden="true">🗳️</div>
+      <div class="nav-brand-name">Elect<span>Vote</span></div>
+    </div>
+    <ul class="nav-links" role="list" style="list-style:none;display:none;" id="desktop-nav">
+      <li><button class="nav-link active" data-page="home">Home</button></li>
+      <li><button class="nav-link" data-page="vote">Vote</button></li>
+      <li><button class="nav-link" data-page="results">Results</button></li>
+      <li><button class="nav-link" data-page="admin">Admin</button></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="theme-btn" id="theme-toggle" aria-label="Toggle dark/light mode" title="Toggle theme">🌙</button>
+      <button class="admin-btn" onclick="go('admin')">⚙️ Admin</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ BOTTOM NAV (mobile) ═══════════════════════════════ -->
+<nav class="botnav" aria-label="Main navigation">
+  <button class="bnav active" data-page="home" aria-label="Home">
+    <span class="bnav-ico">🏠</span><span class="bnav-lbl">Home</span>
+  </button>
+  <button class="bnav" data-page="vote" aria-label="Vote">
+    <span class="bnav-ico">🗳️</span><span class="bnav-lbl">Vote</span>
+  </button>
+  <button class="bnav" data-page="results" aria-label="Results">
+    <span class="bnav-ico">📊</span><span class="bnav-lbl">Results</span>
+  </button>
+  <button class="bnav" data-page="admin" aria-label="Admin">
+    <span class="bnav-ico">⚙️</span><span class="bnav-lbl">Admin</span>
+  </button>
+</nav>
+
+<!-- ══ MAIN ══════════════════════════════════════════════ -->
+<main id="main">
+
+<!-- ▸ HOME PAGE ──────────────────────────────────────── -->
+<div class="page active" id="page-home">
+  <!-- Hero -->
+  <section class="hero" aria-label="Hero section">
+    <div class="hero-glow hero-glow-1" aria-hidden="true"></div>
+    <div class="hero-glow hero-glow-2" aria-hidden="true"></div>
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="hero-eyebrow"><span class="hero-dot" aria-hidden="true"></span>2026 General Election · Live</div>
+          <h1 class="hero-title animate-in">Democracy in<br/>Your <span class="accent">Hands.</span></h1>
+          <p class="hero-subtitle animate-in stagger-1">A transparent, real-time voting platform. Cast your vote, track results live, and make your voice count — all in your browser.</p>
+          <div class="hero-actions animate-in stagger-2">
+            <button class="btn btn-gold btn-lg" onclick="go('vote')">🗳️ Start Voting</button>
+            <button class="btn btn-outline btn-lg" onclick="go('results')">📊 View Results</button>
+          </div>
+          <div class="hero-stats animate-in stagger-3">
+            <div class="hero-stat"><span class="hero-stat-num counter" id="h-total">0</span><span class="hero-stat-lbl">Total Votes Cast</span></div>
+            <div class="hero-stat"><span class="hero-stat-num counter" id="h-cands">0</span><span class="hero-stat-lbl">Candidates</span></div>
+            <div class="hero-stat"><span class="hero-stat-num counter" id="h-parties">0</span><span class="hero-stat-lbl">Parties</span></div>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="float-card float-card-1">
+            <div class="fc-label">Yes Votes</div>
+            <div class="fc-big" id="fv-yes">0</div>
+            <div class="fc-bar-wrap"><div class="fc-bar" id="fv-ybar" style="width:0%"></div></div>
+            <div class="fc-sub">of total votes</div>
+          </div>
+          <div class="float-card float-card-2">
+            <div class="fc-label">Leading</div>
+            <div class="fc-big" id="fv-leader" style="font-size:.9rem;">—</div>
+            <div class="fc-sub" id="fv-leader-sub">No votes yet</div>
+          </div>
+          <div class="float-card float-card-3">
+            <div class="fc-label">Election Status</div>
+            <div style="display:flex;align-items:center;gap:.5rem;margin:.25rem 0;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite;"></span>
+              <span style="font-weight:700;font-size:.9rem;color:var(--green);">Active &amp; Open</span>
+            </div>
+            <div class="fc-sub">Votes recorded in real-time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section" aria-label="Features">
+    <div class="container">
+      <div class="sec-hdr">
+        <div class="sec-eyebrow">How It Works</div>
+        <h2 class="sec-title">Simple, Transparent &amp; Secure</h2>
+        <p class="sec-sub">No accounts needed. Walk up, vote, and see results instantly.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feat-card animate-in stagger-1">
+          <div class="feat-ico">👤</div>
+          <div class="feat-title">Browse Candidates</div>
+          <div class="feat-desc">View all candidates with photos, party info, age, and manifestos.</div>
+        </div>
+        <div class="feat-card animate-in stagger-2">
+          <div class="feat-ico">🗳️</div>
+          <div class="feat-title">Vote YES or NO</div>
+          <div class="feat-desc">Cast your support or opposition for each candidate. One vote per candidate.</div>
+        </div>
+        <div class="feat-card animate-in stagger-3">
+          <div class="feat-ico">📊</div>
+          <div class="feat-title">Live Results</div>
+          <div class="feat-desc">Charts update instantly. See vote counts, percentages, and the current leader.</div>
+        </div>
+        <div class="feat-card animate-in stagger-4">
+          <div class="feat-ico">⚙️</div>
+          <div class="feat-title">Admin Panel</div>
+          <div class="feat-desc">Add or remove candidates with photos, party details, and manifestos.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ▸ VOTE PAGE ──────────────────────────────────────── -->
+<div class="page" id="page-vote">
+  <div class="container section">
+    <div class="sec-hdr-row">
+      <div>
+        <div class="sec-eyebrow">Cast Your Vote</div>
+        <h1 class="sec-title">All Candidates</h1>
+      </div>
+    </div>
+    <div class="vote-toolbar">
+      <div class="search-wrap">
+        <span class="search-ico" aria-hidden="true">🔍</span>
+        <input type="search" id="search-cand" class="search-inp" placeholder="Search candidates…" aria-label="Search candidates"/>
+      </div>
+      <select id="party-filter" class="party-filter" aria-label="Filter by party">
+        <option value="">All Parties</option>
+      </select>
+    </div>
+    <div class="candidates-grid" id="candidates-grid" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- ▸ RESULTS PAGE ───────────────────────────────────── -->
+<div class="page" id="page-results">
+  <div class="container section">
+    <div class="sec-hdr-row">
+      <div>
+        <div class="sec-eyebrow">Election Analytics</div>
+        <h1 class="sec-title">Live Results</h1>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="renderResults()">🔄 Refresh</button>
+    </div>
+
+    <div class="results-stats" id="results-stats"></div>
+
+    <div id="winner-section"></div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Yes vs No — Overall</h3>
+        <div class="chart-wrap"><canvas id="chart-pie"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Votes per Candidate</h3>
+        <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
+      </div>
+    </div>
+
+    <div class="results-table-wrap">
+      <div class="results-table-head">
+        <h3>Candidate Breakdown</h3>
+        <div class="export-row">
+          <button class="btn btn-ghost btn-sm" onclick="exportPDF()">📄 Export PDF</button>
+          <button class="btn btn-ghost btn-sm" id="reset-btn" onclick="confirmReset()">🔄 Reset Election</button>
+        </div>
+      </div>
+      <div id="results-table-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ▸ ADMIN PAGE ─────────────────────────────────────── -->
+<div class="page" id="page-admin">
+  <div class="container section">
+    <div class="sec-hdr">
+      <div class="sec-eyebrow">Administration Panel</div>
+      <h1 class="sec-title">Manage Candidates</h1>
+      <p class="sec-sub">Add, edit, or remove election candidates.</p>
+    </div>
+    <div class="admin-grid">
+      <!-- ADD FORM -->
+      <div class="admin-panel">
+        <h3>➕ Add New Candidate</h3>
+        <div class="img-upload-area" id="upload-area" onclick="document.getElementById('photo-input').click()" role="button" tabindex="0" aria-label="Upload candidate photo">
+          <div class="img-upload-preview" id="photo-preview">📷</div>
+          <div class="img-upload-lbl">Click to upload photo</div>
+          <div class="img-upload-sub">JPG, PNG · Max 2MB</div>
+        </div>
+        <input type="file" id="photo-input" accept="image/*" aria-label="Candidate photo upload"/>
+
+        <div class="img-upload-area" id="logo-area" style="margin-top:.75rem;" onclick="document.getElementById('logo-input').click()" role="button" tabindex="0" aria-label="Upload party logo">
+          <div class="img-upload-preview" id="logo-preview">🏴</div>
+          <div class="img-upload-lbl">Click to upload party logo</div>
+          <div class="img-upload-sub">Party symbol · PNG recommended</div>
+        </div>
+        <input type="file" id="logo-input" accept="image/*" aria-label="Party logo upload"/>
+
+        <form id="add-form" novalidate style="margin-top:1rem;">
+          <div class="form-grid" style="margin-bottom:1rem;">
+            <div class="form-group">
+              <label class="form-label" for="inp-name">Candidate Name *</label>
+              <input class="form-input" id="inp-name" placeholder="Full name" required/>
+              <span class="form-error" id="err-name"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inp-age">Age *</label>
+              <input class="form-input" id="inp-age" type="number" placeholder="e.g. 45" min="18" max="100" required/>
+            </div>
+          </div>
+          <div class="form-grid" style="margin-bottom:1rem;">
+            <div class="form-group">
+              <label class="form-label" for="inp-party">Party Name *</label>
+              <input class="form-input" id="inp-party" placeholder="e.g. National Party" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inp-color">Party Color</label>
+              <input class="form-input" id="inp-color" type="color" value="#f5a623" style="height:42px;padding:.3rem;cursor:pointer;"/>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label class="form-label" for="inp-desc">Manifesto / Description *</label>
+            <textarea class="form-input" id="inp-desc" placeholder="Candidate's key promises and platform…" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-gold btn-full">➕ Add Candidate</button>
+        </form>
+      </div>
+
+      <!-- CANDIDATE LIST -->
+      <div class="admin-panel">
+        <h3 style="margin-bottom:1rem;">👥 Current Candidates (<span id="admin-count">0</span>)</h3>
+        <div class="admin-cand-list" id="admin-list" aria-live="polite"></div>
+        <div id="admin-empty" style="text-align:center;padding:3rem 1rem;color:var(--text3);display:none;">
+          <div style="font-size:2.5rem;margin-bottom:.5rem;">👥</div>
+          <p>No candidates yet. Add one using the form.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ══ TOAST CONTAINER ════════════════════════════════ -->
+<div class="toast-wrap" id="toast-wrap" aria-live="assertive" aria-atomic="true"></div>
+
+<!-- ══ CONFIRM MODAL ══════════════════════════════════ -->
+<div class="modal-bg" id="modal-bg" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-box">
+    <div class="modal-ico" id="modal-ico">🗳️</div>
+    <h2 class="modal-title" id="modal-title">Confirm Vote</h2>
+    <p class="modal-body" id="modal-body"></p>
+    <div class="modal-acts" id="modal-acts"></div>
+  </div>
+</div>
+
+<!-- ══ SCROLL TOP ════════════════════════════════════ -->
+<button class="scroll-top" id="scroll-top" aria-label="Scroll to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   ELECTVOTE — SCRIPT.JS
+   Fully client-side election system
+   No backend · No auth · LocalStorage only
+══════════════════════════════════════════════════════════════ */
+
+'use strict';
+
+/* ─── CONSTANTS ──────────────────────────────────────────── */
+const LS_CANDS  = 'ev_candidates_v3';
+const LS_VOTES  = 'ev_votes_v3';
+const LS_THEME  = 'ev_theme';
+
+/* ─── UTILITY ────────────────────────────────────────────── */
+const $  = id => document.getElementById(id);
+const $$ = sel => [...document.querySelectorAll(sel)];
+
+/** Debounce */
+function debounce(fn, ms) {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+
+/** Read localStorage safely */
+function lsGet(key, def = null) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+  catch { return def; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) { console.warn(e); }
+}
+
+/** Generate unique id */
+function uid() { return Math.random().toString(36).slice(2,10); }
+
+/** File → base64 */
+function fileToB64(file) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.readAsDataURL(file);
+  });
+}
+
+/** Format number with animation */
+function animCounter(el, target, ms = 800) {
+  const start = parseInt(el.textContent) || 0;
+  const diff  = target - start;
+  if (!diff) return;
+  const step  = ms / 16;
+  let frame   = 0;
+  const t = setInterval(() => {
+    frame++;
+    el.textContent = Math.round(start + diff * (frame / step));
+    if (frame >= step) { el.textContent = target; clearInterval(t); }
+  }, 16);
+}
+
+/* ─── TOAST SYSTEM ───────────────────────────────────────── */
+function toast(msg, type = 'info', duration = 3500) {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  const wrap = $('toast-wrap');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span class="toast-ico" aria-hidden="true">${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 300); }, duration);
+}
+
+/* ─── MODAL SYSTEM ───────────────────────────────────────── */
+let _modalResolve = null;
+
+function showModal({ ico = '🗳️', title, body, actions }) {
+  return new Promise(resolve => {
+    _modalResolve = resolve;
+    $('modal-ico').textContent   = ico;
+    $('modal-title').textContent = title;
+    $('modal-body').textContent  = body;
+    const acts = $('modal-acts');
+    acts.innerHTML = '';
+    actions.forEach(({ label, cls, value }) => {
+      const b = document.createElement('button');
+      b.className = `btn ${cls}`;
+      b.textContent = label;
+      b.onclick = () => { closeModal(); resolve(value); };
+      acts.appendChild(b);
+    });
+    $('modal-bg').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => acts.querySelector('button')?.focus(), 50);
+  });
+}
+function closeModal() {
+  $('modal-bg').style.display = 'none';
+  document.body.style.overflow = '';
+}
+$('modal-bg').addEventListener('click', e => { if (e.target === $('modal-bg')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('modal-bg').style.display !== 'none') closeModal(); });
+
+/* ─── DATA LAYER ─────────────────────────────────────────── */
+/**
+ * Candidate: { id, name, age, party, color, desc, photo, partyLogo, createdAt }
+ * Votes:     { [candidateId]: { yes: n, no: n, voted: bool } }
+ */
+
+function getCandidates() { return lsGet(LS_CANDS, []); }
+function getVotes()      { return lsGet(LS_VOTES, {}); }
+
+function saveCandidates(c) { lsSet(LS_CANDS, c); }
+function saveVotes(v)      { lsSet(LS_VOTES, v); }
+
+function getCandVotes(id) {
+  const v = getVotes()[id] || { yes: 0, no: 0, voted: false };
+  return v;
+}
+
+function totalYes() { return Object.values(getVotes()).reduce((a,v)=>a+(v.yes||0),0); }
+function totalNo()  { return Object.values(getVotes()).reduce((a,v)=>a+(v.no||0),0); }
+function totalAll() { return totalYes() + totalNo(); }
+
+/* ─── SAMPLE DATA (preloaded) ────────────────────────────── */
+const SAMPLE_CANDIDATES = [
+  {
+    id: 'c1', name: 'Arjun Mehta', age: 52, party: 'National Progressive Party',
+    color: '#3b82f6',
+    desc: 'Committed to economic growth, digital infrastructure, and youth employment. Former IAS officer with 25 years of public service.',
+    photo: '', partyLogo: '', createdAt: Date.now() - 5000
+  },
+  {
+    id: 'c2', name: 'Priya Sharma', age: 44, party: 'People\'s Democratic Front',
+    color: '#22c55e',
+    desc: 'Champion of education reform and women\'s empowerment. Founded 40+ community schools across rural districts.',
+    photo: '', partyLogo: '', createdAt: Date.now() - 4000
+  },
+  {
+    id: 'c3', name: 'Rajan Patel', age: 61, party: 'Bharatiya Jan Seva',
+    color: '#f5a623',
+    desc: 'Veteran politician focused on farmer welfare, water conservation, and rural connectivity. Ex-Agriculture Minister.',
+    photo: '', partyLogo: '', createdAt: Date.now() - 3000
+  },
+  {
+    id: 'c4', name: 'Kavya Nair', age: 38, party: 'Greens & Sustainability Party',
+    color: '#a855f7',
+    desc: 'Environmental scientist turned politician. Advocates for net-zero policies, clean energy, and sustainable urban planning.',
+    photo: '', partyLogo: '', createdAt: Date.now() - 2000
+  },
+  {
+    id: 'c5', name: 'Dr. Suresh Kumar', age: 57, party: 'National Progressive Party',
+    color: '#3b82f6',
+    desc: 'Public health expert pushing for universal healthcare, affordable medicine, and mental health awareness programs.',
+    photo: '', partyLogo: '', createdAt: Date.now() - 1000
+  },
+  {
+    id: 'c6', name: 'Meera Joshi', age: 41, party: 'People\'s Democratic Front',
+    color: '#22c55e',
+    desc: 'Entrepreneur and social reformer. Plans to streamline government services with technology and reduce bureaucratic delays.',
+    photo: '', partyLogo: '', createdAt: Date.now()
+  }
+];
+
+/* Seed sample data only once */
+if (!localStorage.getItem(LS_CANDS)) {
+  saveCandidates(SAMPLE_CANDIDATES);
+}
+
+/* ─── NAVIGATION ─────────────────────────────────────────── */
+let currentPage = 'home';
+
+function go(page) {
+  if (currentPage === page) return;
+  currentPage = page;
+
+  // Swap pages
+  $$('.page').forEach(p => p.classList.remove('active'));
+  const tgt = $(`page-${page}`);
+  if (tgt) { tgt.classList.add('active'); tgt.focus?.(); }
+
+  // Sync nav
+  $$('.nav-link').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+  $$('.bnav').forEach(b  => b.classList.toggle('active', b.dataset.page === page));
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (page === 'home')    renderHome();
+  if (page === 'vote')    renderVote();
+  if (page === 'results') renderResults();
+  if (page === 'admin')   renderAdmin();
+}
+
+/* ─── HOME PAGE ──────────────────────────────────────────── */
+function renderHome() {
+  const cands   = getCandidates();
+  const parties = [...new Set(cands.map(c => c.party))];
+  const yes     = totalYes();
+  const no      = totalNo();
+  const all     = totalAll();
+
+  animCounter($('h-total'),   all);
+  animCounter($('h-cands'),   cands.length);
+  animCounter($('h-parties'), parties.length);
+
+  // Float cards
+  $('fv-yes').textContent = yes;
+  const yPct = all > 0 ? Math.round(yes / all * 100) : 0;
+  $('fv-ybar').style.width = yPct + '%';
+
+  // Leader
+  const votes = getVotes();
+  let leader = null, leaderYes = -1;
+  cands.forEach(c => {
+    const v = votes[c.id]?.yes || 0;
+    if (v > leaderYes) { leaderYes = v; leader = c; }
+  });
+  if (leader && leaderYes > 0) {
+    $('fv-leader').textContent     = leader.name;
+    $('fv-leader-sub').textContent = leaderYes + ' yes votes';
+  } else {
+    $('fv-leader').textContent     = '—';
+    $('fv-leader-sub').textContent = 'No votes yet';
+  }
+}
+
+/* ─── VOTE PAGE ──────────────────────────────────────────── */
+let searchQ    = '';
+let partyFilt  = '';
+
+function renderVote() {
+  const cands   = getCandidates();
+  const parties = [...new Set(cands.map(c => c.party))];
+
+  // Populate party filter
+  const pf = $('party-filter');
+  pf.innerHTML = '<option value="">All Parties</option>';
+  parties.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = p;
+    if (p === partyFilt) o.selected = true;
+    pf.appendChild(o);
+  });
+
+  renderCandGrid();
+}
+
+function renderCandGrid() {
+  const cands = getCandidates();
+  const votes = getVotes();
+  const grid  = $('candidates-grid');
+
+  const filtered = cands.filter(c => {
+    const matchQ = !searchQ || c.name.toLowerCase().includes(searchQ) || c.party.toLowerCase().includes(searchQ);
+    const matchP = !partyFilt || c.party === partyFilt;
+    return matchQ && matchP;
+  });
+
+  grid.innerHTML = '';
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="no-candidates"><div class="no-candidates-ico">🔍</div><p>No candidates match your search.</p></div>`;
+    return;
+  }
+
+  filtered.forEach((c, idx) => {
+    const v     = getCandVotes(c.id);
+    const total = v.yes + v.no;
+    const yesPct = total > 0 ? Math.round(v.yes / total * 100) : 0;
+    const hasVoted = !!v.voted;
+
+    const card = document.createElement('div');
+    card.className = `cand-card animate-in${hasVoted ? (v.lastVote === 'yes' ? ' voted-yes' : ' voted-no') : ''}`;
+    card.style.animationDelay = (idx * 0.05) + 's';
+
+    // Avatar emoji fallback based on initial
+    const avatarContent = c.photo
+      ? `<img src="${c.photo}" alt="${c.name}" loading="lazy"/>`
+      : `<span aria-hidden="true">${getEmoji(c.name)}</span>`;
+    const logoContent = c.partyLogo
+      ? `<img src="${c.partyLogo}" alt="${c.party} logo"/>`
+      : `<span>${c.party[0]}</span>`;
+
+    card.innerHTML = `
+      <div class="cand-banner" style="background:linear-gradient(135deg,${c.color}22,${c.color}44);">
+        <div class="cand-banner-pattern"></div>
+        <div class="cand-avatar">${avatarContent}</div>
+        <div class="cand-party-badge">
+          <div class="cand-party-logo" style="background:${c.color}33;color:${c.color};">${logoContent}</div>
+          <span class="cand-party-name">${esc(c.party)}</span>
+        </div>
+      </div>
+      <div class="cand-body">
+        <div class="cand-name">${esc(c.name)}</div>
+        <div class="cand-meta">Age ${c.age} &nbsp;·&nbsp; <span style="color:${c.color};font-weight:600;">${esc(c.party)}</span></div>
+        <div class="cand-desc">${esc(c.desc)}</div>
+        <div class="vote-counts">
+          <div class="vc yes"><div class="vc-num">${v.yes}</div><div class="vc-lbl">✅ YES</div></div>
+          <div class="vc no" ><div class="vc-num">${v.no}</div><div class="vc-lbl">❌ NO</div></div>
+        </div>
+        <div class="vote-bar" aria-label="${yesPct}% yes votes">
+          <div class="vote-bar-fill" style="width:${yesPct}%;"></div>
+        </div>
+        ${hasVoted
+          ? `<div class="voted-badge ${v.lastVote}" role="status">${v.lastVote === 'yes' ? '✅ You voted YES' : '❌ You voted NO'}</div>`
+          : `<div class="vote-btns">
+               <button class="btn btn-green" onclick="castVote('${c.id}','yes')">✅ YES</button>
+               <button class="btn btn-red"   onclick="castVote('${c.id}','no')">❌ NO</button>
+             </div>`
+        }
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/** Get avatar emoji from name */
+function getEmoji(name) {
+  const emojis = ['👤','👩','👨','🧑','👩‍💼','👨‍💼','🧑‍💼','🏛️'];
+  return emojis[name.charCodeAt(0) % emojis.length];
+}
+
+/** HTML escape */
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── CAST VOTE ──────────────────────────────────────────── */
+async function castVote(id, type) {
+  const cand = getCandidates().find(c => c.id === id);
+  if (!cand) return;
+
+  const choice = type === 'yes' ? '✅ YES' : '❌ NO';
+  const confirmed = await showModal({
+    ico: type === 'yes' ? '✅' : '❌',
+    title: 'Confirm Your Vote',
+    body: `You are voting ${choice} for ${cand.name} (${cand.party}). This cannot be changed.`,
+    actions: [
+      { label: 'Go Back',      cls: 'btn-outline', value: false },
+      { label: `Confirm ${choice}`, cls: type === 'yes' ? 'btn-green' : 'btn-red', value: true }
+    ]
+  });
+
+  if (!confirmed) return;
+
+  const votes = getVotes();
+  if (!votes[id]) votes[id] = { yes: 0, no: 0, voted: false };
+  if (votes[id].voted) { toast('You already voted for this candidate.', 'warning'); return; }
+
+  votes[id][type]++;
+  votes[id].voted    = true;
+  votes[id].lastVote = type;
+  saveVotes(votes);
+
+  toast(`Vote cast for ${cand.name}! ${type === 'yes' ? '✅ YES' : '❌ NO'}`, 'success', 4000);
+  renderCandGrid(); // re-render to show voted state
+  updateHomeStats();
+}
+
+function updateHomeStats() {
+  if (currentPage === 'home') renderHome();
+}
+
+/* ─── RESULTS PAGE ───────────────────────────────────────── */
+let pieChart = null;
+let barChart = null;
+
+function renderResults() {
+  const cands = getCandidates();
+  const votes = getVotes();
+  const yes   = totalYes();
+  const no    = totalNo();
+  const all   = totalAll();
+
+  /* Stats cards */
+  const statsEl = $('results-stats');
+  statsEl.innerHTML = `
+    <div class="stat-card animate-in stagger-1">
+      <div class="stat-card-ico">🗳️</div>
+      <div class="stat-card-num" style="color:var(--text)">${all}</div>
+      <div class="stat-card-lbl">Total Votes</div>
+    </div>
+    <div class="stat-card animate-in stagger-2">
+      <div class="stat-card-ico">✅</div>
+      <div class="stat-card-num" style="color:var(--green)">${yes}</div>
+      <div class="stat-card-lbl">Total YES</div>
+    </div>
+    <div class="stat-card animate-in stagger-3">
+      <div class="stat-card-ico">❌</div>
+      <div class="stat-card-num" style="color:var(--red)">${no}</div>
+      <div class="stat-card-lbl">Total NO</div>
+    </div>
+    <div class="stat-card animate-in stagger-4">
+      <div class="stat-card-ico">👥</div>
+      <div class="stat-card-num" style="color:var(--gold)">${cands.length}</div>
+      <div class="stat-card-lbl">Candidates</div>
+    </div>
+  `;
+
+  /* Winner */
+  const sorted = [...cands].map(c => ({
+    ...c, v: votes[c.id] || { yes:0,no:0 }
+  })).sort((a,b) => b.v.yes - a.v.yes);
+
+  const winner = sorted[0];
+  const winnerEl = $('winner-section');
+  if (winner && winner.v.yes > 0) {
+    winnerEl.innerHTML = `
+      <div class="winner-card animate-in">
+        <div class="winner-ico">🏆</div>
+        <div class="winner-info">
+          <h3>${esc(winner.name)}</h3>
+          <p>${esc(winner.party)} &nbsp;·&nbsp; ${winner.v.yes} YES votes &nbsp;·&nbsp; Age ${winner.age}</p>
+          <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+            <span class="badge badge-gold">🏆 Current Leader</span>
+            <span class="badge badge-green">✅ ${winner.v.yes} YES</span>
+            <span class="badge badge-red">❌ ${winner.v.no} NO</span>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    winnerEl.innerHTML = '';
+  }
+
+  /* Charts */
+  renderCharts(cands, votes, yes, no);
+
+  /* Table */
+  const tableBody = $('results-table-body');
+  tableBody.innerHTML = `
+    <div class="results-row results-row-head">
+      <span>Candidate</span>
+      <span>YES</span>
+      <span class="hide-sm">NO</span>
+      <span class="hide-sm">Total</span>
+      <span>YES%</span>
+    </div>
+  `;
+
+  sorted.forEach((c, idx) => {
+    const tot   = c.v.yes + c.v.no;
+    const yPct  = tot > 0 ? Math.round(c.v.yes / tot * 100) : 0;
+    const rankCls = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : 'rank-3';
+    const avatarContent = c.photo
+      ? `<img src="${c.photo}" alt="${c.name}"/>`
+      : `<span>${getEmoji(c.name)}</span>`;
+
+    const row = document.createElement('div');
+    row.className = 'results-row animate-in';
+    row.style.animationDelay = (idx * 0.04) + 's';
+    row.innerHTML = `
+      <div class="rr-cand">
+        <div class="rr-ava">${avatarContent}</div>
+        <div>
+          <div class="rr-name ${rankCls}">${idx===0?'🏆 ':''}${esc(c.name)}</div>
+          <div class="rr-party">${esc(c.party)}</div>
+          <div class="rr-bar-wrap" style="width:80px"><div class="rr-bar yes-bar" style="width:${yPct}%"></div></div>
+        </div>
+      </div>
+      <div class="rr-pct" style="color:var(--green)">${c.v.yes}</div>
+      <div class="hide-sm" style="color:var(--red)">${c.v.no}</div>
+      <div class="hide-sm">${tot}</div>
+      <div class="rr-pct ${rankCls}">${yPct}%</div>
+    `;
+    tableBody.appendChild(row);
+  });
+
+  if (!cands.length) {
+    tableBody.innerHTML += `<div style="text-align:center;padding:2rem;color:var(--text3)">No candidates yet.</div>`;
+  }
+}
+
+function renderCharts(cands, votes, totalYesV, totalNoV) {
+  const isDark  = document.documentElement.dataset.theme !== 'light';
+  const gridCol = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  const lblCol  = isDark ? '#9898b8' : '#44445a';
+
+  Chart.defaults.color      = lblCol;
+  Chart.defaults.borderColor = gridCol;
+
+  /* Pie Chart */
+  const pieCtx = $('chart-pie').getContext('2d');
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['YES Votes', 'NO Votes'],
+      datasets: [{
+        data: [totalYesV || 0, totalNoV || 0],
+        backgroundColor: ['#22c55e', '#ef4444'],
+        borderColor: isDark ? '#1e1e2a' : '#fff',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 20, font: { family: 'DM Sans', size: 12 } } }
+      },
+      cutout: '65%'
+    }
+  });
+
+  /* Bar Chart */
+  const barCtx = $('chart-bar').getContext('2d');
+  if (barChart) barChart.destroy();
+  const labels = cands.map(c => c.name.split(' ')[0]);
+  const yesData = cands.map(c => (votes[c.id]?.yes || 0));
+  const noData  = cands.map(c => (votes[c.id]?.no  || 0));
+
+  barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'YES', data: yesData, backgroundColor: 'rgba(34,197,94,.75)', borderRadius: 6, borderSkipped: false },
+        { label: 'NO',  data: noData,  backgroundColor: 'rgba(239,68,68,.70)', borderRadius: 6, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        x: { grid: { color: gridCol }, ticks: { font: { family: 'DM Sans' } } },
+        y: { grid: { color: gridCol }, ticks: { font: { family: 'DM Sans' }, stepSize: 1 }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+/* ─── ADMIN PAGE ─────────────────────────────────────────── */
+let photoB64 = '';
+let logoB64  = '';
+
+function renderAdmin() {
+  const cands = getCandidates();
+  $('admin-count').textContent = cands.length;
+
+  const list  = $('admin-list');
+  const empty = $('admin-empty');
+  list.innerHTML = '';
+
+  if (!cands.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  cands.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'admin-cand animate-in';
+    const ava = c.photo
+      ? `<img src="${c.photo}" alt="${c.name}"/>`
+      : `<span>${getEmoji(c.name)}</span>`;
+    el.innerHTML = `
+      <div class="admin-cand-ava">${ava}</div>
+      <div class="admin-cand-info">
+        <div class="admin-cand-name">${esc(c.name)}</div>
+        <div class="admin-cand-sub">${esc(c.party)} &nbsp;·&nbsp; Age ${c.age}</div>
+      </div>
+      <button class="admin-del-btn" onclick="deleteCandidate('${c.id}')" aria-label="Delete ${c.name}">🗑</button>
+    `;
+    list.appendChild(el);
+  });
+}
+
+/** Add candidate form submit */
+$('add-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name  = $('inp-name').value.trim();
+  const age   = parseInt($('inp-age').value);
+  const party = $('inp-party').value.trim();
+  const color = $('inp-color').value;
+  const desc  = $('inp-desc').value.trim();
+
+  // Basic validation
+  if (!name)  { toast('Candidate name is required.', 'error'); $('inp-name').focus(); return; }
+  if (!age || age < 18 || age > 100) { toast('Enter a valid age (18–100).', 'error'); $('inp-age').focus(); return; }
+  if (!party) { toast('Party name is required.', 'error'); $('inp-party').focus(); return; }
+  if (!desc)  { toast('Manifesto is required.', 'error'); $('inp-desc').focus(); return; }
+
+  const newCand = { id: uid(), name, age, party, color, desc, photo: photoB64, partyLogo: logoB64, createdAt: Date.now() };
+  const cands = getCandidates();
+  cands.push(newCand);
+  saveCandidates(cands);
+
+  toast(`${name} added successfully! ✅`, 'success');
+  $('add-form').reset();
+  resetPhotoPreview();
+  photoB64 = ''; logoB64 = '';
+  renderAdmin();
+});
+
+/** Photo upload */
+$('photo-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('Image must be under 2MB.', 'error'); return; }
+  photoB64 = await fileToB64(file);
+  const prev = $('photo-preview');
+  prev.innerHTML = `<img src="${photoB64}" alt="Preview" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>`;
+});
+
+$('logo-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  logoB64 = await fileToB64(file);
+  const prev = $('logo-preview');
+  prev.innerHTML = `<img src="${logoB64}" alt="Logo preview" style="width:100%;height:100%;object-fit:contain;border-radius:4px;"/>`;
+});
+
+$('upload-area').addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();$('photo-input').click();}});
+$('logo-area').addEventListener('keydown',   e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();$('logo-input').click();}});
+
+function resetPhotoPreview() {
+  $('photo-preview').innerHTML = '📷';
+  $('logo-preview').innerHTML  = '🏴';
+  $('photo-input').value = '';
+  $('logo-input').value  = '';
+}
+
+/** Delete candidate */
+async function deleteCandidate(id) {
+  const cand = getCandidates().find(c => c.id === id);
+  if (!cand) return;
+
+  const confirmed = await showModal({
+    ico: '🗑️',
+    title: 'Delete Candidate',
+    body: `Remove ${cand.name} and all their votes? This cannot be undone.`,
+    actions: [
+      { label: 'Cancel',  cls: 'btn-outline', value: false },
+      { label: '🗑 Delete', cls: 'btn-red',    value: true }
+    ]
+  });
+  if (!confirmed) return;
+
+  const cands = getCandidates().filter(c => c.id !== id);
+  saveCandidates(cands);
+  const votes = getVotes();
+  delete votes[id];
+  saveVotes(votes);
+
+  toast(`${cand.name} removed.`, 'info');
+  renderAdmin();
+}
+
+/* ─── RESET ELECTION ─────────────────────────────────────── */
+async function confirmReset() {
+  const confirmed = await showModal({
+    ico: '⚠️',
+    title: 'Reset All Votes',
+    body: 'This will permanently erase ALL votes and reset the election. Candidates remain. This cannot be undone.',
+    actions: [
+      { label: 'Cancel',      cls: 'btn-outline', value: false },
+      { label: '⚠️ Reset All', cls: 'btn-red',    value: true }
+    ]
+  });
+  if (!confirmed) return;
+  saveVotes({});
+  toast('Election reset. All votes cleared.', 'warning', 5000);
+  renderResults();
+}
+
+/* ─── EXPORT PDF ─────────────────────────────────────────── */
+function exportPDF() {
+  const cands = getCandidates();
+  const votes = getVotes();
+  const yes   = totalYes();
+  const no    = totalNo();
+  const all   = totalAll();
+  const date  = new Date().toLocaleString();
+
+  const sorted = [...cands].map(c => ({
+    ...c, v: votes[c.id] || {yes:0,no:0}
+  })).sort((a,b) => b.v.yes - a.v.yes);
+
+  const rows = sorted.map((c,i) => {
+    const tot  = c.v.yes + c.v.no;
+    const pct  = tot > 0 ? Math.round(c.v.yes/tot*100) : 0;
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${esc(c.name)}</strong></td>
+      <td>${esc(c.party)}</td>
+      <td>${c.age}</td>
+      <td style="color:green;font-weight:700">${c.v.yes}</td>
+      <td style="color:red;font-weight:700">${c.v.no}</td>
+      <td>${tot}</td>
+      <td><strong>${pct}%</strong></td>
+    </tr>`;
+  }).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Election Results — ElectVote</title>
+  <style>body{font-family:'DM Sans',sans-serif;padding:2rem;color:#111}h1{font-size:1.8rem;margin-bottom:.25rem}p.sub{color:#666;margin-bottom:1.5rem}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}th{background:#1a1a2e;color:#fff;padding:.6rem .8rem;text-align:left}
+  td{padding:.55rem .8rem;border-bottom:1px solid #eee}.stat{display:inline-block;background:#f4f4f8;padding:.5rem 1rem;border-radius:8px;margin:.25rem;font-size:.9rem}
+  </style></head><body>
+  <h1>🗳️ ElectVote — Election Results</h1>
+  <p class="sub">Exported on ${date}</p>
+  <div style="margin-bottom:1.5rem">
+    <span class="stat">📊 Total Votes: <strong>${all}</strong></span>
+    <span class="stat">✅ YES: <strong>${yes}</strong></span>
+    <span class="stat">❌ NO: <strong>${no}</strong></span>
+    <span class="stat">👥 Candidates: <strong>${cands.length}</strong></span>
+  </div>
+  <table><thead><tr><th>#</th><th>Name</th><th>Party</th><th>Age</th><th>YES</th><th>NO</th><th>Total</th><th>YES%</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  win.document.close();
+}
+
+/* ─── SEARCH & FILTER ────────────────────────────────────── */
+const doSearch = debounce(q => { searchQ = q.toLowerCase(); renderCandGrid(); }, 220);
+
+$('search-cand').addEventListener('input', e => doSearch(e.target.value));
+$('party-filter').addEventListener('change', e => { partyFilt = e.target.value; renderCandGrid(); });
+
+/* ─── THEME TOGGLE ───────────────────────────────────────── */
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  lsSet(LS_THEME, t);
+  $('theme-toggle').textContent = t === 'dark' ? '🌙' : '☀️';
+  // Redraw charts if on results page
+  if (currentPage === 'results') renderResults();
+}
+$('theme-toggle').addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+});
+// Restore saved theme
+const savedTheme = lsGet(LS_THEME, 'dark');
+applyTheme(savedTheme);
+
+/* ─── NAV BINDING ────────────────────────────────────────── */
+// Desktop nav links (shown via CSS media query)
+document.getElementById('desktop-nav').style.display = 'flex';
+$$('.nav-link').forEach(b => b.addEventListener('click', () => go(b.dataset.page)));
+$$('.bnav').forEach(b     => b.addEventListener('click', () => go(b.dataset.page)));
+$$('[data-page]').forEach(el => {
+  if (!el.classList.contains('nav-link') && !el.classList.contains('bnav'))
+    el.addEventListener('click', () => go(el.dataset.page));
+});
+// Nav brand
+document.querySelector('.nav-brand').addEventListener('keydown', e => {
+  if (e.key === 'Enter') go('home');
+});
+
+/* ─── SCROLL TOP ─────────────────────────────────────────── */
+window.addEventListener('scroll', () => {
+  $('scroll-top').classList.toggle('show', scrollY > 350);
+}, { passive: true });
+
+/* ─── INIT ───────────────────────────────────────────────── */
+function init() {
+  renderHome();
+  // Make nav visible on desktop via CSS already
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Recipe details – ingredients, instructions, and video.">
+  <title>Recipe Details – RecipeHub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="navbar__logo">
+    <div class="navbar__logo-icon">🍳</div>
+    Recipe<span>Hub</span>
+  </a>
+  <ul class="navbar__links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="favorites.html">Favorites</a></li>
+    <li><a href="create.html">Create Recipe</a></li>
+  </ul>
+  <div class="navbar__actions">
+    <button class="btn-icon theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    <a href="favorites.html" class="btn-icon" aria-label="Favorites">❤️</a>
+    <button class="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mobile-nav">
+  <a href="index.html">🏠 Home</a>
+  <a href="favorites.html">❤️ Favorites</a>
+  <a href="create.html">✏️ Create Recipe</a>
+
+</div>
+
+<!-- RECIPE CONTENT (injected by JS) -->
+<main id="recipeMain" aria-live="polite"></main>
+
+<!-- RELATED RECIPES -->
+<section class="section" id="relatedSection" style="display:none" aria-labelledby="related-title">
+  <div class="section__header">
+    <div>
+      <div class="section__eyebrow">More Like This</div>
+      <h2 class="section__title" id="related-title">Related Recipes</h2>
+    </div>
+  </div>
+  <div class="cards-grid" id="relatedGrid"></div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer__grid">
+    <div class="footer__brand">
+      <div class="logo">🍳 Recipe<span style="color:var(--text)">Hub</span></div>
+      <p>Your all-in-one recipe discovery platform.</p>
+    </div>
+    <div class="footer__col">
+      <h4>Explore</h4>
+      <a href="index.html">Home</a>
+      <a href="favorites.html">Favorites</a>
+      <a href="create.html">Create Recipe</a>
+    </div>
+    <div class="footer__col">
+      <h4>Resources</h4>
+      <a href="https://www.themealdb.com" target="_blank" rel="noopener">TheMealDB API</a>
+    </div>
+    <div class="footer__col">
+      <h4>About</h4>
+      <a href="about.html">About RecipeHub</a>
+    </div>
+  </div>
+  <div class="footer__bottom">
+    <span>© 2025 RecipeHub</span>
+    <span>Data from <a href="https://www.themealdb.com" style="color:var(--primary)">TheMealDB</a></span>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+/* ============================================================
+   recipe.html – page script
+   ============================================================ */
+
+const API_BASE = 'https://www.themealdb.com/api/json/v1/1/';
+const main = document.getElementById('recipeMain');
+
+function getIdFromURL() {
+  return new URLSearchParams(window.location.search).get('id');
+}
+
+/* Parse ingredients list from meal object */
+function parseIngredients(meal) {
+  const items = [];
+  for (let i = 1; i <= 20; i++) {
+    const name    = meal[`strIngredient${i}`]?.trim();
+    const measure = meal[`strMeasure${i}`]?.trim();
+    if (name) items.push({ name, measure: measure || '' });
+  }
+  return items;
+}
+
+/* Parse instructions into steps */
+function parseSteps(instructions) {
+  if (!instructions) return [];
+  return instructions
+    .split(/\r?\n+/)
+    .map(s => s.replace(/^\d+[\.\)]\s*/, '').trim())
+    .filter(s => s.length > 10);
+}
+
+/* Render full recipe */
+function renderRecipe(meal) {
+  document.title = `${meal.strMeal} – RecipeHub`;
+
+  const ingredients = parseIngredients(meal);
+  const steps = parseSteps(meal.strInstructions);
+  const hasVideo = meal.strYoutube && meal.strYoutube.includes('youtube.com');
+  const videoId = hasVideo ? meal.strYoutube.split('v=')[1]?.split('&')[0] : null;
+  const isFav = Favorites.has(meal.idMeal);
+
+  main.innerHTML = `
+    <!-- Hero -->
+    <div class="recipe-hero" aria-label="${meal.strMeal} hero image">
+      <div class="recipe-hero__bg" style="background-image:url('${meal.strMealThumb}')"></div>
+      <div class="recipe-hero__overlay"></div>
+      <div class="recipe-hero__content">
+        <a href="index.html" class="btn btn-ghost btn-sm" style="margin-bottom:1rem;color:#fff;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2)">
+          ← Back
+        </a>
+        <span class="recipe-hero__category">${meal.strCategory || 'Recipe'}</span>
+        <h1 class="recipe-hero__title">${meal.strMeal}</h1>
+        <div class="recipe-hero__meta">
+          ${meal.strArea ? `<div class="meta-item"><span class="icon">🌍</span><span>${meal.strArea} Cuisine</span></div>` : ''}
+          ${meal.strCategory ? `<div class="meta-item"><span class="icon">🍽</span><span>${meal.strCategory}</span></div>` : ''}
+          ${ingredients.length ? `<div class="meta-item"><span class="icon">🥘</span><span>${ingredients.length} Ingredients</span></div>` : ''}
+          ${steps.length ? `<div class="meta-item"><span class="icon">📋</span><span>${steps.length} Steps</span></div>` : ''}
+        </div>
+        <div style="display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap">
+          <button class="btn btn-white recipe-fav-btn ${isFav ? 'fav-active' : ''}"
+                  id="mainFavBtn"
+                  data-meal-id="${meal.idMeal}">
+            ${isFav ? '❤️ Saved to Favorites' : '🤍 Save to Favorites'}
+          </button>
+          ${meal.strSource ? `<a href="${meal.strSource}" target="_blank" rel="noopener" class="btn" style="background:rgba(255,255,255,.15);backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(255,255,255,.2)">🔗 Original Source</a>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="recipe-body">
+      <!-- Ingredients sidebar -->
+      <aside aria-label="Ingredients">
+        <div class="ingredients-card">
+          <h3>🥦 Ingredients</h3>
+          ${ingredients.map(ing => `
+            <div class="ingredient-item">
+              <span class="ing-name">${ing.name}</span>
+              <span class="ing-measure">${ing.measure}</span>
+            </div>
+          `).join('')}
+        </div>
+      </aside>
+
+      <!-- Instructions main -->
+      <div>
+        <div class="instructions-card">
+          <h3>📋 Instructions</h3>
+          ${steps.length
+            ? steps.map((step, i) => `
+                <div class="step">
+                  <div class="step-num">${i + 1}</div>
+                  <p class="step-text">${step}</p>
+                </div>
+              `).join('')
+            : `<p style="color:var(--text-3)">${meal.strInstructions || 'No instructions provided.'}</p>`
+          }
+        </div>
+
+        ${videoId ? `
+          <div class="youtube-section" style="margin-top:2rem">
+            <div class="youtube-label">🎬 Watch Video Tutorial</div>
+            <iframe
+              src="https://www.youtube.com/embed/${videoId}"
+              title="${meal.strMeal} cooking video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy">
+            </iframe>
+          </div>
+        ` : ''}
+
+        <!-- Tags -->
+        ${meal.strTags ? `
+          <div style="margin-top:1.5rem;display:flex;gap:.5rem;flex-wrap:wrap">
+            ${meal.strTags.split(',').filter(Boolean).map(t => `
+              <span style="padding:.3rem .8rem;border-radius:50px;background:var(--gradient-soft);border:1px solid rgba(255,107,53,.2);color:var(--primary);font-size:.78rem;font-weight:600">${t.trim()}</span>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  /* Favorite button */
+  const favBtn = document.getElementById('mainFavBtn');
+  favBtn.addEventListener('click', () => {
+    const added = Favorites.toggle(meal);
+    favBtn.textContent = added ? '❤️ Saved to Favorites' : '🤍 Save to Favorites';
+    favBtn.classList.toggle('fav-active', added);
+    toast(added ? 'Added to favorites!' : 'Removed from favorites.', added ? 'success' : 'info');
+  });
+}
+
+/* Custom recipe renderer */
+function renderCustomRecipe(meal) {
+  document.title = `${meal.strMeal} – RecipeHub`;
+  const steps = (meal.strInstructions || '').split('\n').filter(s => s.trim().length > 5);
+  const isFav = Favorites.has(meal.idMeal);
+
+  main.innerHTML = `
+    <div class="recipe-hero">
+      <div class="recipe-hero__bg" style="background-image:url('${meal.strMealThumb || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800'}')"></div>
+      <div class="recipe-hero__overlay"></div>
+      <div class="recipe-hero__content">
+        <a href="index.html" class="btn btn-ghost btn-sm" style="margin-bottom:1rem;color:#fff;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2)">← Back</a>
+        <span class="recipe-hero__category" style="background:#22c55e">✏️ Custom Recipe</span>
+        <h1 class="recipe-hero__title">${meal.strMeal}</h1>
+        <div class="recipe-hero__meta">
+          ${meal.strCategory ? `<div class="meta-item"><span class="icon">🍽</span><span>${meal.strCategory}</span></div>` : ''}
+          ${meal.prepTime ? `<div class="meta-item"><span class="icon">⏱</span><span>${meal.prepTime} mins prep</span></div>` : ''}
+        </div>
+        <div style="margin-top:1.5rem;display:flex;gap:.75rem">
+          <button class="btn btn-white" id="mainFavBtn" data-meal-id="${meal.idMeal}">
+            ${isFav ? '❤️ Saved' : '🤍 Save to Favorites'}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="recipe-body">
+      <aside>
+        <div class="ingredients-card">
+          <h3>🥦 Ingredients</h3>
+          ${(meal.ingredients || []).map(ing => `
+            <div class="ingredient-item">
+              <span class="ing-name">${ing.name}</span>
+              <span class="ing-measure">${ing.amount || ''}</span>
+            </div>
+          `).join('') || '<p style="color:var(--text-3)">No ingredients listed.</p>'}
+        </div>
+      </aside>
+      <div>
+        <div class="instructions-card">
+          <h3>📋 Instructions</h3>
+          ${steps.map((s,i) => `<div class="step"><div class="step-num">${i+1}</div><p class="step-text">${s}</p></div>`).join('')
+            || `<p style="color:var(--text-3)">${meal.strInstructions || 'No instructions.'}</p>`}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('mainFavBtn').addEventListener('click', () => {
+    const added = Favorites.toggle(meal);
+    document.getElementById('mainFavBtn').textContent = added ? '❤️ Saved' : '🤍 Save to Favorites';
+    toast(added ? 'Added to favorites!' : 'Removed from favorites.', added ? 'success' : 'info');
+  });
+}
+
+/* Load related recipes */
+async function loadRelated(category) {
+  if (!category) return;
+  try {
+    const data = await apiFetch(`${API_BASE}filter.php?c=${encodeURIComponent(category)}`);
+    const meals = (data.meals || []).slice(0, 4);
+    if (!meals.length) return;
+    const section = document.getElementById('relatedSection');
+    const grid    = document.getElementById('relatedGrid');
+    section.style.display = '';
+    grid.innerHTML = meals.map(m => buildCard(m)).join('');
+    attachFavEvents(grid);
+  } catch {}
+}
+
+/* ── INIT ── */
+async function init() {
+  const id = getIdFromURL();
+  if (!id) {
+    main.innerHTML = `<div class="empty-state" style="padding:8rem 2rem"><div class="icon">⚠️</div><h3>No recipe selected</h3><p><a href="index.html" class="btn btn-primary">Browse Recipes</a></p></div>`;
+    return;
+  }
+
+  // Show loading
+  main.innerHTML = `<div class="flex-center" style="height:60vh"><div class="spinner"></div></div>`;
+
+  if (id.startsWith('custom_')) {
+    const custom = CustomRecipes.get(id);
+    if (!custom) {
+      main.innerHTML = `<div class="empty-state" style="padding:8rem 2rem"><div class="icon">🍽</div><h3>Recipe not found</h3><p><a href="index.html" class="btn btn-primary">Go Home</a></p></div>`;
+      return;
+    }
+    renderCustomRecipe(custom);
+    RecentlyViewed.add(custom);
+    Stats.increment('views');
+    return;
+  }
+
+  try {
+    const data = await apiFetch(`${API_BASE}lookup.php?i=${id}`);
+    const meal = data.meals?.[0];
+    if (!meal) throw new Error('Meal not found');
+    renderRecipe(meal);
+    RecentlyViewed.add(meal);
+    Stats.increment('views');
+    loadRelated(meal.strCategory);
+  } catch (err) {
+    main.innerHTML = `
+      <div class="empty-state" style="padding:8rem 2rem">
+        <div class="icon">⚠️</div>
+        <h3>Recipe not found</h3>
+        <p>We couldn't load this recipe. Please try again.</p>
+        <a href="index.html" class="btn btn-primary" style="margin-top:1rem">Browse Recipes</a>
+      </div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

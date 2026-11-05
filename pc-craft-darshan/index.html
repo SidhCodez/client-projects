@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildCraft — PC Build Recommender</title>
+<meta name="description" content="Get personalised PC build recommendations with live INR pricing.">
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:        #1a1209;
+    --ink-mid:    #3d2f1a;
+    --ink-soft:   #6b5740;
+    --parchment:  #f5f0e8;
+    --parchment2: #ede6d6;
+    --parchment3: #e2d8c4;
+    --gold:       #b8892a;
+    --gold-light: #d4a84b;
+    --gold-dark:  #8a6218;
+    --rust:       #9b3922;
+    --forest:     #2d5a27;
+    --navy:       #1c2f4a;
+    --white:      #fdfaf4;
+    --shadow:     rgba(26,18,9,0.12);
+    --nav-h:      64px;
+    --font-serif: 'Times New Roman', Times, Georgia, serif;
+    --font-sans:  'Georgia', serif;
+    --radius:     4px;
+    --transition: 0.22s ease;
+  }
+
+  html { scroll-behavior: smooth; font-size: 16px; }
+
+  body {
+    font-family: var(--font-serif);
+    background: var(--parchment);
+    color: var(--ink);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  img { display: block; max-width: 100%; }
+  a { color: var(--gold-dark); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Utility ── */
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+  .container { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 1.25rem; }
+  .section { padding: 5rem 0; }
+  .section--alt { background: var(--parchment2); }
+  .section--dark { background: var(--ink); color: var(--parchment); }
+
+  /* ── NAV ── */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--nav-h);
+    background: var(--ink);
+    border-bottom: 1px solid var(--gold-dark);
+    display: flex; align-items: center;
+  }
+  .nav__inner {
+    width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 1.25rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav__logo {
+    font-size: 1.25rem; font-style: italic; letter-spacing: 0.04em;
+    color: var(--gold-light); font-weight: normal;
+  }
+  .nav__logo span { color: var(--parchment); font-style: normal; }
+
+  .nav__links {
+    display: none; list-style: none; gap: 2rem;
+  }
+  .nav__links a {
+    color: var(--parchment2); font-size: 0.85rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    transition: color var(--transition);
+  }
+  .nav__links a:hover { color: var(--gold-light); text-decoration: none; }
+
+  .nav__burger {
+    display: flex; flex-direction: column; gap: 5px; cursor: pointer;
+    background: none; border: none; padding: 6px; color: var(--parchment);
+  }
+  .nav__burger span {
+    display: block; width: 24px; height: 1.5px;
+    background: currentColor; transition: transform var(--transition), opacity var(--transition);
+  }
+  .nav__burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .nav__burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .nav__burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+  .nav__mobile {
+    display: none; position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0;
+    background: var(--ink); z-index: 99; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2.5rem;
+    list-style: none;
+  }
+  .nav__mobile.open { display: flex; }
+  .nav__mobile a { color: var(--parchment); font-size: 1.4rem; font-style: italic; letter-spacing: 0.04em; }
+  .nav__mobile a:hover { color: var(--gold-light); text-decoration: none; }
+
+  @media (min-width: 768px) {
+    .nav__links { display: flex; }
+    .nav__burger { display: none; }
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    background: var(--ink);
+    display: flex; align-items: center;
+    padding-top: var(--nav-h);
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(184,137,42,0.06) 80px),
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(184,137,42,0.06) 80px);
+  }
+  .hero__inner {
+    position: relative; z-index: 1;
+    max-width: 820px;
+  }
+  .hero__eyebrow {
+    display: inline-block;
+    font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold); border-bottom: 1px solid var(--gold-dark); padding-bottom: 4px;
+    margin-bottom: 1.5rem;
+  }
+  .hero__title {
+    font-size: clamp(2.4rem, 6vw, 5rem);
+    font-style: italic; font-weight: normal;
+    color: var(--parchment); line-height: 1.12;
+    margin-bottom: 1.5rem;
+  }
+  .hero__title em { color: var(--gold-light); font-style: italic; }
+  .hero__sub {
+    font-size: 1.1rem; color: var(--parchment2); max-width: 560px;
+    margin-bottom: 2.5rem; line-height: 1.75;
+  }
+  .hero__cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--gold); color: var(--ink);
+    padding: 0.85rem 2rem; font-family: var(--font-serif);
+    font-size: 1rem; letter-spacing: 0.04em;
+    border: 1px solid var(--gold-dark); cursor: pointer;
+    transition: background var(--transition), transform var(--transition);
+    text-decoration: none;
+  }
+  .hero__cta:hover { background: var(--gold-light); transform: translateY(-1px); text-decoration: none; color: var(--ink); }
+  .hero__cta svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+  .hero__stats {
+    display: flex; gap: 2.5rem; margin-top: 4rem;
+    border-top: 1px solid rgba(184,137,42,0.25); padding-top: 2rem;
+    flex-wrap: wrap;
+  }
+  .hero__stat-num {
+    display: block; font-size: 2rem; font-style: italic;
+    color: var(--gold-light); line-height: 1;
+  }
+  .hero__stat-label { font-size: 0.75rem; color: var(--ink-soft); letter-spacing: 0.1em; text-transform: uppercase; color: var(--parchment2); }
+
+  /* ── SECTION HEADERS ── */
+  .section-label {
+    font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--gold-dark); margin-bottom: 0.75rem;
+  }
+  .section-title {
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-style: italic; font-weight: normal; line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .section-desc { color: var(--ink-soft); max-width: 560px; }
+
+  /* ── HOW IT WORKS ── */
+  .steps { display: grid; gap: 2rem; margin-top: 3rem; }
+  @media (min-width: 640px) { .steps { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .steps { grid-template-columns: repeat(4, 1fr); } }
+
+  .step {
+    background: var(--white);
+    border: 1px solid var(--parchment3);
+    padding: 1.75rem 1.5rem;
+    position: relative;
+  }
+  .step__num {
+    font-size: 3rem; font-style: italic; color: var(--parchment3);
+    line-height: 1; margin-bottom: 1rem; display: block;
+  }
+  .step__title { font-size: 1.05rem; margin-bottom: 0.5rem; }
+  .step__desc { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.65; }
+
+  /* ── CONFIGURATOR ── */
+  #configurator { scroll-margin-top: var(--nav-h); }
+
+  .config-layout {
+    display: grid; gap: 2rem;
+    margin-top: 3rem;
+  }
+  @media (min-width: 1024px) {
+    .config-layout { grid-template-columns: 1fr 380px; align-items: start; }
+  }
+
+  .config-form {
+    background: var(--white);
+    border: 1px solid var(--parchment3);
+    padding: 2rem;
+  }
+
+  .form-section { margin-bottom: 2.5rem; }
+  .form-section:last-child { margin-bottom: 0; }
+
+  .form-section__title {
+    font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold-dark); padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--parchment3); margin-bottom: 1.25rem;
+  }
+
+  .form-row { display: grid; gap: 1rem; margin-bottom: 1rem; }
+  @media (min-width: 560px) { .form-row { grid-template-columns: 1fr 1fr; } }
+  .form-row--single { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 0.82rem; letter-spacing: 0.04em; color: var(--ink-mid);
+  }
+  .field label em { font-style: italic; color: var(--ink-soft); font-size: 0.78rem; }
+
+  .field select,
+  .field input[type="text"],
+  .field input[type="number"] {
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    background: var(--parchment);
+    border: 1px solid var(--parchment3);
+    color: var(--ink);
+    padding: 0.6rem 0.85rem;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 0;
+    transition: border-color var(--transition);
+    outline: none;
+  }
+  .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b5740' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.9rem center; padding-right: 2.2rem; }
+  .field select:focus,
+  .field input:focus { border-color: var(--gold); }
+  .field .error-msg { font-size: 0.78rem; color: var(--rust); display: none; }
+  .field.has-error select,
+  .field.has-error input { border-color: var(--rust); }
+  .field.has-error .error-msg { display: block; }
+
+  .budget-slider-wrap { padding: 0.25rem 0; }
+  .budget-slider {
+    width: 100%; accent-color: var(--gold);
+    height: 4px; cursor: pointer;
+  }
+  .budget-display {
+    display: flex; justify-content: space-between;
+    font-size: 0.82rem; color: var(--ink-soft); margin-top: 4px;
+  }
+  .budget-display strong { color: var(--ink); font-style: italic; font-size: 1rem; }
+
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--parchment3);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 0.9rem; }
+  .toggle-label small { display: block; font-size: 0.78rem; color: var(--ink-soft); }
+
+  .toggle {
+    position: relative; width: 44px; height: 24px; flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle__track {
+    position: absolute; inset: 0; cursor: pointer;
+    background: var(--parchment3); transition: background var(--transition);
+    border-radius: 12px;
+  }
+  .toggle__track::after {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--white);
+    top: 3px; left: 3px; transition: transform var(--transition);
+    box-shadow: 0 1px 3px var(--shadow);
+  }
+  .toggle input:checked + .toggle__track { background: var(--gold); }
+  .toggle input:checked + .toggle__track::after { transform: translateX(20px); }
+
+  .form-actions { margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-serif); font-size: 0.95rem;
+    padding: 0.8rem 1.75rem; cursor: pointer;
+    border-radius: 0; transition: all var(--transition);
+    letter-spacing: 0.04em;
+  }
+  .btn--primary {
+    background: var(--ink); color: var(--parchment);
+    border: 1px solid var(--ink);
+  }
+  .btn--primary:hover { background: var(--ink-mid); }
+  .btn--secondary {
+    background: transparent; color: var(--ink-mid);
+    border: 1px solid var(--parchment3);
+  }
+  .btn--secondary:hover { border-color: var(--ink-soft); }
+  .btn--gold {
+    background: var(--gold); color: var(--ink);
+    border: 1px solid var(--gold-dark);
+  }
+  .btn--gold:hover { background: var(--gold-light); }
+
+  /* ── RESULTS PANEL ── */
+  .results-panel {
+    background: var(--ink);
+    color: var(--parchment);
+    padding: 2rem;
+    position: sticky; top: calc(var(--nav-h) + 1rem);
+  }
+
+  .results-panel__header {
+    font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold); border-bottom: 1px solid rgba(184,137,42,0.25);
+    padding-bottom: 0.75rem; margin-bottom: 1.5rem;
+  }
+
+  .price-total {
+    text-align: center; padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(184,137,42,0.2); margin-bottom: 1.5rem;
+  }
+  .price-total__label { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--parchment2); }
+  .price-total__amount {
+    font-size: 2.6rem; font-style: italic; color: var(--gold-light);
+    line-height: 1.1; margin: 0.3rem 0;
+  }
+  .price-total__gst { font-size: 0.8rem; color: var(--ink-soft); }
+
+  .parts-list { list-style: none; margin-bottom: 1.5rem; }
+  .parts-list li {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.88rem; gap: 0.5rem;
+  }
+  .parts-list li:last-child { border-bottom: none; }
+  .parts-list .part-name { color: var(--parchment2); flex: 1; }
+  .parts-list .part-price { color: var(--gold-light); font-style: italic; white-space: nowrap; }
+  .parts-list .part-model { font-size: 0.75rem; color: var(--ink-soft); display: block; margin-top: 1px; }
+
+  .results-placeholder {
+    text-align: center; padding: 2rem 1rem; color: var(--ink-soft);
+  }
+  .results-placeholder svg { width: 48px; height: 48px; margin: 0 auto 1rem; opacity: 0.35; stroke: var(--parchment); fill: none; stroke-width: 1.5; }
+  .results-placeholder p { font-size: 0.88rem; font-style: italic; }
+
+  .perf-badge {
+    display: inline-block; padding: 3px 10px; font-size: 0.72rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    border: 1px solid; border-radius: 2px; margin-bottom: 1rem;
+  }
+  .perf-badge--budget { color: #7cc47a; border-color: #7cc47a; }
+  .perf-badge--mid    { color: var(--gold); border-color: var(--gold); }
+  .perf-badge--high   { color: #a88fe0; border-color: #a88fe0; }
+
+  .save-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .save-row button { flex: 1; min-width: 120px; }
+
+  .saved-notice {
+    font-size: 0.78rem; color: var(--forest); background: #e8f4e8;
+    border: 1px solid #b8d8b8; padding: 0.5rem 0.75rem;
+    margin-top: 0.75rem; display: none; color: #1c4a1c;
+  }
+
+  /* ── RECOMMENDATIONS ── */
+  #recommendations { scroll-margin-top: var(--nav-h); }
+
+  .rec-grid {
+    display: grid; gap: 1.5rem; margin-top: 3rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px) { .rec-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .rec-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .rec-card {
+    background: var(--white); border: 1px solid var(--parchment3);
+    padding: 1.75rem 1.5rem; position: relative;
+    transition: transform var(--transition), box-shadow var(--transition);
+    cursor: pointer;
+  }
+  .rec-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px var(--shadow); }
+  .rec-card--featured { border-color: var(--gold-dark); border-width: 2px; }
+  .rec-card__badge {
+    position: absolute; top: -1px; right: 1.5rem;
+    background: var(--gold); color: var(--ink);
+    font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 3px 10px;
+  }
+  .rec-card__tier {
+    font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold-dark); margin-bottom: 0.5rem;
+  }
+  .rec-card__name { font-size: 1.15rem; font-style: italic; margin-bottom: 0.4rem; }
+  .rec-card__desc { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 1.25rem; line-height: 1.6; }
+  .rec-card__price {
+    font-size: 1.5rem; font-style: italic; color: var(--ink);
+    border-top: 1px solid var(--parchment3); padding-top: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+  .rec-card__gst { font-size: 0.75rem; color: var(--ink-soft); margin-bottom: 1rem; }
+  .rec-card__specs { list-style: none; font-size: 0.82rem; color: var(--ink-mid); }
+  .rec-card__specs li {
+    padding: 0.35rem 0; border-bottom: 1px solid var(--parchment3);
+    display: flex; justify-content: space-between; gap: 0.5rem;
+  }
+  .rec-card__specs li:last-child { border-bottom: none; }
+  .rec-card__specs .spec-val { font-style: italic; color: var(--ink); }
+  .rec-card__action {
+    margin-top: 1.25rem; width: 100%; text-align: center;
+  }
+
+  .recs-empty {
+    grid-column: 1/-1; text-align: center; padding: 4rem 2rem;
+    font-style: italic; color: var(--ink-soft);
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--ink); color: var(--parchment2);
+    padding: 3rem 0; border-top: 1px solid var(--gold-dark);
+  }
+  .footer__inner {
+    display: flex; flex-wrap: wrap; gap: 2rem;
+    justify-content: space-between; align-items: center;
+  }
+  .footer__logo { font-style: italic; color: var(--gold-light); }
+  .footer__copy { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.5rem; }
+  .footer__links { display: flex; gap: 1.5rem; }
+  .footer__links a { font-size: 0.82rem; color: var(--parchment2); letter-spacing: 0.06em; }
+  .footer__links a:hover { color: var(--gold-light); text-decoration: none; }
+
+  /* ── Notification toast ── */
+  .toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 200;
+    background: var(--ink); color: var(--parchment);
+    padding: 0.85rem 1.25rem; border-left: 3px solid var(--gold);
+    font-size: 0.88rem; font-style: italic;
+    transform: translateX(120%); transition: transform 0.3s ease;
+    max-width: 280px;
+  }
+  .toast.show { transform: translateX(0); }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.55s ease forwards; }
+  .fade-up--d1 { animation-delay: 0.1s; opacity: 0; }
+  .fade-up--d2 { animation-delay: 0.22s; opacity: 0; }
+  .fade-up--d3 { animation-delay: 0.34s; opacity: 0; }
+  .fade-up--d4 { animation-delay: 0.46s; opacity: 0; }
+</style>
+</head>
+<body>
+
+<!-- ── NAVIGATION ── -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <div class="nav__inner">
+    <a href="#hero" class="nav__logo" aria-label="BuildCraft home"><em>Build</em><span>Craft</span></a>
+    <ul class="nav__links" role="list">
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#configurator">Configurator</a></li>
+      <li><a href="#recommendations">Recommendations</a></li>
+    </ul>
+    <button class="nav__burger" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu" id="burger">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<ul class="nav__mobile" id="mobile-menu" role="list" aria-label="Mobile navigation">
+  <li><a href="#how-it-works">How it works</a></li>
+  <li><a href="#configurator">Configurator</a></li>
+  <li><a href="#recommendations">Recommendations</a></li>
+</ul>
+
+<!-- ── HERO ── -->
+<section class="hero section" id="hero" aria-label="Introduction">
+  <div class="container">
+    <div class="hero__inner">
+      <span class="hero__eyebrow fade-up">PC Build Recommender · India</span>
+      <h1 class="hero__title fade-up fade-up--d1">
+        Your <em>ideal build,</em><br>priced in rupees.
+      </h1>
+      <p class="hero__sub fade-up fade-up--d2">
+        Tell us your use case and budget. We'll recommend the best component configuration — with live INR pricing, GST breakdown, and tier comparisons.
+      </p>
+      <a href="#configurator" class="hero__cta fade-up fade-up--d3" aria-label="Go to configurator">
+        Start Configuring
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <div class="hero__stats fade-up fade-up--d4" aria-label="Statistics">
+        <div>
+          <span class="hero__stat-num">500+</span>
+          <span class="hero__stat-label">Components tracked</span>
+        </div>
+        <div>
+          <span class="hero__stat-num">₹12k–₹3L</span>
+          <span class="hero__stat-label">Price range covered</span>
+        </div>
+        <div>
+          <span class="hero__stat-num">3 tiers</span>
+          <span class="hero__stat-label">Budget · Mid · High</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="section section--alt" id="how-it-works" aria-labelledby="how-title">
+  <div class="container">
+    <p class="section-label">Process</p>
+    <h2 class="section-title" id="how-title">How it works</h2>
+    <p class="section-desc">Four steps from intention to invoice-ready build list.</p>
+    <ol class="steps">
+      <li class="step">
+        <span class="step__num" aria-hidden="true">01</span>
+        <h3 class="step__title">Choose your use case</h3>
+        <p class="step__desc">Gaming, video editing, office work, or general use — your workflow determines the optimal component balance.</p>
+      </li>
+      <li class="step">
+        <span class="step__num" aria-hidden="true">02</span>
+        <h3 class="step__title">Set your budget</h3>
+        <p class="step__desc">Drag the slider to your total budget in INR. We'll work within it, allocating spend intelligently across components.</p>
+      </li>
+      <li class="step">
+        <span class="step__num" aria-hidden="true">03</span>
+        <h3 class="step__title">Configure preferences</h3>
+        <p class="step__desc">Brand preferences, form factor, upgrade path priority — fine-tune the recommendation engine to your needs.</p>
+      </li>
+      <li class="step">
+        <span class="step__num" aria-hidden="true">04</span>
+        <h3 class="step__title">Get your build</h3>
+        <p class="step__desc">Receive a full component list with individual and total pricing, GST included, ready to share or save.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ── CONFIGURATOR ── -->
+<section class="section" id="configurator" aria-labelledby="config-title">
+  <div class="container">
+    <p class="section-label">Configurator</p>
+    <h2 class="section-title" id="config-title"><em>Build your specification</em></h2>
+    <p class="section-desc">Fill in your requirements below. All prices shown include 18% GST.</p>
+
+    <div class="config-layout">
+      <!-- Form -->
+      <form class="config-form" id="build-form" novalidate aria-label="Build configuration form">
+
+        <!-- Use Case -->
+        <fieldset class="form-section" style="border:none">
+          <legend class="form-section__title">Use Case &amp; Performance</legend>
+          <div class="form-row">
+            <div class="field" id="field-usecase">
+              <label for="usecase">Primary use case <em>*</em></label>
+              <select id="usecase" required aria-required="true">
+                <option value="">— Select —</option>
+                <option value="gaming">Gaming</option>
+                <option value="editing">Video / Photo Editing</option>
+                <option value="coding">Programming / Development</option>
+                <option value="office">Office &amp; General Use</option>
+                <option value="3d">3D Rendering / CAD</option>
+                <option value="streaming">Streaming / Content Creation</option>
+              </select>
+              <span class="error-msg" role="alert">Please select a use case.</span>
+            </div>
+            <div class="field" id="field-resolution">
+              <label for="resolution">Target resolution <em>*</em></label>
+              <select id="resolution" required aria-required="true">
+                <option value="">— Select —</option>
+                <option value="1080p">1080p (Full HD)</option>
+                <option value="1440p">1440p (QHD)</option>
+                <option value="4k">4K (UHD)</option>
+                <option value="na">Not applicable</option>
+              </select>
+              <span class="error-msg" role="alert">Please select a resolution.</span>
+            </div>
+          </div>
+          <div class="form-row form-row--single">
+            <div class="field" id="field-priority">
+              <label for="priority">Optimise for</label>
+              <select id="priority">
+                <option value="balanced">Balanced performance</option>
+                <option value="cpu">CPU-heavy tasks</option>
+                <option value="gpu">GPU-heavy tasks</option>
+                <option value="storage">Storage &amp; throughput</option>
+                <option value="longevity">Longevity &amp; upgradability</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Budget -->
+        <fieldset class="form-section" style="border:none">
+          <legend class="form-section__title">Budget (INR, incl. GST)</legend>
+          <div class="budget-slider-wrap">
+            <input type="range" class="budget-slider" id="budget"
+              min="20000" max="300000" step="5000" value="80000"
+              aria-label="Budget in rupees" aria-valuemin="20000" aria-valuemax="300000">
+            <div class="budget-display">
+              <span>₹20,000</span>
+              <strong id="budget-display" aria-live="polite">₹80,000</strong>
+              <span>₹3,00,000</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Preferences -->
+        <fieldset class="form-section" style="border:none">
+          <legend class="form-section__title">Preferences</legend>
+          <div class="form-row">
+            <div class="field">
+              <label for="cpu-brand">CPU brand preference</label>
+              <select id="cpu-brand">
+                <option value="any">No preference</option>
+                <option value="intel">Intel</option>
+                <option value="amd">AMD Ryzen</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="gpu-brand">GPU brand preference</label>
+              <select id="gpu-brand">
+                <option value="any">No preference</option>
+                <option value="nvidia">NVIDIA GeForce</option>
+                <option value="amd-gpu">AMD Radeon</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="formfactor">Form factor</label>
+              <select id="formfactor">
+                <option value="atx">ATX (Full/Mid Tower)</option>
+                <option value="matx">Micro-ATX</option>
+                <option value="itx">Mini-ITX (Compact)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="os">Operating system</label>
+              <select id="os">
+                <option value="windows">Windows 11 Home</option>
+                <option value="windows-pro">Windows 11 Pro</option>
+                <option value="linux">Linux (no OS cost)</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Optional toggles -->
+        <fieldset class="form-section" style="border:none">
+          <legend class="form-section__title">Include in build</legend>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              Monitor
+              <small>Include a display in the budget</small>
+            </div>
+            <label class="toggle" aria-label="Include monitor">
+              <input type="checkbox" id="incl-monitor">
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              Peripherals
+              <small>Keyboard, mouse &amp; headset</small>
+            </div>
+            <label class="toggle" aria-label="Include peripherals">
+              <input type="checkbox" id="incl-peripherals">
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              UPS / Surge protection
+              <small>Add a power backup unit</small>
+            </div>
+            <label class="toggle" aria-label="Include UPS">
+              <input type="checkbox" id="incl-ups">
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              RGB lighting
+              <small>Prefer components with RGB</small>
+            </div>
+            <label class="toggle" aria-label="Prefer RGB">
+              <input type="checkbox" id="prefer-rgb">
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" id="generate-btn">Generate Recommendation</button>
+          <button type="button" class="btn btn--secondary" id="reset-btn">Reset</button>
+        </div>
+      </form>
+
+      <!-- Results Panel -->
+      <aside class="results-panel" id="results-panel" aria-live="polite" aria-label="Build results">
+        <div class="results-panel__header">Build Summary</div>
+
+        <div id="results-placeholder" class="results-placeholder">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <rect x="6" y="10" width="36" height="28" rx="2"/>
+            <path d="M16 10V6h16v4M24 24l-4-4 4-4 4 4-4 4z"/>
+          </svg>
+          <p>Configure your build and click <em>Generate Recommendation</em></p>
+        </div>
+
+        <div id="results-content" style="display:none">
+          <div class="price-total">
+            <div class="price-total__label">Estimated Total</div>
+            <div class="price-total__amount" id="result-total">₹0</div>
+            <div class="price-total__gst" id="result-gst-note">incl. 18% GST</div>
+          </div>
+
+          <div id="result-badge"></div>
+
+          <ul class="parts-list" id="parts-list" aria-label="Component breakdown"></ul>
+
+          <div class="save-row">
+            <button class="btn btn--gold" id="save-btn" type="button">Save Build</button>
+            <button class="btn btn--secondary" id="load-btn" type="button" style="color:var(--parchment2); border-color:rgba(255,255,255,0.2)">Load Saved</button>
+          </div>
+          <div class="saved-notice" id="saved-notice" role="status">Build saved to this browser.</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ── RECOMMENDATIONS ── -->
+<section class="section section--alt" id="recommendations" aria-labelledby="rec-title">
+  <div class="container">
+    <p class="section-label">Presets</p>
+    <h2 class="section-title" id="rec-title"><em>Curated builds</em> by tier</h2>
+    <p class="section-desc">Not sure where to start? Explore these hand-curated configurations updated for current Indian market prices.</p>
+    <div class="rec-grid" id="rec-grid" aria-label="Recommended builds">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__inner">
+      <div>
+        <div class="footer__logo">BuildCraft</div>
+        <div class="footer__copy">Prices are indicative and may vary by retailer. Verify before purchase.</div>
+      </div>
+      <nav class="footer__links" aria-label="Footer navigation">
+        <a href="#configurator">Configurator</a>
+        <a href="#recommendations">Presets</a>
+        <a href="#how-it-works">Guide</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   DATA — Component prices in INR (mid-2024 market estimates, incl. GST)
+   ══════════════════════════════════════════ */
+const COMPONENTS = {
+  budget: {
+    label: 'Budget',
+    cpu:     { name: 'AMD Ryzen 5 5600',          price: 12500,  brand:'amd'    },
+    gpu:     { name: 'AMD Radeon RX 6600',         price: 22000,  brand:'amd-gpu'},
+    ram:     { name: 'Corsair 16GB DDR4 3200MHz',  price: 5200   },
+    storage: { name: 'Samsung 980 500GB NVMe',     price: 4800   },
+    mobo:    { name: 'MSI B550M Pro-VDH WiFi',     price: 9500   },
+    psu:     { name: 'Cooler Master MWE 550W 80+ Bronze', price: 4800 },
+    case:    { name: 'Ant Esports ICE-200TG Mid Tower', price: 3200 },
+    cooler:  { name: 'DeepCool AK400 Air Cooler',  price: 2800   },
+  },
+  mid: {
+    label: 'Mid-range',
+    cpu:     { name: 'Intel Core i5-13600K',       price: 26000, brand:'intel' },
+    gpu:     { name: 'NVIDIA RTX 4060 Ti 8GB',     price: 46000, brand:'nvidia'},
+    ram:     { name: 'G.Skill Ripjaws 32GB DDR5 5600', price: 12000 },
+    storage: { name: 'WD Black SN850X 1TB NVMe',   price: 9200  },
+    mobo:    { name: 'ASUS ROG STRIX B660-F Gaming', price: 19500 },
+    psu:     { name: 'Seasonic Focus GX 750W 80+ Gold', price: 9500 },
+    case:    { name: 'Lian Li Lancool 215',        price: 7800  },
+    cooler:  { name: 'Noctua NH-D15',              price: 8900  },
+  },
+  high: {
+    label: 'High-end',
+    cpu:     { name: 'Intel Core i9-13900K',       price: 58000, brand:'intel' },
+    gpu:     { name: 'NVIDIA RTX 4080 Super 16GB', price: 115000, brand:'nvidia'},
+    ram:     { name: 'Corsair Dominator 64GB DDR5 6000', price: 28000 },
+    storage: { name: 'Samsung 990 Pro 2TB NVMe',   price: 16500 },
+    mobo:    { name: 'ASUS ROG Maximus Z790 Hero', price: 52000 },
+    psu:     { name: 'Corsair HX1000i 80+ Platinum', price: 18500 },
+    case:    { name: 'Fractal Design Torrent White', price: 14200 },
+    cooler:  { name: 'NZXT Kraken Elite 360 AIO',  price: 19800 },
+  }
+};
+
+const EXTRAS = {
+  monitor: {
+    budget: { name: 'LG 24MP60G 24" 75Hz IPS',     price: 10500 },
+    mid:    { name: 'Dell S2722DGM 27" 165Hz QHD',  price: 21000 },
+    high:   { name: 'ASUS ROG Swift PG27AQN 27" 360Hz', price: 68000 },
+  },
+  peripherals: {
+    budget: { name: 'Logitech Combo MK235',         price: 1800  },
+    mid:    { name: 'Logitech MX Keys + MX Master 3', price: 8500 },
+    high:   { name: 'Keychron Q2 + Logitech G Pro X Superlight', price: 18000 },
+  },
+  ups: {
+    budget: { name: 'APC BX600C-IN 600VA UPS',      price: 3500  },
+    mid:    { name: 'APC Back-UPS 1100VA',           price: 7200  },
+    high:   { name: 'APC Smart-UPS SMT1500I',        price: 18000 },
+  },
+  os: {
+    windows:     { name: 'Windows 11 Home',  price: 5000 },
+    'windows-pro':{ name: 'Windows 11 Pro',  price: 8500 },
+    linux:        { name: 'Linux (free)',     price: 0    },
+  }
+};
+
+/* ── Helpers ── */
+const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+
+function getTier(budget) {
+  if (budget < 60000)  return 'budget';
+  if (budget < 150000) return 'mid';
+  return 'high';
+}
+
+function buildPartsList(config) {
+  const { budget, usecase, inclMonitor, inclPeripherals, inclUps, os, cpuBrand, gpuBrand } = config;
+  const tier = getTier(budget);
+  const base = JSON.parse(JSON.stringify(COMPONENTS[tier])); // deep clone
+
+  // Brand overrides (swap to closest match)
+  if (cpuBrand !== 'any') {
+    if (tier === 'budget' && cpuBrand === 'intel') {
+      base.cpu = { name: 'Intel Core i5-12400F', price: 13200, brand:'intel' };
+      base.mobo = { name: 'MSI PRO B660M-A DDR4', price: 9800 };
+    }
+    if (tier === 'mid' && cpuBrand === 'amd') {
+      base.cpu = { name: 'AMD Ryzen 7 7700X', price: 28500, brand:'amd' };
+      base.mobo = { name: 'ASUS TUF Gaming B650-Plus', price: 18500 };
+    }
+    if (tier === 'high' && cpuBrand === 'amd') {
+      base.cpu = { name: 'AMD Ryzen 9 7950X', price: 55000, brand:'amd' };
+      base.mobo = { name: 'ASUS ROG Crosshair X670E Hero', price: 58000 };
+    }
+  }
+  if (gpuBrand !== 'any') {
+    if (tier === 'budget' && gpuBrand === 'nvidia') {
+      base.gpu = { name: 'NVIDIA RTX 3060 12GB', price: 28500, brand:'nvidia' };
+    }
+    if (tier === 'mid' && gpuBrand === 'amd-gpu') {
+      base.gpu = { name: 'AMD Radeon RX 7700 XT', price: 40000, brand:'amd-gpu' };
+    }
+    if (tier === 'high' && gpuBrand === 'amd-gpu') {
+      base.gpu = { name: 'AMD Radeon RX 7900 XTX', price: 98000, brand:'amd-gpu' };
+    }
+  }
+
+  // Use-case storage boost
+  if (usecase === 'editing' || usecase === '3d') {
+    if (tier === 'mid')  base.storage = { name: 'WD Black SN850X 2TB NVMe', price: 17000 };
+    if (tier === 'high') base.storage = { name: 'Samsung 990 Pro 4TB NVMe', price: 30000 };
+    if (tier !== 'high') base.ram = { ...base.ram, name: base.ram.name.replace('16GB','32GB'), price: base.ram.price * 1.9 };
+  }
+
+  const parts = [];
+  const compKeys = ['cpu','gpu','ram','storage','mobo','psu','case','cooler'];
+  compKeys.forEach(k => { if (base[k]) parts.push({ key: k, label: labelFor(k), ...base[k] }); });
+
+  // OS
+  const osPart = EXTRAS.os[os] || EXTRAS.os['linux'];
+  if (osPart.price > 0) parts.push({ key:'os', label:'Operating System', ...osPart });
+
+  // Optional extras
+  if (inclMonitor && EXTRAS.monitor[tier]) parts.push({ key:'monitor', label:'Monitor', ...EXTRAS.monitor[tier] });
+  if (inclPeripherals && EXTRAS.peripherals[tier]) parts.push({ key:'peripherals', label:'Peripherals', ...EXTRAS.peripherals[tier] });
+  if (inclUps && EXTRAS.ups[tier]) parts.push({ key:'ups', label:'UPS', ...EXTRAS.ups[tier] });
+
+  return { parts, tier };
+}
+
+function labelFor(k) {
+  return { cpu:'Processor (CPU)', gpu:'Graphics Card (GPU)', ram:'Memory (RAM)',
+           storage:'Storage (SSD)', mobo:'Motherboard', psu:'Power Supply',
+           case:'Cabinet / Case', cooler:'CPU Cooler' }[k] || k.toUpperCase();
+}
+
+/* ── Nav burger ── */
+const burger = document.getElementById('burger');
+const mobileMenu = document.getElementById('mobile-menu');
+burger.addEventListener('click', () => {
+  const open = burger.getAttribute('aria-expanded') === 'true';
+  burger.setAttribute('aria-expanded', String(!open));
+  mobileMenu.classList.toggle('open', !open);
+  document.body.style.overflow = open ? '' : 'hidden';
+});
+mobileMenu.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => {
+    burger.setAttribute('aria-expanded','false');
+    mobileMenu.classList.remove('open');
+    document.body.style.overflow = '';
+  });
+});
+
+/* ── Budget slider ── */
+const budgetInput = document.getElementById('budget');
+const budgetDisplay = document.getElementById('budget-display');
+budgetInput.addEventListener('input', () => {
+  budgetDisplay.textContent = fmt(budgetInput.value);
+});
+
+/* ── Form validation ── */
+function validateForm() {
+  let valid = true;
+  ['usecase','resolution'].forEach(id => {
+    const el = document.getElementById(id);
+    const field = document.getElementById('field-' + id);
+    if (!el.value) { field.classList.add('has-error'); valid = false; }
+    else field.classList.remove('has-error');
+  });
+  return valid;
+}
+
+/* ── Generate ── */
+document.getElementById('build-form').addEventListener('submit', e => {
+  e.preventDefault();
+  if (!validateForm()) {
+    showToast('Please fill in all required fields.');
+    return;
+  }
+  const config = {
+    budget:          parseInt(budgetInput.value),
+    usecase:         document.getElementById('usecase').value,
+    priority:        document.getElementById('priority').value,
+    cpuBrand:        document.getElementById('cpu-brand').value,
+    gpuBrand:        document.getElementById('gpu-brand').value,
+    formfactor:      document.getElementById('formfactor').value,
+    os:              document.getElementById('os').value,
+    inclMonitor:     document.getElementById('incl-monitor').checked,
+    inclPeripherals: document.getElementById('incl-peripherals').checked,
+    inclUps:         document.getElementById('incl-ups').checked,
+    preferRgb:       document.getElementById('prefer-rgb').checked,
+  };
+  renderResults(config);
+  document.getElementById('recommendations').scrollIntoView({ behavior:'smooth', block:'start' });
+});
+
+function renderResults(config) {
+  const { parts, tier } = buildPartsList(config);
+  const total = parts.reduce((s, p) => s + p.price, 0);
+  const basePrice = Math.round(total / 1.18);
+  const gstAmt = total - basePrice;
+
+  document.getElementById('results-placeholder').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+  document.getElementById('result-total').textContent = fmt(total);
+  document.getElementById('result-gst-note').textContent =
+    `Base: ${fmt(basePrice)} + GST (18%): ${fmt(gstAmt)}`;
+
+  const badge = document.getElementById('result-badge');
+  const badgeClass = { budget:'perf-badge--budget', mid:'perf-badge--mid', high:'perf-badge--high' }[tier];
+  badge.innerHTML = `<span class="perf-badge ${badgeClass}">${{ budget:'Entry tier', mid:'Mid tier', high:'High-end tier' }[tier]}</span>`;
+
+  const list = document.getElementById('parts-list');
+  list.innerHTML = parts.map(p => `
+    <li>
+      <span class="part-name">${p.label}</span>
+      <span class="part-price">${fmt(p.price)}</span>
+    </li>
+    <li style="border:none; padding-top:0; margin-top:-10px; margin-bottom:4px;">
+      <span class="part-model" style="font-size:0.75rem; color:var(--ink-soft)">${p.name}</span>
+    </li>
+  `).join('');
+
+  // Store for save
+  window._lastBuild = { config, parts, total, tier };
+
+  // Render recommendation cards
+  renderPresets(tier);
+}
+
+/* ── Save / Load ── */
+document.getElementById('save-btn').addEventListener('click', () => {
+  if (!window._lastBuild) return;
+  localStorage.setItem('buildcraft_save', JSON.stringify(window._lastBuild));
+  const notice = document.getElementById('saved-notice');
+  notice.style.display = 'block';
+  showToast('Build saved successfully.');
+  setTimeout(() => notice.style.display = 'none', 3500);
+});
+
+document.getElementById('load-btn').addEventListener('click', () => {
+  const raw = localStorage.getItem('buildcraft_save');
+  if (!raw) { showToast('No saved build found.'); return; }
+  try {
+    const saved = JSON.parse(raw);
+    // Restore form fields
+    const c = saved.config;
+    document.getElementById('usecase').value = c.usecase || '';
+    document.getElementById('resolution').value = c.resolution || '1080p';
+    document.getElementById('priority').value = c.priority || 'balanced';
+    document.getElementById('cpu-brand').value = c.cpuBrand || 'any';
+    document.getElementById('gpu-brand').value = c.gpuBrand || 'any';
+    document.getElementById('formfactor').value = c.formfactor || 'atx';
+    document.getElementById('os').value = c.os || 'windows';
+    document.getElementById('budget').value = c.budget || 80000;
+    budgetDisplay.textContent = fmt(c.budget || 80000);
+    document.getElementById('incl-monitor').checked = !!c.inclMonitor;
+    document.getElementById('incl-peripherals').checked = !!c.inclPeripherals;
+    document.getElementById('incl-ups').checked = !!c.inclUps;
+    document.getElementById('prefer-rgb').checked = !!c.preferRgb;
+    renderResults(c);
+    showToast('Saved build loaded.');
+  } catch(err) { showToast('Could not load saved build.'); }
+});
+
+/* ── Reset ── */
+document.getElementById('reset-btn').addEventListener('click', () => {
+  document.getElementById('build-form').reset();
+  budgetDisplay.textContent = fmt(80000);
+  document.getElementById('results-placeholder').style.display = 'block';
+  document.getElementById('results-content').style.display = 'none';
+  ['usecase','resolution'].forEach(id => document.getElementById('field-'+id).classList.remove('has-error'));
+  showToast('Form reset.');
+});
+
+/* ── Preset recommendation cards ── */
+const PRESET_CARDS = [
+  {
+    tier: 'budget',
+    name: 'The Starter Rig',
+    use: 'Office, casual gaming, everyday tasks',
+    desc: 'A capable everyday machine for students and first-time builders. Handles 1080p gaming and productivity without fuss.',
+    minPrice: 55000,
+    maxPrice: 80000,
+    featured: false,
+    specs: [
+      ['CPU', 'AMD Ryzen 5 5600'],
+      ['GPU', 'RX 6600 8GB'],
+      ['RAM', '16GB DDR4 3200'],
+      ['Storage', '500GB NVMe'],
+    ]
+  },
+  {
+    tier: 'mid',
+    name: 'The Creator\'s Desk',
+    use: '1440p gaming, editing, streaming',
+    desc: 'The sweet spot for enthusiasts. Strong multi-core performance meets 1440p gaming capability in a refined package.',
+    minPrice: 120000,
+    maxPrice: 175000,
+    featured: true,
+    specs: [
+      ['CPU', 'Intel i5-13600K'],
+      ['GPU', 'RTX 4060 Ti 8GB'],
+      ['RAM', '32GB DDR5 5600'],
+      ['Storage', '1TB NVMe Gen4'],
+    ]
+  },
+  {
+    tier: 'high',
+    name: 'The Workstation',
+    use: '4K gaming, 3D rendering, RAW editing',
+    desc: 'No compromises. Screaming fast CPU, a flagship GPU, and storage headroom for the most demanding workflows.',
+    minPrice: 250000,
+    maxPrice: 320000,
+    featured: false,
+    specs: [
+      ['CPU', 'Intel i9-13900K'],
+      ['GPU', 'RTX 4080 Super'],
+      ['RAM', '64GB DDR5 6000'],
+      ['Storage', '2TB NVMe Gen4'],
+    ]
+  },
+];
+
+function renderPresets(highlightTier) {
+  const grid = document.getElementById('rec-grid');
+  grid.innerHTML = PRESET_CARDS.map(card => {
+    const isHighlighted = card.tier === highlightTier;
+    return `
+    <article class="rec-card${card.featured || isHighlighted ? ' rec-card--featured' : ''}"
+      aria-label="${card.name} build">
+      ${card.featured || isHighlighted ? `<span class="rec-card__badge">${isHighlighted ? 'Your match' : 'Popular'}</span>` : ''}
+      <div class="rec-card__tier">${card.tier === 'budget' ? 'Entry' : card.tier === 'mid' ? 'Mid-range' : 'High-end'} tier</div>
+      <h3 class="rec-card__name">${card.name}</h3>
+      <p class="rec-card__desc">${card.desc}</p>
+      <div class="rec-card__price">${fmt(card.minPrice)} – ${fmt(card.maxPrice)}</div>
+      <div class="rec-card__gst">Estimated range, incl. 18% GST</div>
+      <ul class="rec-card__specs" aria-label="Key specifications">
+        ${card.specs.map(([k,v]) => `<li><span>${k}</span><span class="spec-val">${v}</span></li>`).join('')}
+      </ul>
+      <div class="rec-card__action">
+        <button class="btn btn--secondary" style="width:100%; margin-top:0.75rem"
+          onclick="applyPreset('${card.tier}')">
+          Use this template
+        </button>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+window.applyPreset = function(tier) {
+  const budgets = { budget: 65000, mid: 140000, high: 280000 };
+  const usecases = { budget: 'office', mid: 'gaming', high: 'editing' };
+  document.getElementById('budget').value = budgets[tier];
+  budgetDisplay.textContent = fmt(budgets[tier]);
+  document.getElementById('usecase').value = usecases[tier];
+  document.getElementById('resolution').value = tier === 'budget' ? '1080p' : tier === 'mid' ? '1440p' : '4k';
+  document.getElementById('configurator').scrollIntoView({ behavior:'smooth' });
+  showToast('Template applied — click Generate to build.');
+};
+
+/* ── Toast ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ── Initial render of preset cards ── */
+renderPresets(null);
+</script>
+</body>
+</html>

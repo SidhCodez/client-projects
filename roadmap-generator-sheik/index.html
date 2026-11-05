@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PathForge — Tech Roadmap Generator</title>
+  <meta name="description" content="Generate structured learning roadmaps for any tech domain. Inspired by roadmap.sh." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- Nav -->
+  <nav class="top-nav" aria-label="Site navigation">
+    <a href="#" class="nav-brand" aria-label="PathForge home">
+      <div class="nav-logo" aria-hidden="true">⚡</div>
+      <span class="nav-name">PathForge</span>
+    </a>
+    <div class="nav-controls">
+      <div class="mode-toggle-wrap">
+        <button
+          id="mode-toggle"
+          role="switch"
+          aria-checked="true"
+          aria-label="Toggle between mock and live API mode"
+          title="Toggle API mode"
+        ></button>
+        <span id="mode-label">Mock Mode</span>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main-content">
+
+    <!-- Hero + Domain Picker -->
+    <div id="hero">
+      <section class="hero" aria-label="Hero">
+        <div class="hero-eyebrow">Community-Curated · Free · Open</div>
+        <h1 class="hero-title">Your <span class="accent">learning path</span>,<br>mapped out.</h1>
+        <p class="hero-subtitle">
+          Pick a tech domain and get a structured, milestone-based roadmap you can track, export, and own.
+        </p>
+        <div class="hero-stats" aria-label="Stats">
+          <div class="stat">
+            <span class="stat-num">8</span>
+            <span class="stat-label">Domains</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">80+</span>
+            <span class="stat-label">Milestones</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">100%</span>
+            <span class="stat-label">Free</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="domain-section" aria-label="Choose a domain">
+        <div class="section-label">Choose your domain</div>
+        <div id="domain-grid" role="list" aria-label="Tech domains"></div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading-state" class="loading-state hidden" aria-live="polite" aria-busy="true">
+      <div class="spinner" role="status" aria-label="Loading roadmap"></div>
+      <p>Generating your roadmap…</p>
+    </div>
+
+    <!-- Roadmap View -->
+    <div id="roadmap-view" class="roadmap-view hidden" aria-label="Roadmap">
+      <div class="roadmap-header">
+        <div class="roadmap-nav">
+          <button id="back-btn" class="btn-back" aria-label="Back to domain selection">
+            ← Back
+          </button>
+        </div>
+        <h2 id="roadmap-title"></h2>
+        <p id="roadmap-meta"></p>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-wrap" aria-label="Your progress">
+        <div class="progress-label">
+          <span>Progress</span>
+          <span id="progress-text">0 / 0 completed</span>
+        </div>
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- Sections -->
+      <div id="roadmap-sections" class="roadmap-sections" aria-label="Roadmap sections"></div>
+
+      <!-- Export -->
+      <div class="export-controls" aria-label="Export controls">
+        <label for="export-format">Export as</label>
+        <select id="export-format" aria-label="Export format">
+          <option value="markdown">Markdown (.md)</option>
+          <option value="json">JSON (.json)</option>
+        </select>
+        <button id="export-btn" class="btn btn-primary" aria-label="Generate export">
+          ⬇ Generate Export
+        </button>
+      </div>
+
+      <div id="export-panel" class="export-panel hidden" aria-label="Export output">
+        <textarea
+          id="export-output"
+          readonly
+          aria-label="Exported roadmap content"
+          aria-readonly="true"
+        ></textarea>
+        <div class="export-actions">
+          <button id="copy-btn" class="btn btn-secondary" aria-label="Copy to clipboard">
+            📋 Copy to Clipboard
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>PathForge · Inspired by <a href="https://roadmap.sh" target="_blank" rel="noopener">roadmap.sh</a> · No account needed · Progress saved locally</p>
+  </footer>
+
+</div>
+
+<!-- Toast -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>

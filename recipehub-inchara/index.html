@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RecipeHub – Find, explore, and create delicious recipes instantly. Search by name, category, or ingredients.">
+  <meta property="og:title" content="RecipeHub – Smart Recipe Finder & Creator">
+  <meta property="og:description" content="Discover thousands of recipes, save favorites, and create your own.">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80">
+  <title>RecipeHub – Smart Recipe Finder & Creator</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="navbar__logo" aria-label="RecipeHub Home">
+    <div class="navbar__logo-icon">🍳</div>
+    Recipe<span>Hub</span>
+  </a>
+  <ul class="navbar__links" role="list">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="favorites.html">Favorites</a></li>
+    <li><a href="create.html">Create Recipe</a></li>
+  </ul>
+  <div class="navbar__actions">
+    <button class="btn-icon theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    <a href="favorites.html" class="btn-icon" aria-label="View favorites">❤️</a>
+    <button class="hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile nav -->
+<div class="mobile-nav" aria-hidden="true">
+  <a href="index.html">🏠 Home</a>
+  <a href="favorites.html">❤️ Favorites</a>
+  <a href="create.html">✏️ Create Recipe</a>
+</div>
+
+<!-- ── HERO ── -->
+<section class="hero" aria-label="Hero search">
+  <div class="hero__bg" role="img" aria-label="Delicious food background"></div>
+  <div class="hero__overlay"></div>
+  <div class="hero__content">
+    <div class="hero__eyebrow">
+      <span class="dot"></span>
+      Built by Inchara❤️
+    </div>
+    <h1 class="hero__title">
+      Find <span class="highlight">Delicious</span><br>Recipes Instantly
+    </h1>
+    <p class="hero__subtitle">
+      Explore thousands of recipes from around the world. Search by name, ingredient, or cuisine — and make cooking your next adventure.
+    </p>
+    <div class="hero__search" role="search">
+      <div class="search-box" style="position:relative">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="text"
+               id="heroSearch"
+               placeholder='Try "pasta", "chicken curry"…'
+               autocomplete="off"
+               aria-label="Search recipes">
+        <div class="search-suggestions" id="heroSuggestions" role="listbox" aria-label="Search suggestions"></div>
+      </div>
+      <button class="btn btn-primary" id="heroSearchBtn" aria-label="Search">
+        Search
+      </button>
+    </div>
+    <div class="hero__tags" aria-label="Quick search tags">
+      <span data-quick="Pasta">🍝 Pasta</span>
+      <span data-quick="Chicken">🍗 Chicken</span>
+      <span data-quick="Sushi">🍣 Sushi</span>
+      <span data-quick="Pizza">🍕 Pizza</span>
+      <span data-quick="Curry">🍛 Curry</span>
+      <span data-quick="Beef">🥩 Beef</span>
+    </div>
+  </div>
+
+  <div class="hero__stats" aria-label="Site statistics">
+    <div class="stat-pill">
+      <div class="num">300+</div>
+      <div class="label">Recipes</div>
+    </div>
+    <div class="stat-pill">
+      <div class="num" data-stat="favs">0</div>
+      <div class="label">Saved</div>
+    </div>
+    <div class="stat-pill">
+      <div class="num" data-stat="views">0</div>
+      <div class="label">Viewed</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CATEGORIES PILLS ── -->
+<section class="section section--alt" aria-labelledby="cat-title">
+  <div class="section__header">
+    <div>
+      <div class="section__eyebrow">Browse by Category</div>
+      <h2 class="section__title" id="cat-title">What Are You Craving?</h2>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="clearCatFilter" style="display:none">
+      ✕ Clear Filter
+    </button>
+  </div>
+  <div class="category-scroll" id="categoryPills" role="list" aria-label="Category filters"></div>
+</section>
+
+<!-- ── RECIPE RESULTS ── -->
+<section class="section" id="resultsSection" aria-labelledby="results-title">
+  <div class="section__header">
+    <div>
+      <div class="section__eyebrow" id="resultsEyebrow">Trending Now</div>
+      <h2 class="section__title" id="results-title">Popular Recipes</h2>
+    </div>
+    <span id="resultsCount" style="color:var(--text-3);font-size:.88rem;"></span>
+  </div>
+  <div class="cards-grid" id="recipesGrid" aria-label="Recipe results"></div>
+</section>
+
+<!-- ── INGREDIENT FINDER ── -->
+<section class="section section--alt reveal" aria-labelledby="ing-title">
+  <div class="section__header">
+    <div>
+      <div class="section__eyebrow">Ingredient Search</div>
+      <h2 class="section__title" id="ing-title">Find Recipes By What You Have</h2>
+    </div>
+  </div>
+  <div class="ingredient-finder">
+    <h3>🥦 Enter Your Ingredients</h3>
+    <p>Type ingredients you have at home, separated by commas, and we'll find matching recipes.</p>
+    <div class="ingredient-input-row">
+      <input type="text"
+             id="ingInput"
+             placeholder="e.g. tomato, cheese, onion, garlic"
+             aria-label="Enter ingredients">
+      <button class="btn btn-primary" id="ingSearchBtn">Find Recipes</button>
+    </div>
+  </div>
+  <div class="cards-grid" id="ingResultsGrid" style="margin-top:2rem" aria-label="Ingredient search results"></div>
+</section>
+
+<!-- ── RANDOM RECIPE ── -->
+<section class="section reveal" aria-labelledby="random-title">
+  <div class="random-banner" id="randomBanner">
+    <div>
+      <h2 id="random-title">Feeling Adventurous?</h2>
+      <p>Let us surprise you with a random recipe from our entire collection.</p>
+    </div>
+    <button class="btn-white" id="randomBtn">🎲 Surprise Me!</button>
+  </div>
+  <div id="randomResult" style="margin-top:2rem;"></div>
+</section>
+
+<!-- ── RECENTLY VIEWED ── -->
+<section class="section section--alt reveal" id="recentSection" aria-labelledby="recent-title" style="display:none">
+  <div class="section__header">
+    <div>
+      <div class="section__eyebrow">Your History</div>
+      <h2 class="section__title" id="recent-title">Recently Viewed</h2>
+    </div>
+  </div>
+  <div class="recently-viewed-list" id="recentList" aria-label="Recently viewed recipes"></div>
+</section>
+
+<!-- ── CATEGORIES GRID ── -->
+<section class="section reveal" aria-labelledby="catgrid-title">
+  <div class="section__header">
+    <div>
+      <div class="section__eyebrow">Explore Categories</div>
+      <h2 class="section__title" id="catgrid-title">Browse All Categories</h2>
+    </div>
+  </div>
+  <div class="category-grid" id="categoryGrid" aria-label="All categories"></div>
+</section>
+
+<!-- ── STATS BAR ── -->
+<div class="stats-bar" aria-label="User statistics">
+  <div class="stat">
+    <span class="val" data-stat="views">0</span>
+    <div class="lbl">Recipes Viewed</div>
+  </div>
+  <div class="stat">
+    <span class="val" data-stat="favs">0</span>
+    <div class="lbl">Favorites Saved</div>
+  </div>
+  <div class="stat">
+    <span class="val" id="customCount">0</span>
+    <div class="lbl">Custom Recipes</div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer class="footer" role="contentinfo">
+  <div class="footer__grid">
+    <div class="footer__brand">
+      <div class="logo">🍳 Recipe<span style="color:var(--text)">Hub</span></div>
+      <p>Your all-in-one recipe discovery platform. Search, save, and create amazing dishes from around the world.</p>
+    </div>
+    <div class="footer__col">
+      <h4>Explore</h4>
+      <a href="index.html">Home</a>
+      <a href="favorites.html">Favorites</a>
+      <a href="create.html">Create Recipe</a>
+    </div>
+    <div class="footer__col">
+      <h4>Categories</h4>
+      <a href="index.html" data-quick-footer="Chicken">Chicken</a>
+      <a href="index.html" data-quick-footer="Beef">Beef</a>
+      <a href="index.html" data-quick-footer="Dessert">Dessert</a>
+      <a href="index.html" data-quick-footer="Seafood">Seafood</a>
+    </div>
+  </div>
+  <div class="footer__bottom">
+    <span>© 2026 RecipeHub. Built by  Inchara❤️.</span>
+    <span>API<a href="https://www.themealdb.com" style="color:var(--primary)">TheMealDB</a></span>
+  </div>
+</footer>
+
+<!-- Toast container (injected by JS) -->
+
+<script src="js/app.js"></script>
+<script>
+/* ============================================================
+   index.html – page-level script
+   ============================================================ */
+
+const API_BASE = 'https://www.themealdb.com/api/json/v1/1/';
+
+/* ── Update stat displays ── */
+function refreshStats() {
+  document.querySelectorAll('[data-stat="favs"]').forEach(el => {
+    el.textContent = Favorites.getAll().length;
+  });
+  document.querySelectorAll('[data-stat="views"]').forEach(el => {
+    el.textContent = Stats.get('views');
+  });
+  const customCount = document.getElementById('customCount');
+  if (customCount) customCount.textContent = CustomRecipes.getAll().length;
+}
+
+/* ── Skeleton loaders ── */
+function showSkeletons(container, count = 8) {
+  container.innerHTML = Array(count).fill(buildSkeletonCard()).join('');
+}
+
+/* ── Render recipe grid ── */
+function renderRecipes(meals, container) {
+  if (!meals || meals.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">🍽</div>
+        <h3>No recipes found</h3>
+        <p>Try a different search term or browse our categories.</p>
+      </div>`;
+    return;
+  }
+  container.innerHTML = meals.map(m => buildCard(m)).join('');
+  attachFavEvents(container);
+  lazyLoad();
+}
+
+/* ── Load trending (random batch) ── */
+async function loadTrending() {
+  const grid = document.getElementById('recipesGrid');
+  showSkeletons(grid, 8);
+
+  // Load custom recipes + a mix of API meals
+  const customs = CustomRecipes.getAll().slice(0, 4);
+  const promises = ['Chicken','Pasta','Beef','Seafood'].map(q =>
+    apiFetch(`${API_BASE}search.php?s=${q}`).then(d => d.meals ? d.meals.slice(0,2) : []).catch(() => [])
+  );
+  const results = await Promise.all(promises);
+  let meals = [...customs, ...results.flat()];
+  // Deduplicate
+  const seen = new Set();
+  meals = meals.filter(m => { if (seen.has(m.idMeal)) return false; seen.add(m.idMeal); return true; });
+
+  document.getElementById('resultsEyebrow').textContent = 'Trending Now';
+  document.getElementById('results-title').textContent  = 'Popular Recipes';
+  document.getElementById('resultsCount').textContent   = `${meals.length} recipes`;
+  renderRecipes(meals, grid);
+}
+
+/* ── Load categories pills ── */
+async function loadCategoryPills() {
+  const container = document.getElementById('categoryPills');
+  try {
+    const data = await apiFetch(`${API_BASE}categories.php`);
+    if (!data.categories) return;
+    const all = { strCategory: 'All', strCategoryThumb: '' };
+    const cats = [all, ...data.categories];
+    container.innerHTML = cats.map(c => `
+      <button class="cat-pill ${c.strCategory === 'All' ? 'active' : ''}"
+              data-cat="${c.strCategory}"
+              role="option"
+              aria-selected="${c.strCategory === 'All'}"
+              aria-label="Filter by ${c.strCategory}">
+        ${c.strCategoryThumb ? `<img src="${c.strCategoryThumb}" alt="${c.strCategory}" loading="lazy">` : '🍽'}
+        ${c.strCategory}
+      </button>
+    `).join('');
+
+    container.querySelectorAll('.cat-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('.cat-pill').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected','true');
+        const cat = btn.dataset.cat;
+        const clearBtn = document.getElementById('clearCatFilter');
+        if (cat === 'All') {
+          clearBtn.style.display = 'none';
+          loadTrending();
+        } else {
+          clearBtn.style.display = '';
+          filterByCategory(cat);
+        }
+      });
+    });
+  } catch (err) {
+    console.error('Categories load error:', err);
+  }
+}
+
+/* ── Load category grid ── */
+async function loadCategoryGrid() {
+  const grid = document.getElementById('categoryGrid');
+  try {
+    const data = await apiFetch(`${API_BASE}categories.php`);
+    if (!data.categories) return;
+    grid.innerHTML = data.categories.map(c => `
+      <div class="category-card" data-cat="${c.strCategory}" role="button" tabindex="0" aria-label="Browse ${c.strCategory}">
+        <img src="${c.strCategoryThumb}" alt="${c.strCategory}" loading="lazy">
+        <p>${c.strCategory}</p>
+      </div>
+    `).join('');
+    grid.querySelectorAll('.category-card').forEach(card => {
+      card.addEventListener('click', () => filterByCategory(card.dataset.cat));
+      card.addEventListener('keypress', e => { if (e.key === 'Enter') filterByCategory(card.dataset.cat); });
+    });
+  } catch (err) {
+    console.error('Category grid error:', err);
+  }
+}
+
+/* ── Filter by category ── */
+async function filterByCategory(cat) {
+  const grid = document.getElementById('recipesGrid');
+  showSkeletons(grid, 6);
+  document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  try {
+    const data = await apiFetch(`${API_BASE}filter.php?c=${encodeURIComponent(cat)}`);
+    const meals = data.meals || [];
+    document.getElementById('resultsEyebrow').textContent = 'Category';
+    document.getElementById('results-title').textContent  = `${cat} Recipes`;
+    document.getElementById('resultsCount').textContent   = `${meals.length} recipes`;
+    renderRecipes(meals, grid);
+  } catch (err) {
+    toast('Failed to load category recipes. Please try again.', 'error');
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">⚠️</div><h3>Failed to load</h3><p>Please check your connection and try again.</p></div>`;
+  }
+}
+
+/* ── Hero search ── */
+const heroInput = document.getElementById('heroSearch');
+const heroSuggestions = document.getElementById('heroSuggestions');
+let suggestionData = [];
+
+async function searchRecipes(query) {
+  if (!query.trim()) return loadTrending();
+  const grid = document.getElementById('recipesGrid');
+  showSkeletons(grid, 6);
+  document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  try {
+    const data = await apiFetch(`${API_BASE}search.php?s=${encodeURIComponent(query)}`);
+    const meals = data.meals || [];
+    // Also include custom recipes
+    const customs = CustomRecipes.getAll().filter(r =>
+      r.strMeal.toLowerCase().includes(query.toLowerCase())
+    );
+    const combined = [...customs, ...meals];
+    document.getElementById('resultsEyebrow').textContent = 'Search Results';
+    document.getElementById('results-title').textContent  = `Results for "${query}"`;
+    document.getElementById('resultsCount').textContent   = `${combined.length} found`;
+    renderRecipes(combined, grid);
+    Stats.increment('views');
+    refreshStats();
+  } catch (err) {
+    toast('Search failed. Please try again.', 'error');
+  }
+  heroSuggestions.classList.remove('visible');
+}
+
+document.getElementById('heroSearchBtn').addEventListener('click', () => {
+  searchRecipes(heroInput.value);
+});
+heroInput.addEventListener('keypress', e => {
+  if (e.key === 'Enter') searchRecipes(heroInput.value);
+});
+
+/* Debounced live suggestions */
+heroInput.addEventListener('input', debounce(async (e) => {
+  const q = e.target.value.trim();
+  if (q.length < 2) { heroSuggestions.classList.remove('visible'); return; }
+  try {
+    const data = await apiFetch(`${API_BASE}search.php?s=${encodeURIComponent(q)}`);
+    const meals = (data.meals || []).slice(0, 6);
+    if (!meals.length) { heroSuggestions.classList.remove('visible'); return; }
+    heroSuggestions.innerHTML = meals.map(m => `
+      <div class="suggestion-item" role="option" data-id="${m.idMeal}" tabindex="0">
+        <img src="${m.strMealThumb}/preview" alt="${m.strMeal}" loading="lazy">
+        <div>
+          <strong>${m.strMeal}</strong>
+          <div style="font-size:.75rem;color:var(--text-3)">${m.strCategory}</div>
+        </div>
+      </div>
+    `).join('');
+    heroSuggestions.classList.add('visible');
+    heroSuggestions.querySelectorAll('.suggestion-item').forEach(item => {
+      item.addEventListener('click', () => {
+        window.location.href = `recipe.html?id=${item.dataset.id}`;
+      });
+    });
+  } catch {}
+}, 350));
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-box')) heroSuggestions.classList.remove('visible');
+});
+
+/* Quick tag clicks */
+document.querySelectorAll('[data-quick]').forEach(tag => {
+  tag.addEventListener('click', () => {
+    heroInput.value = tag.dataset.quick;
+    searchRecipes(tag.dataset.quick);
+  });
+});
+
+/* ── Ingredient Search ── */
+document.getElementById('ingSearchBtn').addEventListener('click', async () => {
+  const raw = document.getElementById('ingInput').value.trim();
+  if (!raw) { toast('Please enter at least one ingredient.', 'info'); return; }
+
+  const ingredients = raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const grid = document.getElementById('ingResultsGrid');
+  showSkeletons(grid, 4);
+
+  try {
+    // Fetch by first ingredient, then client-side filter
+    const data = await apiFetch(`${API_BASE}filter.php?i=${encodeURIComponent(ingredients[0])}`);
+    let meals = data.meals || [];
+
+    if (ingredients.length > 1) {
+      // Further filter: for each meal fetch details and check remaining ingredients
+      const details = await Promise.all(
+        meals.slice(0, 20).map(m =>
+          apiFetch(`${API_BASE}lookup.php?i=${m.idMeal}`).then(d => d.meals?.[0]).catch(() => null)
+        )
+      );
+      meals = details.filter(meal => {
+        if (!meal) return false;
+        const mealIngs = [];
+        for (let i = 1; i <= 20; i++) {
+          if (meal[`strIngredient${i}`]) mealIngs.push(meal[`strIngredient${i}`].toLowerCase());
+        }
+        return ingredients.every(ing => mealIngs.some(mi => mi.includes(ing)));
+      });
+    }
+
+    if (!meals.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">🥺</div><h3>No matches found</h3><p>Try fewer or different ingredients.</p></div>`;
+      return;
+    }
+    renderRecipes(meals.slice(0, 8), grid);
+    toast(`Found ${meals.length} recipe(s)!`, 'success');
+  } catch (err) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">⚠️</div><h3>Search failed</h3><p>Please try again.</p></div>`;
+  }
+});
+
+document.getElementById('ingInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') document.getElementById('ingSearchBtn').click();
+});
+
+/* ── Random Recipe ── */
+document.getElementById('randomBtn').addEventListener('click', async () => {
+  const grid = document.getElementById('randomResult');
+  grid.innerHTML = buildSkeletonCard();
+  try {
+    const data = await apiFetch(`${API_BASE}random.php`);
+    const meal = data.meals?.[0];
+    if (!meal) throw new Error('No meal');
+    grid.innerHTML = `<div class="cards-grid" style="max-width:360px">${buildCard(meal)}</div>`;
+    attachFavEvents(grid);
+    toast(`🎲 How about "${meal.strMeal}"?`, 'success');
+    RecentlyViewed.add(meal);
+    Stats.increment('views');
+    refreshStats();
+    loadRecentlyViewed();
+  } catch (err) {
+    grid.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><h3>Couldn't load random recipe</h3><p>Please try again.</p></div>`;
+  }
+});
+
+/* ── Recently Viewed ── */
+function loadRecentlyViewed() {
+  const recent = RecentlyViewed.getAll();
+  const section = document.getElementById('recentSection');
+  const list = document.getElementById('recentList');
+  if (!recent.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  list.innerHTML = recent.map(m => `
+    <a href="recipe.html?id=${m.idMeal}" class="rv-card" aria-label="${m.strMeal}">
+      <img src="${m.strMealThumb}" alt="${m.strMeal}" loading="lazy">
+      <p>${m.strMeal}</p>
+    </a>
+  `).join('');
+}
+
+/* ── Clear category filter ── */
+document.getElementById('clearCatFilter').addEventListener('click', () => {
+  document.querySelectorAll('.cat-pill').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+  const allBtn = document.querySelector('.cat-pill[data-cat="All"]');
+  if (allBtn) { allBtn.classList.add('active'); allBtn.setAttribute('aria-selected','true'); }
+  document.getElementById('clearCatFilter').style.display = 'none';
+  loadTrending();
+});
+
+/* ── INIT ── */
+async function init() {
+  refreshStats();
+  loadRecentlyViewed();
+  await Promise.all([
+    loadTrending(),
+    loadCategoryPills(),
+    loadCategoryGrid(),
+  ]);
+  initReveal();
+}
+
+init();
+</script>
+</body>
+</html>

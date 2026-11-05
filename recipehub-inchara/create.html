@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create and save your own custom recipes on RecipeHub.">
+  <title>Create Recipe – RecipeHub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="navbar__logo">
+    <div class="navbar__logo-icon">🍳</div>
+    Recipe<span>Hub</span>
+  </a>
+  <ul class="navbar__links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="favorites.html">Favorites</a></li>
+    <li><a href="create.html">Create Recipe</a></li>
+    <li><a href="about.html">About</a></li>
+  </ul>
+  <div class="navbar__actions">
+    <button class="btn-icon theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    <button class="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mobile-nav">
+  <a href="index.html">🏠 Home</a>
+  <a href="favorites.html">❤️ Favorites</a>
+  <a href="create.html">✏️ Create Recipe</a>
+  <a href="about.html">ℹ️ About</a>
+</div>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <h1>✏️ Create a <span class="text-gradient">Recipe</span></h1>
+  <p>Share your culinary creations with the world. Your recipes save locally and appear alongside the global collection.</p>
+</div>
+
+<!-- CREATE FORM -->
+<section class="section" aria-labelledby="create-title">
+  <div class="create-form" role="form" aria-labelledby="create-title">
+    <h2 id="create-title" style="font-size:1.4rem;font-weight:800;margin-bottom:2rem">
+      📝 New Recipe
+    </h2>
+
+    <!-- Name -->
+    <div class="form-group">
+      <label for="recipeName">Recipe Name <span>*</span></label>
+      <input type="text" id="recipeName" class="form-control"
+             placeholder="e.g. Grandma's Secret Pasta" required aria-required="true">
+    </div>
+
+    <!-- Category & Prep Time row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div class="form-group">
+        <label for="recipeCategory">Category <span>*</span></label>
+        <select id="recipeCategory" class="form-control" required aria-required="true">
+          <option value="">Select a category</option>
+          <option>Beef</option><option>Chicken</option><option>Dessert</option>
+          <option>Lamb</option><option>Miscellaneous</option><option>Pasta</option>
+          <option>Pork</option><option>Seafood</option><option>Side</option>
+          <option>Starter</option><option>Vegan</option><option>Vegetarian</option>
+          <option>Breakfast</option><option>Goat</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="prepTime">Prep Time (minutes)</label>
+        <input type="number" id="prepTime" class="form-control"
+               placeholder="e.g. 30" min="1" max="600">
+      </div>
+    </div>
+
+    <!-- Image URL -->
+    <div class="form-group">
+      <label for="recipeImage">Image URL</label>
+      <input type="url" id="recipeImage" class="form-control"
+             placeholder="https://example.com/my-dish.jpg">
+      <div id="imagePreview" style="margin-top:.75rem;display:none">
+        <img id="previewImg" src="" alt="Recipe preview"
+             style="width:100%;max-height:220px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--border)">
+      </div>
+    </div>
+
+    <!-- Ingredients -->
+    <div class="form-group">
+      <label>Ingredients <span>*</span></label>
+      <div id="ingredientsContainer"></div>
+      <button type="button" class="btn btn-ghost btn-sm" id="addIngredientBtn" style="margin-top:.5rem">
+        ＋ Add Ingredient
+      </button>
+    </div>
+
+    <!-- Instructions -->
+    <div class="form-group">
+      <label for="recipeInstructions">Instructions <span>*</span></label>
+      <textarea id="recipeInstructions" class="form-control" rows="8"
+                placeholder="Write your cooking steps here. Each new line will become a numbered step."
+                required aria-required="true"></textarea>
+    </div>
+
+    <!-- Area / Cuisine -->
+    <div class="form-group">
+      <label for="recipeArea">Cuisine / Origin (optional)</label>
+      <input type="text" id="recipeArea" class="form-control" placeholder="e.g. Italian, Indian, Mexican">
+    </div>
+
+    <!-- Submit -->
+    <div style="display:flex;gap:1rem;justify-content:flex-end;flex-wrap:wrap;margin-top:2rem">
+      <button type="button" class="btn btn-ghost" id="resetBtn">Reset Form</button>
+      <button type="button" class="btn btn-primary" id="saveRecipeBtn">
+        💾 Save Recipe
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- MY CUSTOM RECIPES -->
+<section class="section section--alt" aria-labelledby="my-recipes-title">
+  <div class="section__header">
+    <div>
+      <div class="section__eyebrow">Your Creations</div>
+      <h2 class="section__title" id="my-recipes-title">My Custom Recipes</h2>
+    </div>
+    <span id="customCount" style="color:var(--text-3);font-size:.88rem"></span>
+  </div>
+  <div class="cards-grid" id="customGrid" aria-label="Your custom recipes" aria-live="polite"></div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer__grid">
+    <div class="footer__brand">
+      <div class="logo">🍳 Recipe<span style="color:var(--text)">Hub</span></div>
+      <p>Your all-in-one recipe discovery platform.</p>
+    </div>
+    <div class="footer__col"><h4>Explore</h4>
+      <a href="index.html">Home</a>
+      <a href="favorites.html">Favorites</a>
+      <a href="about.html">About</a>
+    </div>
+    <div class="footer__col"><h4>Resources</h4>
+      <a href="https://www.themealdb.com" target="_blank" rel="noopener">TheMealDB API</a>
+    </div>
+    <div class="footer__col"><h4>About</h4><a href="about.html">About RecipeHub</a></div>
+  </div>
+  <div class="footer__bottom"><span>© 2025 RecipeHub</span></div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+/* ============================================================
+   create.html – page script
+   ============================================================ */
+
+let ingredientCount = 0;
+
+function addIngredientRow(name = '', amount = '') {
+  ingredientCount++;
+  const container = document.getElementById('ingredientsContainer');
+  const row = document.createElement('div');
+  row.className = 'ingredient-row';
+  row.dataset.index = ingredientCount;
+  row.innerHTML = `
+    <input type="text"
+           class="form-control ing-name"
+           placeholder="Ingredient name"
+           value="${name}"
+           aria-label="Ingredient name">
+    <input type="text"
+           class="form-control ing-amount"
+           placeholder="Amount (e.g. 2 cups)"
+           value="${amount}"
+           style="max-width:180px"
+           aria-label="Ingredient amount">
+    <button type="button" class="remove-btn" aria-label="Remove ingredient">✕</button>
+  `;
+  row.querySelector('.remove-btn').addEventListener('click', () => row.remove());
+  container.appendChild(row);
+}
+
+function getIngredients() {
+  return [...document.querySelectorAll('.ingredient-row')].map(row => ({
+    name:   row.querySelector('.ing-name').value.trim(),
+    amount: row.querySelector('.ing-amount').value.trim(),
+  })).filter(i => i.name);
+}
+
+function validateForm() {
+  const name = document.getElementById('recipeName').value.trim();
+  const cat  = document.getElementById('recipeCategory').value;
+  const inst = document.getElementById('recipeInstructions').value.trim();
+  const ings = getIngredients();
+
+  if (!name) { toast('Please enter a recipe name.', 'error'); document.getElementById('recipeName').focus(); return false; }
+  if (!cat)  { toast('Please select a category.', 'error'); document.getElementById('recipeCategory').focus(); return false; }
+  if (!inst) { toast('Please add some instructions.', 'error'); document.getElementById('recipeInstructions').focus(); return false; }
+  if (!ings.length) { toast('Please add at least one ingredient.', 'error'); return false; }
+  return true;
+}
+
+function saveRecipe() {
+  if (!validateForm()) return;
+
+  const recipe = {
+    strMeal:         document.getElementById('recipeName').value.trim(),
+    strCategory:     document.getElementById('recipeCategory').value,
+    strArea:         document.getElementById('recipeArea').value.trim() || 'Custom',
+    strInstructions: document.getElementById('recipeInstructions').value.trim(),
+    strMealThumb:    document.getElementById('recipeImage').value.trim() || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
+    ingredients:     getIngredients(),
+    prepTime:        document.getElementById('prepTime').value || '',
+    isCustom:        true,
+  };
+
+  // Build legacy strIngredientN / strMeasureN for API compatibility
+  recipe.ingredients.forEach((ing, i) => {
+    recipe[`strIngredient${i+1}`] = ing.name;
+    recipe[`strMeasure${i+1}`]    = ing.amount;
+  });
+
+  CustomRecipes.add(recipe);
+  toast(`"${recipe.strMeal}" saved successfully! 🎉`, 'success');
+  resetForm();
+  renderCustomRecipes();
+}
+
+function resetForm() {
+  document.getElementById('recipeName').value = '';
+  document.getElementById('recipeCategory').value = '';
+  document.getElementById('recipeInstructions').value = '';
+  document.getElementById('recipeImage').value = '';
+  document.getElementById('recipeArea').value = '';
+  document.getElementById('prepTime').value = '';
+  document.getElementById('ingredientsContainer').innerHTML = '';
+  document.getElementById('imagePreview').style.display = 'none';
+  ingredientCount = 0;
+  // Add one blank row
+  addIngredientRow();
+}
+
+function renderCustomRecipes() {
+  const grid  = document.getElementById('customGrid');
+  const count = document.getElementById('customCount');
+  const customs = CustomRecipes.getAll();
+  count.textContent = customs.length ? `${customs.length} recipe${customs.length === 1 ? '' : 's'}` : '';
+
+  if (!customs.length) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">📝</div>
+        <h3>No custom recipes yet</h3>
+        <p>Fill out the form above to create your first recipe!</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = customs.map(m => {
+    const base = buildCard(m);
+    return base.replace('</div>\n    </article>', `
+      <button class="btn btn-ghost btn-sm delete-custom-btn" data-id="${m.idMeal}"
+              style="flex:1;justify-content:center;color:#ef4444" aria-label="Delete recipe">
+        🗑 Delete
+      </button>
+    </div></article>`);
+  }).join('');
+
+  attachFavEvents(grid);
+
+  grid.querySelectorAll('.delete-custom-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (confirm('Delete this custom recipe?')) {
+        CustomRecipes.remove(btn.dataset.id);
+        renderCustomRecipes();
+        toast('Recipe deleted.', 'info');
+      }
+    });
+  });
+}
+
+/* ── Event Listeners ── */
+document.getElementById('addIngredientBtn').addEventListener('click', () => addIngredientRow());
+document.getElementById('saveRecipeBtn').addEventListener('click', saveRecipe);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (confirm('Reset the form? Any unsaved data will be lost.')) resetForm();
+});
+
+/* Image preview */
+document.getElementById('recipeImage').addEventListener('input', debounce(e => {
+  const url = e.target.value.trim();
+  const preview = document.getElementById('imagePreview');
+  const img = document.getElementById('previewImg');
+  if (url) {
+    img.src = url;
+    img.onload = () => { preview.style.display = ''; };
+    img.onerror = () => { preview.style.display = 'none'; };
+  } else {
+    preview.style.display = 'none';
+  }
+}, 500));
+
+/* ── INIT ── */
+addIngredientRow(); // start with one blank ingredient row
+renderCustomRecipes();
+</script>
+</body>
+</html>

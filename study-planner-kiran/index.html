@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Study Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="style.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <h1>Study<span>.</span><br>Planner</h1>
+    <p id="today-date"></p>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="focus-mode-btn" title="Enter Focus Mode">🎯</button>
+    <button class="icon-btn" id="theme-toggle" title="Toggle theme">🌙</button>
+  </div>
+</header>
+
+<!-- QUOTE -->
+<div class="quote-bar">
+  <div class="quote-icon">💡</div>
+  <div>
+    <div class="quote-text" id="quote-text"></div>
+    <div class="quote-author" id="quote-author"></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="stat-total">0</div></div>
+  <div class="stat-card s2"><div class="stat-label">Completed</div><div class="stat-value" id="stat-done">0</div></div>
+  <div class="stat-card s4"><div class="stat-label">Pending</div><div class="stat-value" id="stat-pending">0</div></div>
+  <div class="stat-card s3"><div class="stat-label">🔥 Streak</div><div class="stat-value" id="stat-streak">0</div></div>
+  <div class="stat-card s5"><div class="stat-label">Progress</div><div class="stat-value" id="stat-pct">0%</div><div class="prog-wrap"><div class="prog-bar" id="prog-bar"></div></div></div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" data-tab="tasks">📝 Tasks</button>
+  <button class="tab-btn" data-tab="pomodoro">⏱ Pomodoro</button>
+  <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
+  <button class="tab-btn" data-tab="achievements">🏆 Badges</button>
+</div>
+
+<!-- ── TAB: TASKS ── -->
+<div class="tab-panel active" id="tab-tasks">
+  <div class="add-form">
+    <div class="section-label">// New Task</div>
+    <div class="form-row full">
+      <label>Title
+        <input type="text" id="task-title" placeholder="e.g. Read Chapter 5" maxlength="100" autocomplete="off"/>
+      </label>
+    </div>
+    <div class="form-row three">
+      <label>Due Date
+        <input type="date" id="task-due"/>
+      </label>
+      <label>Priority
+        <select id="task-priority">
+          <option value="medium">⚡ Medium</option>
+          <option value="high">🔴 High</option>
+          <option value="low">🔵 Low</option>
+        </select>
+      </label>
+      <label>Recurring
+        <select id="task-recur">
+          <option value="none">— None</option>
+          <option value="daily">🔁 Daily</option>
+          <option value="weekly">📅 Weekly</option>
+        </select>
+      </label>
+    </div>
+    <label>Subtasks
+      <div class="subtask-row">
+        <input type="text" id="subtask-input" placeholder="Add subtask, press Enter or +" maxlength="80"/>
+        <button class="btn-sm" id="subtask-add-btn" type="button">+ Add</button>
+      </div>
+    </label>
+    <div class="subtag-list" id="subtag-list"></div>
+    <button class="btn-primary" id="add-btn" type="button">+ Add Task</button>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="pending">Pending</button>
+    <button class="filter-btn" data-filter="completed">Completed</button>
+  </div>
+
+  <div class="tasks-header">
+    <div class="section-label" style="margin:0">// Tasks</div>
+    <div class="tasks-header-actions">
+      <button class="clear-btn" id="clear-btn" type="button">Clear Completed</button>
+    </div>
+  </div>
+  <div id="task-list" role="list"></div>
+</div>
+
+<!-- ── TAB: POMODORO ── -->
+<div class="tab-panel" id="tab-pomodoro">
+  <div class="pomodoro">
+    <div class="pomo-label" id="pomo-phase-label">Work Session</div>
+    <div class="pomo-ring">
+      <svg viewBox="0 0 160 160" width="160" height="160">
+        <circle class="ring-bg" cx="80" cy="80" r="68"/>
+        <circle class="ring-prog" id="pomo-ring-circle" cx="80" cy="80" r="68"
+          stroke-dasharray="427" stroke-dashoffset="0"/>
+      </svg>
+      <div class="ring-text">
+        <div class="pomo-time-big" id="pomo-time">25:00</div>
+      </div>
+    </div>
+    <div class="focus-task-label" id="pomo-task-label">No task selected</div>
+    <div class="pomo-controls">
+      <button class="pomo-btn primary" id="pomo-start">▶ Start</button>
+      <button class="pomo-btn" id="pomo-pause">⏸ Pause</button>
+      <button class="pomo-btn" id="pomo-reset">↺ Reset</button>
+      <button class="pomo-btn" id="pomo-skip">⏭ Skip</button>
+    </div>
+    <div class="pomo-sessions-label" id="pomo-sessions-label">🍅 Sessions today: 0</div>
+    <div class="pomo-settings">
+      <div class="pomo-setting"><label>Work (min)<input type="number" id="pomo-work" value="25" min="1" max="99"/></label></div>
+      <div class="pomo-setting"><label>Short Break<input type="number" id="pomo-short" value="5" min="1" max="30"/></label></div>
+      <div class="pomo-setting"><label>Long Break<input type="number" id="pomo-long" value="15" min="1" max="60"/></label></div>
+      <div class="pomo-setting"><label>Long Every<input type="number" id="pomo-long-every" value="4" min="1" max="10"/></label></div>
+    </div>
+    <div class="task-focus-select-wrap">
+      <label>Focus on task</label>
+      <select id="pomo-task-select"><option value="">— Select task —</option></select>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB: DASHBOARD ── -->
+<div class="tab-panel" id="tab-dashboard">
+  <div class="insights-card">
+    <div class="section-label">// Weekly Insights</div>
+    <div class="insight-grid">
+      <div class="insight-item"><div class="insight-val" id="ins-week">0</div><div class="insight-label">Done this week</div></div>
+      <div class="insight-item"><div class="insight-val" id="ins-best">—</div><div class="insight-label">Best day</div></div>
+      <div class="insight-item"><div class="insight-val" id="ins-pomo">0</div><div class="insight-label">Pomodoros today</div></div>
+      <div class="insight-item"><div class="insight-val" id="ins-high">0</div><div class="insight-label">High-priority done</div></div>
+    </div>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card"><h3>// Completion Rate</h3><canvas id="chart-donut"></canvas></div>
+    <div class="chart-card"><h3>// Last 7 Days</h3><canvas id="chart-bar"></canvas></div>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card"><h3>// Priority Breakdown</h3><canvas id="chart-priority"></canvas></div>
+    <div class="chart-card"><h3>// Cumulative Trend</h3><canvas id="chart-line"></canvas></div>
+  </div>
+</div>
+
+<!-- ── TAB: ACHIEVEMENTS ── -->
+<div class="tab-panel" id="tab-achievements">
+  <div class="achievements-grid" id="achievements-list"></div>
+</div>
+
+</div><!-- /.app -->
+
+<!-- FOCUS OVERLAY -->
+<div id="focus-overlay">
+  <div class="fo-heading">⚡ Focus Mode</div>
+  <div class="fo-task" id="fo-task">No task selected</div>
+  <div class="fo-time" id="fo-time">25:00</div>
+  <div class="fo-phase" id="fo-phase">Work Session</div>
+  <div class="fo-sessions" id="fo-sessions">🍅 0 sessions today</div>
+  <div class="pomo-controls">
+    <button class="pomo-btn primary" id="fo-start">▶ Start</button>
+    <button class="pomo-btn" id="fo-pause">⏸ Pause</button>
+    <button class="pomo-btn" id="fo-reset">↺ Reset</button>
+  </div>
+  <button class="focus-exit" id="focus-exit">✕ Exit Focus Mode</button>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════
+   QUOTES
+════════════════════════════════════════════ */
+const QUOTES=[
+  {q:"The secret of getting ahead is getting started.",a:"Mark Twain"},
+  {q:"It always seems impossible until it's done.",a:"Nelson Mandela"},
+  {q:"Don't watch the clock; do what it does. Keep going.",a:"Sam Levenson"},
+  {q:"Success is the sum of small efforts repeated day in and day out.",a:"Robert Collier"},
+  {q:"You don't have to be great to start, but you have to start to be great.",a:"Zig Ziglar"},
+  {q:"Discipline is the bridge between goals and accomplishment.",a:"Jim Rohn"},
+  {q:"Focus on being productive instead of busy.",a:"Tim Ferriss"},
+  {q:"Learning is not attained by chance; it must be sought with ardor.",a:"Abigail Adams"},
+  {q:"Education is the passport to the future.",a:"Malcolm X"},
+  {q:"The more you read, the more things you will know.",a:"Dr. Seuss"},
+];
+
+/* ════════════════════════════════════════════
+   STORAGE KEYS
+════════════════════════════════════════════ */
+const K={TASKS:'sp2_tasks',THEME:'sp2_theme',STREAK:'sp2_streak',BADGES:'sp2_badges',TOTAL_DONE:'sp2_total_done'};
+
+/* ════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════ */
+let tasks=[], filter='all', dragSrc=null, pendingSubtasks=[];
+
+/* ════════════════════════════════════════════
+   POMODORO STATE
+════════════════════════════════════════════ */
+const pomo={
+  running:false, phase:'work',
+  secondsLeft:25*60, totalSeconds:25*60,
+  sessionsToday:0, cycleCount:0,
+  focusTaskId:'', _interval:null
+};
+
+/* ════════════════════════════════════════════
+   STORAGE HELPERS
+════════════════════════════════════════════ */
+const ls={
+  get:(k,def=null)=>{try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):def;}catch{return def;}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+};
+
+function loadTasks(){tasks=ls.get(K.TASKS,[])}
+function saveTasks(){ls.set(K.TASKS,tasks)}
+
+/* ════════════════════════════════════════════
+   DATE HELPERS
+════════════════════════════════════════════ */
+function todayStr(){return new Date().toISOString().split('T')[0]}
+function yesterdayStr(){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().split('T')[0]}
+function formatDate(s){if(!s)return null;const[y,m,d]=s.split('-');return`${d}/${m}/${y}`}
+function isOverdue(due){return!!(due&&due<todayStr())}
+function weekDays(){
+  const days=[],d=new Date();
+  for(let i=6;i>=0;i--){const x=new Date(d);x.setDate(d.getDate()-i);days.push(x.toISOString().split('T')[0]);}
+  return days;
+}
+
+/* ════════════════════════════════════════════
+   STREAK
+════════════════════════════════════════════ */
+function updateStreak(){
+  const today=todayStr();
+  const s=ls.get(K.STREAK,{lastDate:null,count:0});
+  const hasDoneToday=tasks.some(t=>t.done&&t.doneDate===today);
+  if(hasDoneToday&&s.lastDate!==today){
+    const newCount=s.lastDate===yesterdayStr()?s.count+1:1;
+    ls.set(K.STREAK,{lastDate:today,count:newCount});
+    return newCount;
+  }
+  if(!hasDoneToday){
+    if(s.lastDate===today||s.lastDate===yesterdayStr())return s.count;
+    return 0;
+  }
+  return s.count;
+}
+
+/* ════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════ */
+let _toastTimer;
+function toast(msg,type='info'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`show ${type}`;
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>el.className='',2800);
+}
+
+/* ════════════════════════════════════════════
+   QUOTE
+════════════════════════════════════════════ */
+function setQuote(){
+  const q=QUOTES[new Date().getDay()%QUOTES.length];
+  document.getElementById('quote-text').textContent=`"${q.q}"`;
+  document.getElementById('quote-author').textContent=`— ${q.a}`;
+}
+
+/* ════════════════════════════════════════════
+   SUBTASK FORM
+════════════════════════════════════════════ */
+document.getElementById('subtask-add-btn').addEventListener('click',addPendingSubtask);
+document.getElementById('subtask-input').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addPendingSubtask();}});
+
+function addPendingSubtask(){
+  const inp=document.getElementById('subtask-input');
+  const val=inp.value.trim();if(!val)return;
+  pendingSubtasks.push({id:Date.now()+Math.random()+'',text:val,done:false});
+  inp.value=''; renderPendingSubtasks();
+}
+function removePendingSubtask(id){
+  pendingSubtasks=pendingSubtasks.filter(s=>s.id!==id);
+  renderPendingSubtasks();
+}
+function renderPendingSubtasks(){
+  const el=document.getElementById('subtag-list');
+  el.innerHTML=pendingSubtasks.map(s=>`
+    <span class="subtag">${escHtml(s.text)}<button type="button" onclick="removePendingSubtask('${s.id}')">✕</button></span>
+  `).join('');
+}
+
+/* ════════════════════════════════════════════
+   ADD TASK
+════════════════════════════════════════════ */
+document.getElementById('add-btn').addEventListener('click',addTask);
+document.getElementById('task-title').addEventListener('keydown',e=>{if(e.key==='Enter')addTask();});
+
+function addTask(){
+  const title=document.getElementById('task-title').value.trim();
+  const due=document.getElementById('task-due').value;
+  const priority=document.getElementById('task-priority').value;
+  const recur=document.getElementById('task-recur').value;
+  if(!title){
+    const inp=document.getElementById('task-title');
+    inp.style.borderColor='var(--danger)';inp.focus();
+    setTimeout(()=>inp.style.borderColor='',1200);return;
+  }
+  const task={
+    id:Date.now()+'',title,due:due||null,priority,recur,
+    done:false,doneDate:null,created:todayStr(),
+    subtasks:[...pendingSubtasks]
+  };
+  tasks.unshift(task);saveTasks();
+  pendingSubtasks=[];renderPendingSubtasks();
+  document.getElementById('task-title').value='';
+  document.getElementById('task-due').value='';
+  document.getElementById('task-priority').value='medium';
+  document.getElementById('task-recur').value='none';
+  render();checkAchievements();
+  toast('Task added ✓','success');
+}
+
+/* ════════════════════════════════════════════
+   TOGGLE / DELETE
+════════════════════════════════════════════ */
+function toggleDone(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const wasDone=t.done;
+  t.done=!t.done; t.doneDate=t.done?todayStr():null;
+  if(t.done&&!wasDone){
+    // increment total done counter
+    ls.set(K.TOTAL_DONE,(ls.get(K.TOTAL_DONE,0))+1);
+    // handle recurring: spawn next occurrence
+    if(t.recur&&t.recur!=='none'){
+      const next={...t,id:Date.now()+'',done:false,doneDate:null,created:todayStr(),subtasks:t.subtasks.map(s=>({...s,done:false}))};
+      if(t.due){
+        const dd=new Date(t.due+'T12:00');
+        if(t.recur==='daily')dd.setDate(dd.getDate()+1);else dd.setDate(dd.getDate()+7);
+        next.due=dd.toISOString().split('T')[0];
+      }
+      const idx=tasks.findIndex(x=>x.id===id);
+      tasks.splice(idx+1,0,next);
+      toast(`🔁 Recurring task rescheduled (${t.recur})`,'info');
+    }
+  }
+  saveTasks();render();checkAchievements();
+}
+
+function toggleSubtask(taskId,subId){
+  const t=tasks.find(x=>x.id===taskId);if(!t)return;
+  const s=t.subtasks.find(x=>x.id===subId);if(!s)return;
+  s.done=!s.done;saveTasks();render();
+}
+
+function deleteTask(id){
+  tasks=tasks.filter(t=>t.id!==id);saveTasks();render();
+}
+
+document.getElementById('clear-btn').addEventListener('click',()=>{
+  const before=tasks.length;
+  tasks=tasks.filter(t=>!t.done);
+  if(tasks.length<before){saveTasks();render();toast('Cleared completed','info');}
+});
+
+/* ════════════════════════════════════════════
+   FILTERS
+════════════════════════════════════════════ */
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    filter=btn.dataset.filter;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');render();
+  });
+});
+
+/* ════════════════════════════════════════════
+   DRAG & DROP REORDER
+════════════════════════════════════════════ */
+function initDrag(card,id){
+  card.setAttribute('draggable','true');
+  card.addEventListener('dragstart',e=>{dragSrc=id;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+  card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+  card.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('drag-over');});
+  card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+  card.addEventListener('drop',e=>{
+    e.preventDefault();card.classList.remove('drag-over');
+    if(dragSrc===id)return;
+    const fi=tasks.findIndex(t=>t.id===dragSrc);
+    const ti=tasks.findIndex(t=>t.id===id);
+    if(fi<0||ti<0)return;
+    const[m]=tasks.splice(fi,1);tasks.splice(ti,0,m);
+    saveTasks();render();
+  });
+}
+
+/* ════════════════════════════════════════════
+   RENDER — main draw
+════════════════════════════════════════════ */
+function render(){
+  let visible=tasks;
+  if(filter==='pending')  visible=tasks.filter(t=>!t.done);
+  if(filter==='completed')visible=tasks.filter(t=>t.done);
+
+  const list=document.getElementById('task-list');
+  list.innerHTML='';
+  if(!visible.length){
+    list.innerHTML=`<div class="empty"><div class="empty-icon">📚</div>
+      <p>${filter==='completed'?'No completed tasks yet.':filter==='pending'?'All caught up! 🎉':'No tasks yet. Add one above.'}</p></div>`;
+  } else {
+    visible.forEach(t=>list.appendChild(buildCard(t)));
+  }
+
+  // stats
+  const total=tasks.length,done=tasks.filter(t=>t.done).length;
+  const pending=total-done,pct=total?Math.round(done/total*100):0;
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-done').textContent=done;
+  document.getElementById('stat-pending').textContent=pending;
+  document.getElementById('stat-streak').textContent=updateStreak();
+  document.getElementById('stat-pct').textContent=pct+'%';
+  document.getElementById('prog-bar').style.width=pct+'%';
+
+  // sync pomodoro task dropdown
+  const sel=document.getElementById('pomo-task-select');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— Select task —</option>';
+  tasks.filter(t=>!t.done).forEach(t=>{
+    const o=document.createElement('option');
+    o.value=t.id;o.textContent=t.title.slice(0,55);sel.appendChild(o);
+  });
+  if(cur)sel.value=cur;
+  updatePomoTaskLabel();
+}
+
+/* ════════════════════════════════════════════
+   BUILD CARD
+════════════════════════════════════════════ */
+function buildCard(task){
+  const card=document.createElement('div');
+  card.className=`task-card${task.done?' done':''}`;
+  card.dataset.priority=task.priority;
+  card.dataset.id=task.id;
+  card.setAttribute('role','listitem');
+
+  const overdue=!task.done&&isOverdue(task.due);
+  const priBadge=`<span class="badge badge-${task.priority}">${task.priority}</span>`;
+  const dateBadge=task.due?(overdue
+    ?`<span class="badge badge-overdue">⚠ ${formatDate(task.due)}</span>`
+    :`<span class="badge badge-date">${formatDate(task.due)}</span>`):'';
+  const recurBadge=task.recur&&task.recur!=='none'?`<span class="badge badge-recur">🔁 ${task.recur}</span>`:'';
+
+  // subtask progress
+  const subTotal=task.subtasks?task.subtasks.length:0;
+  const subDone=task.subtasks?task.subtasks.filter(s=>s.done).length:0;
+  const subPct=subTotal?Math.round(subDone/subTotal*100):0;
+  const subtasksHtml=subTotal?`
+    <div class="subtasks">
+      ${task.subtasks.map(s=>`
+        <div class="subtask-item${s.done?' sub-done':''}">
+          <input type="checkbox" id="sub-${s.id}" ${s.done?'checked':''}
+            onchange="toggleSubtask('${task.id}','${s.id}')"/>
+          <span>${escHtml(s.text)}</span>
+        </div>`).join('')}
+      <div class="sub-prog-wrap"><div class="sub-prog-bar" style="width:${subPct}%"></div></div>
+    </div>`:'';
+
+  card.innerHTML=`
+    <div class="check-wrap">
+      <input type="checkbox" id="chk-${task.id}" ${task.done?'checked':''}/>
+      <label for="chk-${task.id}" title="${task.done?'Mark pending':'Mark done'}">✓</label>
+    </div>
+    <div class="task-body">
+      <div class="task-title">${escHtml(task.title)}</div>
+      <div class="task-meta">${priBadge}${dateBadge}${recurBadge}</div>
+      ${subtasksHtml}
+    </div>
+    <div class="task-actions">
+      <div class="action-row">
+        <button class="action-btn focusable" title="Focus on this task" data-focusid="${task.id}">🎯</button>
+        <button class="action-btn del" title="Delete task" data-delid="${task.id}">✕</button>
+      </div>
+      <div class="action-row">
+        <span class="action-btn drag-handle" title="Drag to reorder">⠿</span>
+      </div>
+    </div>`;
+
+  card.querySelector(`#chk-${task.id}`).addEventListener('change',()=>toggleDone(task.id));
+  card.querySelector('.del').addEventListener('click',()=>deleteTask(task.id));
+  card.querySelector('.focusable').addEventListener('click',()=>{
+    pomo.focusTaskId=task.id;
+    document.getElementById('pomo-task-select').value=task.id;
+    updatePomoTaskLabel();enterFocusMode();
+  });
+  initDrag(card,task.id);
+  return card;
+}
+
+/* ════════════════════════════════════════════
+   POMODORO
+════════════════════════════════════════════ */
+function pomoConfig(){
+  return{
+    work:parseInt(document.getElementById('pomo-work').value)||25,
+    short:parseInt(document.getElementById('pomo-short').value)||5,
+    long:parseInt(document.getElementById('pomo-long').value)||15,
+    longEvery:parseInt(document.getElementById('pomo-long-every').value)||4
+  };
+}
+
+function updatePomoUI(){
+  const m=String(Math.floor(pomo.secondsLeft/60)).padStart(2,'0');
+  const s=String(pomo.secondsLeft%60).padStart(2,'0');
+  const str=`${m}:${s}`;
+  const col=pomo.phase==='work'?'var(--accent)':pomo.phase==='short'?'var(--accent2)':'var(--accent3)';
+  const phaseLabel=pomo.phase==='work'?'Work Session':pomo.phase==='short'?'Short Break':'Long Break';
+
+  document.getElementById('pomo-time').textContent=str;
+  document.getElementById('pomo-time').style.color=col;
+  document.getElementById('fo-time').textContent=str;
+  document.getElementById('fo-time').style.color=col;
+  document.getElementById('pomo-phase-label').textContent=phaseLabel;
+  document.getElementById('fo-phase').textContent=phaseLabel;
+  document.getElementById('pomo-sessions-label').textContent=`🍅 Sessions today: ${pomo.sessionsToday}`;
+  document.getElementById('fo-sessions').textContent=`🍅 ${pomo.sessionsToday} sessions today`;
+
+  // svg ring
+  const circ=427; // 2π×68≈427
+  const offset=circ*(pomo.secondsLeft/pomo.totalSeconds);
+  const circle=document.getElementById('pomo-ring-circle');
+  circle.style.strokeDashoffset=offset;
+  circle.style.stroke=col;
+
+  document.title=`[${str}] Study Planner`;
+}
+
+function pomoNextPhase(){
+  const cfg=pomoConfig();
+  if(pomo.phase==='work'){
+    pomo.sessionsToday++;pomo.cycleCount++;
+    document.getElementById('ins-pomo').textContent=pomo.sessionsToday;
+    if(pomo.cycleCount%cfg.longEvery===0){
+      pomo.phase='long';pomo.totalSeconds=cfg.long*60;
+      toast('🍅 Done! Long break time.','success');
+    } else {
+      pomo.phase='short';pomo.totalSeconds=cfg.short*60;
+      toast('🍅 Done! Short break.','success');
+    }
+  } else {
+    pomo.phase='work';pomo.totalSeconds=cfg.work*60;
+    toast('Break over. Let\'s go! 💪','info');
+  }
+  pomo.secondsLeft=pomo.totalSeconds;
+  updatePomoUI();checkAchievements();
+}
+
+function pomoTick(){pomo.secondsLeft--;if(pomo.secondsLeft<=0)pomoNextPhase();else updatePomoUI();}
+function startPomo(){if(!pomo.running){pomo.running=true;pomo._interval=setInterval(pomoTick,1000);}}
+function pausePomo(){if(pomo.running){pomo.running=false;clearInterval(pomo._interval);}}
+function resetPomo(){
+  pausePomo();
+  const cfg=pomoConfig();
+  pomo.secondsLeft=pomo.totalSeconds=(pomo.phase==='work'?cfg.work:pomo.phase==='short'?cfg.short:cfg.long)*60;
+  updatePomoUI();
+}
+
+document.getElementById('pomo-start').addEventListener('click',startPomo);
+document.getElementById('pomo-pause').addEventListener('click',pausePomo);
+document.getElementById('pomo-reset').addEventListener('click',resetPomo);
+document.getElementById('pomo-skip').addEventListener('click',()=>{pausePomo();pomoNextPhase();});
+document.getElementById('fo-start').addEventListener('click',startPomo);
+document.getElementById('fo-pause').addEventListener('click',pausePomo);
+document.getElementById('fo-reset').addEventListener('click',resetPomo);
+document.getElementById('pomo-task-select').addEventListener('change',e=>{pomo.focusTaskId=e.target.value;updatePomoTaskLabel();});
+
+function updatePomoTaskLabel(){
+  const t=tasks.find(x=>x.id===pomo.focusTaskId);
+  const label=t?t.title:'No task selected';
+  document.getElementById('pomo-task-label').textContent=label;
+  document.getElementById('fo-task').textContent=label;
+}
+
+/* ════════════════════════════════════════════
+   FOCUS MODE
+════════════════════════════════════════════ */
+document.getElementById('focus-mode-btn').addEventListener('click',enterFocusMode);
+document.getElementById('focus-exit').addEventListener('click',()=>{
+  document.getElementById('focus-overlay').classList.remove('active');
+  document.title='Study Planner';
+});
+function enterFocusMode(){
+  document.getElementById('focus-overlay').classList.add('active');
+  updatePomoTaskLabel();updatePomoUI();
+}
+
+/* ════════════════════════════════════════════
+   ACHIEVEMENT DEFINITIONS
+════════════════════════════════════════════ */
+const BADGE_DEFS=[
+  {id:'first',  icon:'🌱',name:'First Step',    desc:'Add your very first task',cls:''},
+  {id:'streak3',icon:'📅',name:'3-Day Streak',  desc:'Complete tasks 3 days in a row',cls:''},
+  {id:'streak7',icon:'🔥',name:'7-Day Streak',  desc:'Complete tasks 7 days in a row',cls:'w'},
+  {id:'done10', icon:'✅',name:'Getting Going',  desc:'Complete 10 tasks',cls:''},
+  {id:'done100',icon:'💯',name:'Century',        desc:'Complete 100 tasks total',cls:'w'},
+  {id:'highpri',icon:'⚡',name:'Priority Master',desc:'Complete all high-priority tasks',cls:'p'},
+  {id:'pomo5',  icon:'🍅',name:'Pomodoro Fan',   desc:'Complete 5 Pomodoro sessions today',cls:''},
+  {id:'pomo10', icon:'🔴',name:'Focus Machine',  desc:'Complete 10 Pomodoro sessions today',cls:'w'},
+];
+
+function checkAchievements(){
+  const streak=updateStreak();
+  const totalDone=ls.get(K.TOTAL_DONE,0);
+  const highPending=tasks.filter(t=>t.priority==='high'&&!t.done).length;
+  const hasHigh=tasks.some(t=>t.priority==='high');
+  const earned={
+    first:  tasks.length>0,
+    streak3:streak>=3,
+    streak7:streak>=7,
+    done10: totalDone>=10,
+    done100:totalDone>=100,
+    highpri:hasHigh&&highPending===0,
+    pomo5:  pomo.sessionsToday>=5,
+    pomo10: pomo.sessionsToday>=10,
+  };
+  const stored=ls.get(K.BADGES,{});
+  let newBadge=false;
+  for(const[k,ok] of Object.entries(earned)){
+    if(ok&&!stored[k]){stored[k]=true;newBadge=true;const b=BADGE_DEFS.find(x=>x.id===k);if(b)toast(`🏆 Badge: ${b.name}`,'success');}
+  }
+  if(newBadge)ls.set(K.BADGES,stored);
+  renderAchievements(stored);
+}
+function renderAchievements(stored){
+  if(!stored)stored=ls.get(K.BADGES,{});
+  document.getElementById('achievements-list').innerHTML=BADGE_DEFS.map(b=>`
+    <div class="badge-card${stored[b.id]?` earned ${b.cls}`:''}">
+      <div class="badge-icon">${b.icon}</div>
+      <div><div class="badge-name">${b.name}</div><div class="badge-desc">${b.desc}</div></div>
+    </div>`).join('');
+}
+
+/* ════════════════════════════════════════════
+   CHARTS
+════════════════════════════════════════════ */
+let chartInstances={};
+function renderCharts(){
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const grid=dark?'#2a3347':'#e2e8f0';
+  const txtCol=dark?'#64748b':'#94a3b8';
+  Chart.defaults.color=txtCol;
+  Object.values(chartInstances).forEach(c=>c.destroy());chartInstances={};
+
+  const done=tasks.filter(t=>t.done).length;
+  const pending=tasks.length-done;
+  const days=weekDays();
+  const dayLabels=days.map(d=>new Date(d+'T12:00').toLocaleDateString('en',{weekday:'short'}));
+  const dayCounts=days.map(d=>tasks.filter(t=>t.done&&t.doneDate===d).length);
+
+  // donut
+  chartInstances.donut=new Chart(document.getElementById('chart-donut'),{
+    type:'doughnut',
+    data:{labels:['Done','Pending'],datasets:[{data:[done,pending],backgroundColor:['#4ade80','#2a3347'],borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom'}},cutout:'65%'}
+  });
+
+  // bar: last 7 days
+  chartInstances.bar=new Chart(document.getElementById('chart-bar'),{
+    type:'bar',
+    data:{labels:dayLabels,datasets:[{label:'Tasks',data:dayCounts,backgroundColor:'#38bdf8',borderRadius:4}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:grid}},x:{grid:{color:grid}}}}
+  });
+
+  // priority pie
+  const hi=tasks.filter(t=>t.priority==='high').length;
+  const md=tasks.filter(t=>t.priority==='medium').length;
+  const lo=tasks.filter(t=>t.priority==='low').length;
+  chartInstances.priority=new Chart(document.getElementById('chart-priority'),{
+    type:'pie',
+    data:{labels:['High','Medium','Low'],datasets:[{data:[hi,md,lo],backgroundColor:['#f87171','#fbbf24','#38bdf8'],borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom'}}}
+  });
+
+  // cumulative line
+  let cumul=0;
+  const cumulData=days.map(d=>{cumul+=tasks.filter(t=>t.done&&t.doneDate===d).length;return cumul;});
+  chartInstances.line=new Chart(document.getElementById('chart-line'),{
+    type:'line',
+    data:{labels:dayLabels,datasets:[{label:'Total',data:cumulData,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.15)',fill:true,tension:.4,pointRadius:4}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:grid}},x:{grid:{color:grid}}}}
+  });
+
+  // insights
+  const thisWeek=dayCounts.reduce((a,b)=>a+b,0);
+  const bestIdx=dayCounts.indexOf(Math.max(...dayCounts));
+  document.getElementById('ins-week').textContent=thisWeek;
+  document.getElementById('ins-best').textContent=dayCounts[bestIdx]>0?dayLabels[bestIdx]:'—';
+  document.getElementById('ins-pomo').textContent=pomo.sessionsToday;
+  document.getElementById('ins-high').textContent=tasks.filter(t=>t.done&&t.priority==='high').length;
+}
+
+/* ════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════ */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel=document.getElementById('tab-'+btn.dataset.tab);
+    if(panel)panel.classList.add('active');
+    if(btn.dataset.tab==='dashboard')renderCharts();
+    if(btn.dataset.tab==='achievements')renderAchievements();
+  });
+});
+
+/* ════════════════════════════════════════════
+   THEME
+════════════════════════════════════════════ */
+const themeBtn=document.getElementById('theme-toggle');
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  themeBtn.textContent=t==='dark'?'🌙':'☀️';
+  ls.set(K.THEME,t);
+}
+themeBtn.addEventListener('click',()=>applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'));
+
+/* ════════════════════════════════════════════
+   XSS ESCAPE
+════════════════════════════════════════════ */
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+(function init(){
+  applyTheme(ls.get(K.THEME,'dark'));
+  document.getElementById('today-date').textContent=
+    new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  setQuote();
+  loadTasks();
+  render();
+  renderAchievements();
+  checkAchievements();
+  // init pomo display
+  const cfg=pomoConfig();
+  pomo.totalSeconds=pomo.secondsLeft=cfg.work*60;
+  updatePomoUI();
+})();
+</script>
+</body>
+</html>

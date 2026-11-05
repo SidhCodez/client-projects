@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Compare – SmartCompare AI</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+</head>
+<body class="dashboard">
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <a href="index.html" style="text-decoration:none;display:flex;align-items:center;gap:8px;">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">SmartCompare<span class="brand-ai"> AI</span></span>
+      </a>
+    </div>
+    <div class="nav-actions">
+      <button id="btn-history" class="nav-btn" title="View history">📋 History</button>
+      <button id="btn-export" class="nav-btn primary" title="Export PDF">⬇ Export PDF</button>
+    </div>
+  </nav>
+
+  <!-- MODE SELECTOR -->
+  <div class="mode-bar">
+    <span class="mode-label">Mode:</span>
+    <div class="mode-pills" role="group" aria-label="Comparison mode">
+      <button class="mode-pill active" data-mode="general">👤 General</button>
+      <button class="mode-pill" data-mode="student">🎓 Student</button>
+      <button class="mode-pill" data-mode="gamer">🎮 Gamer</button>
+      <button class="mode-pill" data-mode="professional">💼 Professional</button>
+      <button class="mode-pill" data-mode="photographer">📸 Photographer</button>
+    </div>
+  </div>
+
+  <!-- MAIN DASHBOARD -->
+  <main class="dashboard-main" id="app">
+
+    <!-- INPUT SECTION -->
+    <section class="input-section" id="input-section">
+      <div class="input-grid">
+
+        <div class="input-panel" id="panel-a">
+          <div class="input-panel-header">
+            <span class="panel-label label-a">Product A</span>
+            <button class="clear-btn" data-target="a" title="Clear">✕</button>
+          </div>
+          <textarea
+            id="raw-a"
+            class="spec-textarea"
+            placeholder="Paste raw specs here…
+
+Example:
+iPhone 15 Pro
+Price: $999
+RAM: 8GB
+Storage: 256GB
+Battery: 3274 mAh
+Camera: 48MP main, 12MP ultra wide
+Display: 6.1-inch OLED 2556×1179
+Rating: 4.7/5"
+            rows="12"
+          ></textarea>
+          <button class="parse-btn" data-target="a">Parse Specs →</button>
+          <div class="parsed-preview" id="preview-a"></div>
+        </div>
+
+        <div class="input-divider">
+          <div class="divider-line"></div>
+          <span class="vs-badge">VS</span>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="input-panel" id="panel-b">
+          <div class="input-panel-header">
+            <span class="panel-label label-b">Product B</span>
+            <button class="clear-btn" data-target="b" title="Clear">✕</button>
+          </div>
+          <textarea
+            id="raw-b"
+            class="spec-textarea"
+            placeholder="Paste raw specs here…
+
+Example:
+Samsung Galaxy S24+
+Price: $999
+RAM: 12GB
+Storage: 256GB
+Battery: 4900 mAh
+Camera: 50MP main, 12MP ultra wide, 10MP telephoto
+Display: 6.7-inch Dynamic AMOLED 3088×1440
+Rating: 4.5/5"
+            rows="12"
+          ></textarea>
+          <button class="parse-btn" data-target="b">Parse Specs →</button>
+          <div class="parsed-preview" id="preview-b"></div>
+        </div>
+
+      </div>
+
+      <div class="compare-action">
+        <button id="btn-compare" class="compare-button" disabled>
+          <span class="compare-btn-text">Compare Products</span>
+          <span class="compare-btn-hint">Parse both products first</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- RESULTS SECTION (hidden until compare) -->
+    <section class="results-section hidden" id="results-section">
+
+      <!-- WINNER BANNER -->
+      <div class="winner-banner" id="winner-banner">
+        <div class="winner-content">
+          <span class="winner-trophy">🏆</span>
+          <div class="winner-info">
+            <div class="winner-label">Recommended for <span id="winner-mode-label">General</span> use</div>
+            <div class="winner-name" id="winner-name">—</div>
+          </div>
+          <div class="winner-score-block">
+            <div class="winner-score" id="winner-score">—</div>
+            <div class="winner-score-label">Score</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCORE OVERVIEW -->
+      <div class="score-overview" id="score-overview">
+        <div class="score-card" id="score-card-a">
+          <div class="score-product-name" id="score-name-a">Product A</div>
+          <div class="score-ring-wrap">
+            <svg class="score-ring" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" class="ring-bg"/>
+              <circle cx="60" cy="60" r="50" class="ring-fill ring-a" id="ring-a"
+                stroke-dasharray="0 314" stroke-dashoffset="78.5"/>
+            </svg>
+            <div class="score-ring-value" id="score-value-a">—</div>
+          </div>
+          <div class="score-breakdown" id="breakdown-a"></div>
+        </div>
+
+        <div class="score-vs">VS</div>
+
+        <div class="score-card" id="score-card-b">
+          <div class="score-product-name" id="score-name-b">Product B</div>
+          <div class="score-ring-wrap">
+            <svg class="score-ring" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" class="ring-bg"/>
+              <circle cx="60" cy="60" r="50" class="ring-fill ring-b" id="ring-b"
+                stroke-dasharray="0 314" stroke-dashoffset="78.5"/>
+            </svg>
+            <div class="score-ring-value" id="score-value-b">—</div>
+          </div>
+          <div class="score-breakdown" id="breakdown-b"></div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW -->
+      <div class="charts-row" id="charts-row">
+        <div class="chart-card">
+          <h3 class="chart-title">Radar Overview</h3>
+          <div class="chart-wrap">
+            <canvas id="chart-radar"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Metric Breakdown</h3>
+          <div class="chart-wrap">
+            <canvas id="chart-bar"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Price vs Score</h3>
+          <div class="chart-wrap">
+            <canvas id="chart-price"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDE-BY-SIDE SPEC TABLE -->
+      <div class="spec-table-wrap" id="spec-table-wrap">
+        <h3 class="section-title">Side-by-Side Specs</h3>
+        <div class="spec-table" id="spec-table"></div>
+      </div>
+
+      <!-- AI RECOMMENDATIONS -->
+      <div class="recommendations-wrap" id="recommendations-wrap">
+        <h3 class="section-title">AI Analysis</h3>
+        <div class="rec-grid" id="rec-grid"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- HISTORY MODAL -->
+  <div class="modal-overlay hidden" id="history-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Comparison History</h3>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="history-list">
+        <p class="empty-state">No saved comparisons yet.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="danger-btn" id="btn-clear-history">Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast hidden" id="toast"></div>
+
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/recommendation.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/compare.js"></script>
+</body>
+</html>

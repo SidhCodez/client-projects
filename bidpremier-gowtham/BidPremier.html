@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BidPremier – IPL Fantasy Auction Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg0:#060914;--bg1:#0d1626;--bg2:#111d35;--gold:#f5c842;--teal:#00e5c8;--pink:#ff4f8b;--blue:#4f9fff;--orange:#ff7f3f;--t1:#f0f4ff;--t2:#8ba0c0;--t3:#4a5f80;--br:rgba(79,159,255,0.15);--brg:rgba(245,200,66,0.3);--fd:Orbitron,monospace;--fh:Rajdhani,sans-serif;--fb:Inter,sans-serif}
+[data-theme=neon]{--bg0:#000510;--bg1:#050d1a;--bg2:#080f1e;--gold:#39ff14;--teal:#00ffff;--pink:#ff00ff}
+[data-theme=stadium]{--bg0:#0a0800;--bg1:#150f00;--bg2:#1a1200;--gold:#ffcc00;--teal:#00cc88;--pink:#ff6600}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--fb);background:var(--bg0);color:var(--t1);min-height:100vh;overflow-x:hidden;cursor:none}
+button,a{cursor:none;font-family:inherit;border:none;outline:none}
+input,select{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg1)}::-webkit-scrollbar-thumb{background:var(--teal);border-radius:2px}
+#cur{position:fixed;width:10px;height:10px;background:var(--teal);border-radius:50%;pointer-events:none;z-index:9999;mix-blend-mode:screen;transform:translate(-50%,-50%)}
+#cur2{position:fixed;width:32px;height:32px;border:1.5px solid var(--gold);border-radius:50%;pointer-events:none;z-index:9998;transition:all .14s;mix-blend-mode:screen;transform:translate(-50%,-50%)}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;opacity:.1;animation:ob 8s ease-in-out infinite}
+.o1{width:400px;height:400px;background:var(--teal);top:-100px;left:-100px}
+.o2{width:500px;height:500px;background:var(--pink);bottom:-150px;right:-150px;animation-delay:3s}
+.o3{width:300px;height:300px;background:var(--gold);top:40%;left:40%;animation-delay:6s}
+@keyframes ob{0%,100%{transform:translate(0,0)}50%{transform:translate(28px,-28px)}}
+#app{position:relative;z-index:1;padding-bottom:44px}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(6,9,20,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--br)}
+.logo{font-family:var(--fd);font-size:17px;font-weight:900;color:var(--gold);letter-spacing:2px;text-shadow:0 0 18px rgba(245,200,66,.4)}
+.logo span{color:var(--teal)}
+.navlinks{display:flex;gap:2px}
+.nb{font-family:var(--fh);font-size:13px;font-weight:600;color:var(--t2);padding:5px 11px;border-radius:8px;background:transparent;transition:.2s;cursor:none}
+.nb:hover,.nb.on{color:var(--teal);background:rgba(0,229,200,.08)}
+.navr{display:flex;align-items:center;gap:10px}
+.purse-pill{display:flex;align-items:center;gap:5px;background:rgba(245,200,66,.1);border:1px solid var(--brg);border-radius:20px;padding:4px 12px;font-family:var(--fh);font-size:14px;font-weight:600;color:var(--gold)}
+.icobtn{width:30px;height:30px;border-radius:50%;background:rgba(79,159,255,.1);border:1px solid var(--br);color:var(--t2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:.2s;cursor:none}
+.icobtn:hover{border-color:var(--teal);color:var(--teal)}
+/* PAGES */
+.pg{display:none;padding-top:56px;min-height:100vh}
+.pg.on{display:block}
+.wrap{max-width:1400px;margin:0 auto;padding:0 20px}
+/* HOME */
+.hero{min-height:calc(100vh - 56px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px}
+.hero-ticker{font-family:var(--fh);font-size:11px;color:var(--t3);letter-spacing:3px;text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:7px}
+.td{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3;transform:scale(.7)}}
+.htitle{font-family:var(--fd);font-size:clamp(44px,8vw,94px);font-weight:900;line-height:.95;letter-spacing:-2px;margin-bottom:10px}
+.w1{background:linear-gradient(135deg,var(--gold),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.w2{display:block;background:linear-gradient(135deg,var(--teal),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hsub{font-family:var(--fh);font-size:16px;color:var(--t2);margin:18px 0 34px;max-width:560px;line-height:1.5}
+.cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btnp{font-family:var(--fh);font-size:16px;font-weight:700;padding:12px 34px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;cursor:none;box-shadow:0 8px 28px rgba(245,200,66,.3);transition:.3s;position:relative;overflow:hidden}
+.btnp:hover{transform:translateY(-3px);box-shadow:0 12px 38px rgba(245,200,66,.5)}
+.btns{font-family:var(--fh);font-size:16px;font-weight:700;padding:12px 34px;border-radius:12px;background:transparent;color:var(--teal);border:2px solid var(--teal);cursor:none;transition:.3s}
+.btns:hover{background:rgba(0,229,200,.1);transform:translateY(-3px)}
+.hstats{display:flex;gap:36px;margin-top:50px;flex-wrap:wrap;justify-content:center}
+.hstat{text-align:center}
+.hsn{font-family:var(--fd);font-size:34px;font-weight:900;color:var(--gold);text-shadow:0 0 18px rgba(245,200,66,.4)}
+.hsl{font-family:var(--fh);font-size:11px;color:var(--t3);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;padding:55px 0}
+.fcard{background:var(--bg2);border:1px solid var(--br);border-radius:18px;padding:24px;transition:.3s}
+.fcard:hover{border-color:var(--teal);transform:translateY(-4px);box-shadow:0 18px 55px rgba(0,0,0,.4)}
+.ficon{font-size:36px;margin-bottom:12px}
+.ftitle{font-family:var(--fh);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:5px}
+.fdesc{font-size:13px;color:var(--t2);line-height:1.6}
+/* AUCTION */
+.alay{display:grid;grid-template-columns:1fr 320px;gap:16px;padding:16px 0 40px;align-items:start}
+.spotlight{background:var(--bg2);border:1px solid var(--br);border-radius:18px;padding:22px;position:relative;overflow:hidden;margin-bottom:16px}
+.spotlight::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(transparent,rgba(0,229,200,.035),transparent,rgba(245,200,66,.035),transparent);animation:rot 10s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.sphead{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;position:relative;z-index:1}
+.splbl{font-family:var(--fh);font-size:11px;font-weight:600;color:var(--teal);letter-spacing:3px;text-transform:uppercase}
+.sptimer{font-family:var(--fd);font-size:26px;font-weight:900;color:var(--gold);text-shadow:0 0 16px rgba(245,200,66,.4);min-width:50px;text-align:center}
+.sptimer.urg{color:var(--pink)!important;animation:bl .5s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}
+.pdisp{display:grid;grid-template-columns:170px 1fr;gap:22px;position:relative;z-index:1}
+.pav{width:170px;height:190px;border-radius:12px;background:linear-gradient(135deg,var(--bg0),var(--bg1));border:2px solid var(--brg);display:flex;align-items:center;justify-content:center;font-size:76px;position:relative;overflow:hidden;flex-shrink:0}
+.rbadge{position:absolute;top:8px;left:8px;z-index:2;font-family:var(--fh);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:1px;text-transform:uppercase}
+.rb-BAT{background:rgba(245,200,66,.2);color:var(--gold);border:1px solid var(--brg)}
+.rb-BOWL{background:rgba(0,229,200,.2);color:var(--teal);border:1px solid rgba(0,229,200,.3)}
+.rb-AR{background:rgba(255,79,139,.2);color:var(--pink);border:1px solid rgba(255,79,139,.3)}
+.rb-WK{background:rgba(79,159,255,.2);color:var(--blue);border:1px solid rgba(79,159,255,.3)}
+.pname{font-family:var(--fd);font-size:26px;font-weight:900;color:var(--t1);margin-bottom:4px;letter-spacing:-.5px}
+.pmeta{font-family:var(--fh);font-size:12px;color:var(--t2);margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
+.sbox{background:rgba(13,22,38,.8);border:1px solid var(--br);border-radius:10px;padding:9px;text-align:center}
+.sv{font-family:var(--fd);font-size:16px;font-weight:700;color:var(--teal)}
+.sl{font-family:var(--fh);font-size:9px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.fdots{display:flex;gap:5px;align-items:center;margin-bottom:13px}
+.fd{width:9px;height:9px;border-radius:50%}
+.fd.W{background:#39ff14;box-shadow:0 0 5px #39ff14}
+.fd.L{background:var(--pink);box-shadow:0 0 5px var(--pink)}
+.fd.H{background:var(--gold);box-shadow:0 0 5px var(--gold)}
+.bidsec{background:rgba(6,9,20,.9);border:1px solid var(--brg);border-radius:12px;padding:16px}
+.bidlbl{font-family:var(--fh);font-size:10px;color:var(--t3);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.curbid{font-family:var(--fd);font-size:40px;font-weight:900;color:var(--gold);text-shadow:0 0 18px rgba(245,200,66,.4);line-height:1;margin-bottom:3px;transition:.3s}
+.curbid.up{animation:bflash .4s ease}
+@keyframes bflash{0%{transform:scale(1.15);color:#fff}100%{transform:scale(1)}}
+.bidder{font-family:var(--fh);font-size:12px;color:var(--t2);margin-bottom:12px}
+.bidder span{color:var(--teal);font-weight:700}
+.bbtns{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+.bb{font-family:var(--fh);font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px;background:rgba(245,200,66,.1);border:1px solid var(--brg);color:var(--gold);cursor:none;transition:.2s}
+.bb:hover{background:rgba(245,200,66,.2)}
+.bb.big{background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;border-color:transparent;flex:1}
+.bb.big:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,200,66,.4)}
+.actrl{display:flex;gap:6px;margin-top:7px}
+.cb{font-family:var(--fh);font-size:11px;font-weight:600;padding:6px 11px;border-radius:8px;cursor:none;transition:.2s}
+.cp{background:rgba(255,79,139,.1);border:1px solid rgba(255,79,139,.3);color:var(--pink)}.cp:hover{background:rgba(255,79,139,.2)}
+.cu{background:rgba(79,159,255,.1);border:1px solid rgba(79,159,255,.3);color:var(--blue)}.cu:hover{background:rgba(79,159,255,.2)}
+.cn{background:rgba(0,229,200,.1);border:1px solid rgba(0,229,200,.3);color:var(--teal)}.cn:hover{background:rgba(0,229,200,.2)}
+.soldov{position:absolute;inset:0;border-radius:18px;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;opacity:0;pointer-events:none;transition:opacity .3s}
+.soldov.on{opacity:1;pointer-events:all}
+.soldbanner{font-family:var(--fd);font-size:68px;font-weight:900;color:var(--gold);text-shadow:0 0 30px rgba(245,200,66,.6);animation:solda .5s ease;letter-spacing:4px}
+@keyframes solda{0%{transform:scale(0) rotate(-10deg);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.soldd{font-family:var(--fh);font-size:18px;color:var(--t2);margin-top:7px}
+.sdt{color:var(--teal);font-weight:700;font-size:24px}
+.alog{background:var(--bg2);border:1px solid var(--br);border-radius:18px;overflow:hidden}
+.loghead{padding:13px 16px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between}
+.logtitle{font-family:var(--fh);font-size:14px;font-weight:700;color:var(--t1)}
+.logbadge{font-family:var(--fh);font-size:10px;background:rgba(0,229,200,.15);border:1px solid rgba(0,229,200,.3);color:var(--teal);padding:2px 8px;border-radius:20px}
+.logfeed{height:185px;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:4px}
+.le{font-family:var(--fh);font-size:12px;padding:6px 9px;border-radius:6px;border-left:3px solid transparent;animation:sli .3s ease}
+@keyframes sli{from{transform:translateX(-14px);opacity:0}to{transform:translateX(0);opacity:1}}
+.le.sold{border-color:var(--gold);background:rgba(245,200,66,.05)}
+.le.bid{border-color:var(--teal);background:rgba(0,229,200,.03)}
+.le.unsold{border-color:var(--pink);background:rgba(255,79,139,.05)}
+.le.sys{border-color:var(--t3);color:var(--t3)}
+.lt{color:var(--teal);font-weight:700}
+.la{color:var(--gold);font-weight:700}
+/* SIDEBAR */
+.ss{background:var(--bg2);border:1px solid var(--br);border-radius:18px;margin-bottom:13px;overflow:hidden}
+.sh{padding:12px 15px;border-bottom:1px solid var(--br);font-family:var(--fh);font-size:13px;font-weight:700;color:var(--t1);display:flex;align-items:center;justify-content:space-between}
+.airow{display:flex;align-items:center;gap:8px;padding:8px 15px;border-bottom:1px solid rgba(79,159,255,.05);transition:.2s}
+.airow:last-child{border-bottom:none}
+.airow:hover{background:rgba(255,255,255,.02)}
+.aicol{width:3px;height:32px;border-radius:2px;flex-shrink:0}
+.aii{flex:1;margin-left:8px}
+.ain{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--t1)}
+.aip{font-family:var(--fh);font-size:10px;color:var(--t3)}
+.aic{font-family:var(--fd);font-size:12px;font-weight:700;color:var(--teal);text-align:center}
+.pbar{height:3px;background:rgba(255,255,255,.05);border-radius:2px;margin-top:2px;overflow:hidden}
+.pfill{height:100%;border-radius:2px;transition:width .5s}
+.qi{display:flex;align-items:center;gap:9px;padding:8px 15px;border-bottom:1px solid rgba(79,159,255,.05)}
+.qi:last-child{border-bottom:none}
+.qav{width:32px;height:32px;border-radius:7px;font-size:18px;display:flex;align-items:center;justify-content:center;background:var(--bg0);flex-shrink:0}
+.qn{font-family:var(--fh);font-size:12px;font-weight:600;color:var(--t1)}
+.qb{font-family:var(--fh);font-size:10px;color:var(--t3)}
+/* TEAMS */
+.pgh{text-align:center;padding:34px 0 16px}
+.pgt{font-family:var(--fd);font-size:32px;font-weight:900;color:var(--t1);letter-spacing:-1px;margin-bottom:5px}
+.pgt span{color:var(--gold)}
+.pgs{font-family:var(--fh);font-size:14px;color:var(--t2)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;padding-bottom:45px}
+.tc{background:var(--bg2);border:1px solid var(--br);border-radius:18px;overflow:hidden;transition:.3s}
+.tc:hover{transform:translateY(-4px);box-shadow:0 18px 55px rgba(0,0,0,.5)}
+.tch{padding:16px;display:flex;align-items:center;gap:13px;position:relative}
+.tlb{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0}
+.tnb{font-family:var(--fd);font-size:16px;font-weight:900;color:var(--t1);letter-spacing:-.5px}
+.tper{font-family:var(--fh);font-size:11px;color:var(--t3);margin-top:2px}
+.trat{position:absolute;top:16px;right:16px;font-family:var(--fd);font-size:20px;font-weight:900}
+.tsr{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--br)}
+.tsc{padding:12px;text-align:center;border-right:1px solid var(--br)}
+.tsc:last-child{border-right:none}
+.tsv{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--teal)}
+.tsl{font-family:var(--fh);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.tpl{padding:13px 16px}
+.tplt{font-family:var(--fh);font-size:11px;font-weight:700;color:var(--t3);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-family:var(--fh);font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.chip.bat{background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.2);color:var(--gold)}
+.chip.bowl{background:rgba(0,229,200,.1);border:1px solid rgba(0,229,200,.2);color:var(--teal)}
+.chip.ar{background:rgba(255,79,139,.1);border:1px solid rgba(255,79,139,.2);color:var(--pink)}
+.chip.wk{background:rgba(79,159,255,.1);border:1px solid rgba(79,159,255,.2);color:var(--blue)}
+.chip.emp{background:rgba(255,255,255,.03);border:1px dashed var(--br);color:var(--t3)}
+/* ANALYTICS */
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-bottom:45px}
+.ac{background:var(--bg2);border:1px solid var(--br);border-radius:18px;padding:20px}
+.ac.full{grid-column:1/-1}
+.act{font-family:var(--fh);font-size:14px;font-weight:700;color:var(--t1);margin-bottom:16px}
+.ch{height:195px;position:relative}
+.ltbl{width:100%;border-collapse:collapse}
+.ltbl th{font-family:var(--fh);font-size:10px;font-weight:700;color:var(--t3);letter-spacing:2px;text-transform:uppercase;padding:6px 9px;border-bottom:1px solid var(--br);text-align:left}
+.ltbl td{font-family:var(--fh);font-size:12px;color:var(--t1);padding:8px 9px;border-bottom:1px solid rgba(79,159,255,.05)}
+.ltbl tr:hover td{background:rgba(255,255,255,.015)}
+.rn{font-family:var(--fd);font-size:15px;font-weight:900;color:var(--t3);width:34px}
+.rn.g{color:var(--gold)}.rn.s{color:#c0c0c0}.rn.b{color:#cd7f32}
+/* PLAYERS */
+.pfbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.fb{font-family:var(--fh);font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid var(--br);color:var(--t2);cursor:none;transition:.2s}
+.fb.on,.fb:hover{background:rgba(0,229,200,.1);border-color:rgba(0,229,200,.3);color:var(--teal)}
+.sbox2{flex:1;min-width:160px;max-width:280px;background:rgba(13,22,38,.8);border:1px solid var(--br);border-radius:8px;padding:6px 13px;color:var(--t1);font-size:12px}
+.sbox2::placeholder{color:var(--t3)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding-bottom:45px}
+.pdc{background:var(--bg2);border:1px solid var(--br);border-radius:18px;overflow:hidden;transition:.3s;cursor:none}
+.pdc:hover{border-color:var(--teal);transform:translateY(-4px);box-shadow:0 0 18px rgba(0,229,200,.3)}
+.pdtop{height:85px;display:flex;align-items:center;justify-content:center;font-size:55px;position:relative;background:linear-gradient(135deg,var(--bg0),var(--bg1))}
+.pdbody{padding:12px}
+.pdn{font-family:var(--fh);font-size:14px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.pdrr{display:flex;align-items:center;gap:6px;margin-bottom:9px}
+.pdstats{display:flex;justify-content:space-between;font-family:var(--fh);font-size:10px}
+.pdsi{text-align:center}
+.pdsv{color:var(--teal);font-weight:700;font-size:14px}
+.pdsl{color:var(--t3);font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.pdpr{margin-top:9px;padding-top:9px;border-top:1px solid var(--br);display:flex;align-items:center;justify-content:space-between}
+.pdb{font-family:var(--fh);font-size:10px;color:var(--t3)}
+.pdv{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--gold)}
+.pst{display:inline-flex;align-items:center;font-family:var(--fh);font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px}
+.pst.av{background:rgba(57,255,20,.1);color:#39ff14}
+.pst.sd{background:rgba(255,79,139,.1);color:var(--pink)}
+/* ACHIEVEMENTS */
+.agr{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;padding-bottom:45px}
+.achc{background:var(--bg2);border:1px solid var(--br);border-radius:18px;padding:20px;text-align:center;transition:.3s;position:relative;overflow:hidden}
+.achc.un{border-color:var(--gold);box-shadow:0 0 18px rgba(245,200,66,.15)}
+.achc.lk{opacity:.45;filter:grayscale(.7)}
+.aci{font-size:44px;margin-bottom:9px}
+.acn{font-family:var(--fh);font-size:14px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.acd{font-family:var(--fh);font-size:11px;color:var(--t3);line-height:1.5}
+.acx{margin-top:9px;font-family:var(--fd);font-size:12px;font-weight:700;color:var(--gold)}
+.acbadge{position:absolute;top:9px;right:9px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px}
+.acbadge.y{background:var(--gold);color:#000}.acbadge.n{background:rgba(255,255,255,.05);color:var(--t3)}
+.xpbox{background:var(--bg2);border:1px solid var(--br);border-radius:18px;padding:20px;margin-bottom:20px}
+.xph{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.xplv{font-family:var(--fd);font-size:20px;font-weight:900;color:var(--gold)}
+.xpbr{height:9px;background:rgba(255,255,255,.05);border-radius:5px;overflow:hidden;margin-bottom:5px}
+.xpf{height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));border-radius:5px;transition:width 1s}
+.xpl{font-family:var(--fh);font-size:11px;color:var(--t3)}
+/* SETTINGS */
+.sgr{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-bottom:45px}
+.scard{background:var(--bg2);border:1px solid var(--br);border-radius:18px;padding:20px}
+.stitle{font-family:var(--fh);font-size:14px;font-weight:700;color:var(--t1);margin-bottom:16px}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(79,159,255,.05)}
+.srow:last-child{border-bottom:none}
+.slbl{font-family:var(--fh);font-size:12px;color:var(--t2)}
+.thops{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.thop{padding:10px;border-radius:10px;border:1px solid var(--br);cursor:none;text-align:center;transition:.2s}
+.thop.on{border-color:var(--teal);background:rgba(0,229,200,.08)}
+.thon{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--t1)}
+.thod{font-family:var(--fh);font-size:9px;color:var(--t3);margin-top:1px}
+.tog{position:relative;width:42px;height:21px}
+.tog input{opacity:0;width:0;height:0}
+.tsl2{position:absolute;inset:0;cursor:none;background:rgba(255,255,255,.1);border-radius:11px;transition:.3s;border:1px solid var(--br)}
+.tsl2::before{content:'';position:absolute;width:15px;height:15px;left:2px;top:2px;background:var(--t3);border-radius:50%;transition:.3s}
+.tog input:checked+.tsl2{background:rgba(0,229,200,.3);border-color:var(--teal)}
+.tog input:checked+.tsl2::before{transform:translateX(21px);background:var(--teal)}
+/* TICKER */
+.ticker{background:rgba(245,200,66,.04);border-top:1px solid var(--brg);padding:6px 0;overflow:hidden;position:fixed;bottom:0;left:0;right:0;z-index:90;display:flex;align-items:center}
+.tlbl{flex-shrink:0;padding:0 13px;font-family:var(--fh);font-size:10px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;border-right:1px solid var(--brg)}
+.tcnt{flex:1;overflow:hidden;font-family:var(--fh);font-size:11px;color:var(--t2)}
+.tscr{display:flex;gap:38px;animation:tmov 42s linear infinite;white-space:nowrap}
+@keyframes tmov{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.titem{display:inline-flex;align-items:center;gap:6px}
+.tdot{width:3px;height:3px;border-radius:50%;background:var(--gold);flex-shrink:0}
+/* NOTIFICATIONS */
+#nots{position:fixed;top:66px;right:14px;z-index:200;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.not{background:var(--bg2);border:1px solid var(--br);border-radius:10px;padding:9px 14px;font-family:var(--fh);font-size:12px;color:var(--t1);animation:ni .4s;pointer-events:all;min-width:190px;max-width:290px;border-left:3px solid var(--teal);backdrop-filter:blur(10px)}
+.not.g{border-left-color:var(--gold)}.not.r{border-left-color:var(--pink)}
+@keyframes ni{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes no{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+/* ACHIEVEMENT POPUP */
+#achpop{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:500;pointer-events:none;background:var(--bg2);border:2px solid var(--gold);border-radius:18px;padding:26px 42px;text-align:center;box-shadow:0 0 55px rgba(245,200,66,.4);opacity:0;transition:opacity .3s;backdrop-filter:blur(20px)}
+#achpop.on{opacity:1;animation:ap .5s}
+@keyframes ap{0%{transform:translate(-50%,-50%) scale(.5)}60%{transform:translate(-50%,-50%) scale(1.08)}100%{transform:translate(-50%,-50%) scale(1)}}
+.apico{font-size:52px}
+.aptitle{font-family:var(--fd);font-size:12px;font-weight:700;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin:6px 0 2px}
+.apname{font-family:var(--fh);font-size:20px;font-weight:700;color:var(--t1)}
+/* CONFETTI */
+.cf{position:fixed;top:0;border-radius:2px;animation:cff linear forwards;pointer-events:none;z-index:1000}
+@keyframes cff{0%{top:-10px;transform:rotate(0)}100%{top:110vh;transform:rotate(720deg)}}
+/* RESPONSIVE */
+@media(max-width:900px){.agrid,.sgr{grid-template-columns:1fr}.tgrid{grid-template-columns:1fr}}@media(max-width:768px){.alay{grid-template-columns:1fr}.pdisp{grid-template-columns:1fr}.pav{width:100%;height:120px;font-size:52px}}
+/* ── HAMBURGER BUTTON ── */
+.ham{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;padding:6px;border-radius:8px;background:rgba(79,159,255,.1);border:1px solid var(--br);cursor:none;transition:.2s;flex-shrink:0}
+.ham:hover{border-color:var(--teal)}
+.ham span{display:block;height:2px;border-radius:2px;background:var(--t2);transition:all .3s}
+.ham.open span:nth-child(1){transform:translateY(7px) rotate(45deg);background:var(--teal)}
+.ham.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.ham.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);background:var(--teal)}
+
+/* ── MOBILE DRAWER ── */
+.mob-drawer{
+  position:fixed;top:56px;left:0;right:0;bottom:0;z-index:99;
+  background:rgba(6,9,20,.97);backdrop-filter:blur(20px);
+  display:flex;flex-direction:column;padding:16px;gap:6px;
+  transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;
+}
+.mob-drawer.open{transform:translateX(0)}
+.mob-drawer .nb{
+  font-size:16px;padding:14px 18px;border-radius:12px;
+  border:1px solid var(--br);text-align:left;
+  display:flex;align-items:center;gap:12px;
+  width:100%;
+}
+.mob-drawer .nb.on{
+  background:rgba(0,229,200,.1);border-color:rgba(0,229,200,.3);color:var(--teal);
+}
+.mob-drawer-purse{
+  margin-top:auto;padding:14px 18px;
+  border-radius:12px;background:rgba(245,200,66,.08);
+  border:1px solid var(--brg);
+  font-family:var(--fh);font-size:15px;font-weight:700;color:var(--gold);
+  display:flex;align-items:center;justify-content:space-between;
+}
+
+/* ── BOTTOM TAB BAR (mobile) ── */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:95;
+  background:rgba(6,9,20,.97);backdrop-filter:blur(20px);
+  border-top:1px solid var(--br);
+  padding:6px 0 max(6px,env(safe-area-inset-bottom));
+}
+.bottom-nav-inner{display:flex;justify-content:space-around}
+.bnb{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-family:var(--fh);font-size:9px;font-weight:600;color:var(--t3);
+  padding:4px 8px;border-radius:10px;background:none;cursor:none;
+  transition:.2s;min-width:44px;
+}
+.bnb .bico{font-size:18px;line-height:1}
+.bnb.on{color:var(--teal)}
+.bnb.on .bico{filter:drop-shadow(0 0 6px var(--teal))}
+
+/* ── RESPONSIVE BREAKPOINTS ── */
+@media(max-width:768px){
+  .navlinks{display:none}
+  .ham{display:flex}
+  .bottom-nav{display:block}
+  /* push page content above bottom nav */
+  #app{padding-bottom:70px}
+  /* hide old ticker on very small screens to give space */
+  .ticker{display:none}
+  .htitle{font-size:clamp(36px,10vw,56px)}
+  .sgrid{grid-template-columns:1fr 1fr}
+  .hstats{gap:20px}
+  .hsn{font-size:26px}
+  /* purse pill compact */
+  .purse-pill{font-size:12px;padding:3px 9px}
+  #npurse{display:inline}
+}
+@media(max-width:480px){
+  .navr .icobtn{display:none}/* hide theme btn, use settings page instead */
+  .hero{padding:28px 14px}
+  .cta{flex-direction:column;align-items:stretch}
+  .btnp,.btns{text-align:center;font-size:15px;padding:12px 20px}
+  .fgrid{grid-template-columns:1fr;gap:12px;padding:32px 0}
+  .pdisp{grid-template-columns:1fr}
+  .pav{width:100%;height:120px;font-size:52px}
+  .alay{grid-template-columns:1fr}
+  .agrid{grid-template-columns:1fr}
+  .sgr{grid-template-columns:1fr}
+  .tgrid{grid-template-columns:1fr}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr))}
+  .agr{grid-template-columns:repeat(auto-fill,minmax(155px,1fr))}
+  .bbtns{gap:5px}
+  .bb{padding:7px 10px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="cur2"></div>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+<div id="nots"></div>
+<div id="achpop"><div class="apico" id="apico">🏆</div><div class="aptitle">Achievement Unlocked!</div><div class="apname" id="apname">Auction Master</div></div>
+<div id="app">
+<nav>
+  <div class="logo">BID<span>PREMIER</span></div>
+  <div class="navlinks">
+    <button class="nb on" onclick="go('home')">Home</button>
+    <button class="nb" onclick="go('auction')">🏏 Auction</button>
+    <button class="nb" onclick="go('teams')">👥 Teams</button>
+    <button class="nb" onclick="go('analytics')">📊 Analytics</button>
+    <button class="nb" onclick="go('players')">🔍 Players</button>
+    <button class="nb" onclick="go('achievements')">🏆 Awards</button>
+    <button class="nb" onclick="go('settings')">⚙️ Settings</button>
+  </div>
+  <div class="navr">
+    <div class="purse-pill">💰 <span id="npurse">₹100 Cr</span></div>
+    <button class="icobtn" onclick="cycleTheme()" title="Theme">🎨</button>
+    <button class="ham" id="ham-btn" onclick="toggleDrawer()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="mob-drawer" id="mob-drawer">
+  <button class="nb on" onclick="go('home');closeDrawer()">🏠 Home</button>
+  <button class="nb" onclick="go('auction');closeDrawer()">🏏 Auction</button>
+  <button class="nb" onclick="go('teams');closeDrawer()">👥 Teams</button>
+  <button class="nb" onclick="go('analytics');closeDrawer()">📊 Analytics</button>
+  <button class="nb" onclick="go('players');closeDrawer()">🔍 Players</button>
+  <button class="nb" onclick="go('achievements');closeDrawer()">🏆 Awards</button>
+  <button class="nb" onclick="go('settings');closeDrawer()">⚙️ Settings</button>
+  <div class="mob-drawer-purse"><span>💰 Purse</span><span id="drawer-purse">₹100 Cr</span></div>
+</div>
+<div id="drawer-backdrop" onclick="closeDrawer()" style="display:none;position:fixed;inset:0;z-index:98;background:rgba(0,0,0,.5)"></div>
+<div class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bnb on" id="bnb-home" onclick="go('home')"><div class="bico">🏠</div>Home</button>
+    <button class="bnb" id="bnb-auction" onclick="go('auction')"><div class="bico">🏏</div>Auction</button>
+    <button class="bnb" id="bnb-teams" onclick="go('teams')"><div class="bico">👥</div>Teams</button>
+    <button class="bnb" id="bnb-players" onclick="go('players')"><div class="bico">🔍</div>Players</button>
+    <button class="bnb" id="bnb-achievements" onclick="go('achievements')"><div class="bico">🏆</div>Awards</button>
+    <button class="bnb" id="bnb-settings" onclick="go('settings')"><div class="bico">⚙️</div>More</button>
+  </div>
+</div>
+<!-- HOME -->
+<div id="pg-home" class="pg on">
+<div class="hero">
+  <div class="hero-ticker"><div class="td"></div>IPL Mega Auction 2025 · Live Now</div>
+  <h1 class="htitle"><span class="w1">BID</span><span class="w2">PREMIER</span></h1>
+  <p class="hsub">The Ultimate IPL Fantasy Auction Simulator. Build your dream team, outsmart AI rivals, conquer the auction table.</p>
+  <div class="cta">
+    <button class="btnp" onclick="startAuction()">🏏 Start Mega Auction</button>
+    <button class="btns" onclick="go('players')">🔍 Browse Players</button>
+  </div>
+  <div class="hstats">
+    <div class="hstat"><div class="hsn" id="hs1">0</div><div class="hsl">Players</div></div>
+    <div class="hstat"><div class="hsn" id="hs2">0</div><div class="hsl">Teams</div></div>
+    <div class="hstat"><div class="hsn" id="hs3">0</div><div class="hsl">Total Purse Cr</div></div>
+    <div class="hstat"><div class="hsn" id="hs4">0</div><div class="hsl">Players Sold</div></div>
+  </div>
+</div>
+<div class="wrap">
+<div class="fgrid">
+  <div class="fcard"><div class="ficon">🤖</div><div class="ftitle">Smart AI Rivals</div><div class="fdesc">5 AI teams with unique personalities — CSK, MI, RCB, SRH, KKR — each with strategic bidding that adapts dynamically to the auction state.</div></div>
+  <div class="fcard"><div class="ficon">⚡</div><div class="ftitle">Live Auction Engine</div><div class="fdesc">Real-time countdown timers, Going Once/Going Twice/SOLD! animations, bid wars, and a dynamic feed that feels alive.</div></div>
+  <div class="fcard"><div class="ficon">📊</div><div class="ftitle">Deep Analytics</div><div class="fdesc">Track purse usage, team composition, spending charts, role distribution, and squad strength with interactive dashboards.</div></div>
+  <div class="fcard"><div class="ficon">🏆</div><div class="ftitle">Gamification</div><div class="fdesc">Earn XP, unlock achievements like Auction Master and Budget King, and level up your auction career.</div></div>
+  <div class="fcard"><div class="ficon">🎨</div><div class="ftitle">3 Themes</div><div class="fdesc">Dark Mode, Neon Mode, Stadium Mode — all preferences saved locally between sessions.</div></div>
+  <div class="fcard"><div class="ficon">💾</div><div class="ftitle">Auto-Save</div><div class="fdesc">All data persisted to localStorage. Your auction progress survives page refreshes.</div></div>
+</div>
+</div>
+</div>
+<!-- AUCTION -->
+<div id="pg-auction" class="pg">
+<div class="wrap">
+<div class="alay">
+<div>
+<div class="spotlight">
+  <div class="soldov" id="sov">
+    <div class="soldbanner" id="sbanner">SOLD!</div>
+    <div class="soldd"><span id="spln">—</span> → <span class="sdt" id="splt">—</span></div>
+    <div class="soldd" style="margin-top:6px;font-size:16px">For <span style="color:var(--gold)" id="spla">₹0 Cr</span></div>
+  </div>
+  <div class="sphead">
+    <div class="splbl" id="stlbl">⚡ LIVE AUCTION</div>
+    <div style="display:flex;align-items:center;gap:13px">
+      <div style="font-family:var(--fh);font-size:12px;color:var(--t3)">Lot <span id="lotn" style="color:var(--gold)">1</span>/<span id="lott">100</span></div>
+      <div class="sptimer" id="timer">30</div>
+    </div>
+  </div>
+  <div class="pdisp">
+    <div class="pav"><div class="rbadge rb-BAT" id="prbadge">BAT</div><span id="pemoji" style="font-size:76px;z-index:1">🏏</span></div>
+    <div>
+      <div class="pname" id="pname">Click Start Mega Auction</div>
+      <div class="pmeta"><span id="pflag">🏴</span><span id="pnat" style="color:var(--t3)">—</span><span id="pstyle" style="color:var(--t3)">—</span><span id="pprev" style="color:var(--t3)">—</span></div>
+      <div class="sgrid">
+        <div class="sbox"><div class="sv" id="sa1">—</div><div class="sl">Avg</div></div>
+        <div class="sbox"><div class="sv" id="sa2">—</div><div class="sl">SR</div></div>
+        <div class="sbox"><div class="sv" id="sa3">—</div><div class="sl">Rating</div></div>
+        <div class="sbox"><div class="sv" id="sa4">—</div><div class="sl">Matches</div></div>
+        <div class="sbox"><div class="sv" id="sa5">—</div><div class="sl">Economy</div></div>
+        <div class="sbox"><div class="sv" id="sa6">—</div><div class="sl">Popularity</div></div>
+      </div>
+      <div style="font-family:var(--fh);font-size:9px;color:var(--t3);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase">Recent Form</div>
+      <div class="fdots" id="fdots"></div>
+      <div class="bidsec">
+        <div class="bidlbl">Current Bid</div>
+        <div class="curbid" id="curbid">₹0 Cr</div>
+        <div class="bidder">Highest Bidder: <span id="hbidder">—</span></div>
+        <div class="bbtns">
+          <button class="bb" onclick="bid(0.25)">+25L</button>
+          <button class="bb" onclick="bid(0.5)">+50L</button>
+          <button class="bb" onclick="bid(1)">+1Cr</button>
+          <button class="bb" onclick="bid(2)">+2Cr</button>
+          <button class="bb big" onclick="bid(5)">🔥 BID BIG +5Cr</button>
+        </div>
+        <div class="actrl">
+          <button class="cb cp" onclick="passP()">❌ Pass</button>
+          <button class="cb cu" onclick="togPause()" id="pbtn">⏸ Pause</button>
+          <button class="cb cn" onclick="skipN()">⏭ Next</button>
+          <button class="cb cn" onclick="startAuction()" style="margin-left:auto">🔄 Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="alog">
+  <div class="loghead"><div class="logtitle">📡 Auction Feed</div><div class="logbadge" id="logc">0 entries</div></div>
+  <div class="logfeed" id="logfeed"><div class="le sys">⚡ Auction engine ready. Press Start Mega Auction!</div></div>
+</div>
+</div>
+<!-- SIDEBAR -->
+<div>
+  <div class="ss"><div class="sh"><span>💰 Your Purse</span><span style="font-family:var(--fd);font-size:17px;color:var(--gold)" id="sidpurse">₹100 Cr</span></div>
+    <div style="padding:12px 15px"><div class="pbar"><div class="pfill" id="mpbar" style="background:linear-gradient(90deg,var(--teal),var(--blue));width:100%"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:var(--fh);font-size:10px;color:var(--t3)"><span>Spent: <span style="color:var(--gold)" id="sidspent">₹0</span></span><span>Players: <span style="color:var(--teal)" id="sidpl">0</span></span></div></div>
+  </div>
+  <div class="ss"><div class="sh"><span>🤖 AI Teams</span><span class="logbadge">Live</span></div><div id="aisb"></div></div>
+  <div class="ss"><div class="sh">⏭ Up Next</div><div id="upnext"></div></div>
+  <div class="ss"><div class="sh"><span>🏏 My Squad</span><span id="sqc" style="font-family:var(--fd);font-size:13px;color:var(--teal)">0/25</span></div>
+    <div id="mysq" style="padding:6px;max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:3px"></div>
+  </div>
+</div>
+</div>
+</div>
+</div>
+<!-- TEAMS -->
+<div id="pg-teams" class="pg"><div class="wrap">
+  <div class="pgh"><div class="pgt">Team <span>Dashboard</span></div><div class="pgs">All 6 franchises and their squad composition</div></div>
+  <div class="tgrid" id="tgrid"></div>
+</div></div>
+<!-- ANALYTICS -->
+<div id="pg-analytics" class="pg"><div class="wrap">
+  <div class="pgh"><div class="pgt">📊 <span>Analytics</span></div><div class="pgs">Deep insights into auction performance</div></div>
+  <div class="agrid">
+    <div class="ac"><div class="act">💰 Purse Usage by Team</div><div class="ch"><canvas id="pc"></canvas></div></div>
+    <div class="ac"><div class="act">📊 Role Distribution (Your Team)</div><div class="ch"><canvas id="rc"></canvas></div></div>
+    <div class="ac full"><div class="act">🏆 Auction Leaderboard</div><table class="ltbl"><thead><tr><th>#</th><th>Team</th><th>Players</th><th>Spent</th><th>Remaining</th><th>Avg Price</th><th>Strength</th></tr></thead><tbody id="lbody"></tbody></table></div>
+    <div class="ac"><div class="act">💎 Top Signings</div><div id="tsign"></div></div>
+    <div class="ac"><div class="act">📈 Sale Prices Over Time</div><div class="ch"><canvas id="bc"></canvas></div></div>
+  </div>
+</div></div>
+<!-- PLAYERS -->
+<div id="pg-players" class="pg"><div class="wrap">
+  <div class="pgh"><div class="pgt">🔍 Player <span>Database</span></div><div class="pgs">All players in the auction pool</div></div>
+  <div class="pfbar">
+    <input class="sbox2" type="text" placeholder="Search players..." id="psearch" oninput="filterP()">
+    <button class="fb on" onclick="fRole('all',this)">All</button>
+    <button class="fb" onclick="fRole('BAT',this)">Batters</button>
+    <button class="fb" onclick="fRole('BOWL',this)">Bowlers</button>
+    <button class="fb" onclick="fRole('AR',this)">All-Rounders</button>
+    <button class="fb" onclick="fRole('WK',this)">Keepers</button>
+  </div>
+  <div class="pgrid" id="pgrid"></div>
+</div></div>
+<!-- ACHIEVEMENTS -->
+<div id="pg-achievements" class="pg"><div class="wrap">
+  <div class="pgh"><div class="pgt">🏆 <span>Achievements</span></div><div class="pgs">Unlock trophies and earn XP</div></div>
+  <div class="xpbox">
+    <div class="xph">
+      <div><div class="xplv">Level <span id="xlv">1</span></div><div style="font-family:var(--fh);font-size:12px;color:var(--t3)">Auction Rookie</div></div>
+      <div style="text-align:right"><div style="font-family:var(--fd);font-size:17px;color:var(--gold)"><span id="xxp">0</span> XP</div><div style="font-family:var(--fh);font-size:10px;color:var(--t3)">Next: <span id="xnxt">500</span> XP</div></div>
+    </div>
+    <div class="xpbr"><div class="xpf" id="xpf" style="width:0%"></div></div>
+    <div class="xpl" id="xpl">0 / 500 XP to next level</div>
+  </div>
+  <div class="agr" id="achgrid"></div>
+</div></div>
+<!-- SETTINGS -->
+<div id="pg-settings" class="pg"><div class="wrap">
+  <div class="pgh"><div class="pgt">⚙️ <span>Settings</span></div><div class="pgs">Customize your experience</div></div>
+  <div class="sgr">
+    <div class="scard"><div class="stitle">🎨 Theme</div><div class="thops" id="thops">
+      <div class="thop on" onclick="setTheme('dark',this)"><div class="thon">Dark Mode</div><div class="thod">Classic arena</div></div>
+      <div class="thop" onclick="setTheme('neon',this)"><div class="thon">Neon Mode</div><div class="thod">Electric glow</div></div>
+      <div class="thop" onclick="setTheme('stadium',this)"><div class="thon">Stadium Mode</div><div class="thod">Warm lights</div></div>
+      <div class="thop" onclick="setTheme('default',this)"><div class="thon">Default</div><div class="thod">Standard</div></div>
+    </div></div>
+    <div class="scard"><div class="stitle">🎮 Auction Settings</div>
+      <div class="srow"><span class="slbl">Timer Duration</span><select id="tset" onchange="saveSett()" style="background:var(--bg1);border:1px solid var(--br);color:var(--t1);padding:4px 9px;border-radius:7px;font-size:12px"><option value="15">15 sec Fast</option><option value="30" selected>30 sec Normal</option><option value="60">60 sec Slow</option></select></div>
+      <div class="srow"><span class="slbl">Starting Purse</span><select id="pset" onchange="saveSett()" style="background:var(--bg1);border:1px solid var(--br);color:var(--t1);padding:4px 9px;border-radius:7px;font-size:12px"><option value="75">₹75 Cr</option><option value="100" selected>₹100 Cr</option><option value="120">₹120 Cr</option></select></div>
+      <div class="srow"><span class="slbl">AI Aggression</span><select id="aiset" onchange="saveSett()" style="background:var(--bg1);border:1px solid var(--br);color:var(--t1);padding:4px 9px;border-radius:7px;font-size:12px"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></div>
+      <div class="srow"><span class="slbl">Confetti</span><label class="tog"><input type="checkbox" id="cfset" checked onchange="saveSett()"><span class="tsl2"></span></label></div>
+      <div class="srow"><span class="slbl">Notifications</span><label class="tog"><input type="checkbox" id="nfset" checked onchange="saveSett()"><span class="tsl2"></span></label></div>
+    </div>
+    <div class="scard"><div class="stitle">⚠️ Danger Zone</div>
+      <div class="srow"><span class="slbl">Reset All Progress</span><button class="cb cp" onclick="resetAll()" style="padding:7px 16px">Reset Game</button></div>
+      <div class="srow"><span class="slbl">Clear Achievements</span><button class="cb cu" onclick="resetAch()" style="padding:7px 16px">Clear</button></div>
+    </div>
+    <div class="scard"><div class="stitle">ℹ️ About BidPremier</div>
+      <div style="font-family:var(--fh);font-size:12px;color:var(--t2);line-height:2">
+        <p><strong style="color:var(--gold)">BidPremier v2.0</strong> – IPL Fantasy Auction Simulator</p>
+        <p>Built with HTML · CSS · Vanilla JavaScript</p>
+        <p>Players: <span style="color:var(--teal)">100</span> | Teams: <span style="color:var(--teal)">6</span> | Modes: <span style="color:var(--teal)">3</span></p>
+        <p style="margin-top:6px;font-size:10px;color:var(--t3)">⌨️ Keys: 1–5 = bid amounts · P = pause · Esc = pass player</p>
+      </div>
+    </div>
+  </div>
+</div></div>
+</div><!-- end #app -->
+<div class="ticker"><div class="tlbl">📡 LIVE</div><div class="tcnt"><div class="tscr" id="tscr"></div></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ===== CURSOR =====
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+(function a(){rx+=(mx-rx)*0.13;ry+=(my-ry)*0.13;cur2.style.left=rx+'px';cur2.style.top=ry+'px';requestAnimationFrame(a)})();
+
+// ===== PLAYER DATABASE =====
+const PDB=[
+  {id:1,n:"Virat Kohli",r:"BAT",nat:"India",fl:"🇮🇳",em:"🦁",st:"RHB",b:2,rt:96,avg:37.2,sr:135,eco:null,m:237,fm:["W","W","W","H","W"],pp:"98%",pv:"RCB"},
+  {id:2,n:"Rohit Sharma",r:"BAT",nat:"India",fl:"🇮🇳",em:"🐅",st:"RHB",b:2,rt:94,avg:31.2,sr:131,eco:null,m:243,fm:["W","W","L","W","W"],pp:"97%",pv:"MI"},
+  {id:3,n:"KL Rahul",r:"BAT",nat:"India",fl:"🇮🇳",em:"👑",st:"RHB",b:2,rt:90,avg:47.4,sr:136,eco:null,m:115,fm:["W","H","W","W","L"],pp:"90%",pv:"LSG"},
+  {id:4,n:"Suryakumar Yadav",r:"BAT",nat:"India",fl:"🇮🇳",em:"☀️",st:"RHB",b:2,rt:93,avg:39.6,sr:182,eco:null,m:141,fm:["W","W","W","W","H"],pp:"94%",pv:"MI"},
+  {id:5,n:"Shubman Gill",r:"BAT",nat:"India",fl:"🇮🇳",em:"🌈",st:"RHB",b:1.5,rt:88,avg:41.1,sr:132,eco:null,m:90,fm:["W","W","W","H","W"],pp:"89%",pv:"GT"},
+  {id:6,n:"Yashasvi Jaiswal",r:"BAT",nat:"India",fl:"🇮🇳",em:"🌟",st:"LHB",b:1,rt:85,avg:38.0,sr:147,eco:null,m:30,fm:["W","W","W","W","H"],pp:"83%",pv:"RR"},
+  {id:7,n:"Travis Head",r:"BAT",nat:"Australia",fl:"🇦🇺",em:"🦘",st:"LHB",b:1.5,rt:85,avg:37.0,sr:151,eco:null,m:35,fm:["W","W","W","W","L"],pp:"82%",pv:"SRH"},
+  {id:8,n:"David Warner",r:"BAT",nat:"Australia",fl:"🇦🇺",em:"🦅",st:"LHB",b:1.5,rt:88,avg:41.7,sr:143,eco:null,m:184,fm:["L","W","W","W","H"],pp:"85%",pv:"DC"},
+  {id:9,n:"Faf du Plessis",r:"BAT",nat:"S Africa",fl:"🇿🇦",em:"🏅",st:"RHB",b:1.5,rt:84,avg:36.9,sr:134,eco:null,m:140,fm:["H","W","W","L","W"],pp:"79%",pv:"RCB"},
+  {id:10,n:"Shreyas Iyer",r:"BAT",nat:"India",fl:"🇮🇳",em:"⚡",st:"RHB",b:1.5,rt:87,avg:31.5,sr:127,eco:null,m:115,fm:["W","W","L","W","H"],pp:"82%",pv:"KKR"},
+  {id:11,n:"Ruturaj Gaikwad",r:"BAT",nat:"India",fl:"🇮🇳",em:"🎯",st:"RHB",b:1,rt:85,avg:35.5,sr:142,eco:null,m:64,fm:["W","W","W","L","W"],pp:"78%",pv:"CSK"},
+  {id:12,n:"Tilak Varma",r:"BAT",nat:"India",fl:"🇮🇳",em:"⭐",st:"LHB",b:0.75,rt:79,avg:31.0,sr:143,eco:null,m:37,fm:["W","W","W","H","L"],pp:"72%",pv:"MI"},
+  {id:13,n:"Rinku Singh",r:"BAT",nat:"India",fl:"🇮🇳",em:"💫",st:"LHB",b:0.5,rt:76,avg:29.5,sr:152,eco:null,m:38,fm:["W","W","L","W","W"],pp:"70%",pv:"KKR"},
+  {id:14,n:"Devdutt Padikkal",r:"BAT",nat:"India",fl:"🇮🇳",em:"🌿",st:"LHB",b:0.6,rt:73,avg:22.0,sr:130,eco:null,m:39,fm:["W","L","W","H","W"],pp:"60%",pv:"RR"},
+  {id:15,n:"Prithvi Shaw",r:"BAT",nat:"India",fl:"🇮🇳",em:"💥",st:"RHB",b:0.75,rt:78,avg:28.5,sr:148,eco:null,m:67,fm:["L","W","L","H","W"],pp:"68%",pv:"DC"},
+  {id:16,n:"Rishabh Pant",r:"WK",nat:"India",fl:"🇮🇳",em:"🔥",st:"LHB/WK",b:2,rt:91,avg:35.2,sr:149,eco:null,m:111,fm:["W","W","H","W","W"],pp:"92%",pv:"DC"},
+  {id:17,n:"Jos Buttler",r:"WK",nat:"England",fl:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",em:"🎪",st:"RHB/WK",b:2,rt:92,avg:38.7,sr:150,eco:null,m:107,fm:["W","W","L","W","W"],pp:"91%",pv:"RR"},
+  {id:18,n:"MS Dhoni",r:"WK",nat:"India",fl:"🇮🇳",em:"🐶",st:"RHB/WK",b:2,rt:98,avg:28.0,sr:135,eco:null,m:350,fm:["W","W","W","W","W"],pp:"99%",pv:"CSK"},
+  {id:19,n:"Sanju Samson",r:"WK",nat:"India",fl:"🇮🇳",em:"🌊",st:"RHB/WK",b:1.5,rt:86,avg:38.0,sr:147,eco:null,m:143,fm:["W","W","H","W","W"],pp:"85%",pv:"RR"},
+  {id:20,n:"Quinton de Kock",r:"WK",nat:"S Africa",fl:"🇿🇦",em:"🎯",st:"LHB/WK",b:1.5,rt:86,avg:34.2,sr:141,eco:null,m:120,fm:["W","L","W","W","W"],pp:"80%",pv:"LSG"},
+  {id:21,n:"Ishan Kishan",r:"WK",nat:"India",fl:"🇮🇳",em:"💡",st:"LHB/WK",b:1.5,rt:83,avg:33.0,sr:147,eco:null,m:103,fm:["L","W","L","W","W"],pp:"77%",pv:"MI"},
+  {id:22,n:"Heinrich Klaasen",r:"WK",nat:"S Africa",fl:"🇿🇦",em:"🦁",st:"RHB/WK",b:1.25,rt:84,avg:36.2,sr:152,eco:null,m:52,fm:["H","W","W","W","L"],pp:"76%",pv:"SRH"},
+  {id:23,n:"Devon Conway",r:"WK",nat:"New Zealand",fl:"🇳🇿",em:"🥝",st:"LHB/WK",b:1,rt:82,avg:34.2,sr:126,eco:null,m:51,fm:["W","W","L","W","H"],pp:"70%",pv:"CSK"},
+  {id:24,n:"Dinesh Karthik",r:"WK",nat:"India",fl:"🇮🇳",em:"🔑",st:"RHB/WK",b:0.5,rt:75,avg:27.0,sr:131,eco:null,m:230,fm:["W","L","W","H","W"],pp:"65%",pv:"RCB"},
+  {id:25,n:"Wriddhiman Saha",r:"WK",nat:"India",fl:"🇮🇳",em:"🎩",st:"RHB/WK",b:0.5,rt:72,avg:24.0,sr:130,eco:null,m:130,fm:["H","W","L","W","L"],pp:"55%",pv:"GT"},
+  {id:26,n:"Hardik Pandya",r:"AR",nat:"India",fl:"🇮🇳",em:"💪",st:"RHB/RM",b:2,rt:91,avg:26.4,sr:143,eco:8.7,m:111,fm:["W","L","W","W","H"],pp:"90%",pv:"MI"},
+  {id:27,n:"Ravindra Jadeja",r:"AR",nat:"India",fl:"🇮🇳",em:"🧙",st:"LHB/SLA",b:2,rt:90,avg:24.6,sr:136,eco:7.6,m:226,fm:["W","W","W","L","W"],pp:"88%",pv:"CSK"},
+  {id:28,n:"Glenn Maxwell",r:"AR",nat:"Australia",fl:"🇦🇺",em:"🌪️",st:"RHB/OB",b:2,rt:87,avg:28.0,sr:168,eco:8.2,m:113,fm:["W","W","L","W","W"],pp:"85%",pv:"RCB"},
+  {id:29,n:"Andre Russell",r:"AR",nat:"W Indies",fl:"🌴",em:"🔥",st:"RHB/RF",b:2,rt:90,avg:30.0,sr:180,eco:8.5,m:100,fm:["W","W","L","W","W"],pp:"88%",pv:"KKR"},
+  {id:30,n:"Sunil Narine",r:"AR",nat:"W Indies",fl:"🌴",em:"🌊",st:"LHB/OB",b:1.5,rt:86,avg:21.0,sr:157,eco:6.8,m:162,fm:["W","W","W","H","W"],pp:"82%",pv:"KKR"},
+  {id:31,n:"Ben Stokes",r:"AR",nat:"England",fl:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",em:"🦁",st:"LHB/RM",b:2,rt:88,avg:30.0,sr:145,eco:8.5,m:43,fm:["L","W","H","W","W"],pp:"83%",pv:"CSK"},
+  {id:32,n:"Pat Cummins",r:"AR",nat:"Australia",fl:"🇦🇺",em:"🦅",st:"RHB/RF",b:2,rt:89,avg:22.0,sr:133,eco:8.3,m:41,fm:["L","W","W","W","H"],pp:"84%",pv:"SRH"},
+  {id:33,n:"Axar Patel",r:"AR",nat:"India",fl:"🇮🇳",em:"⚙️",st:"LHB/SLA",b:1,rt:84,avg:22.6,sr:147,eco:7.8,m:105,fm:["W","H","W","W","L"],pp:"78%",pv:"DC"},
+  {id:34,n:"R Ashwin",r:"AR",nat:"India",fl:"🇮🇳",em:"🕸️",st:"RHB/OB",b:1,rt:85,avg:18.0,sr:142,eco:7.2,m:200,fm:["W","W","H","W","L"],pp:"80%",pv:"PBKS"},
+  {id:35,n:"Sam Curran",r:"AR",nat:"England",fl:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",em:"🎯",st:"LHB/LFM",b:1.5,rt:83,avg:20.0,sr:130,eco:8.7,m:45,fm:["L","W","W","W","H"],pp:"74%",pv:"PBKS"},
+  {id:36,n:"Cameron Green",r:"AR",nat:"Australia",fl:"🇦🇺",em:"🌿",st:"RHB/RF",b:1.75,rt:83,avg:27.2,sr:152,eco:9.1,m:17,fm:["H","W","L","W","W"],pp:"75%",pv:"MI"},
+  {id:37,n:"Liam Livingstone",r:"AR",nat:"England",fl:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",em:"⚡",st:"RHB/LB",b:1.5,rt:81,avg:29.0,sr:165,eco:8.8,m:27,fm:["L","W","W","H","W"],pp:"72%",pv:"PBKS"},
+  {id:38,n:"Marcus Stoinis",r:"AR",nat:"Australia",fl:"🇦🇺",em:"💥",st:"RHB/RM",b:1,rt:80,avg:24.5,sr:147,eco:9.3,m:64,fm:["W","L","H","W","W"],pp:"71%",pv:"LSG"},
+  {id:39,n:"Mitchell Marsh",r:"AR",nat:"Australia",fl:"🇦🇺",em:"🦘",st:"RHB/RM",b:1.5,rt:83,avg:29.0,sr:148,eco:9.0,m:47,fm:["W","H","W","L","W"],pp:"75%",pv:"DC"},
+  {id:40,n:"Krunal Pandya",r:"AR",nat:"India",fl:"🇮🇳",em:"🌿",st:"LHB/OB",b:0.5,rt:75,avg:18.0,sr:130,eco:8.4,m:80,fm:["W","L","W","H","W"],pp:"62%",pv:"LSG"},
+  {id:41,n:"Jasprit Bumrah",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🎯",st:"RFM",b:2,rt:97,avg:null,sr:null,eco:6.3,m:120,fm:["W","W","W","W","W"],pp:"97%",pv:"MI"},
+  {id:42,n:"Mohammed Shami",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌪️",st:"RFM",b:2,rt:91,avg:null,sr:null,eco:7.3,m:87,fm:["W","W","H","W","W"],pp:"88%",pv:"GT"},
+  {id:43,n:"Kagiso Rabada",r:"BOWL",nat:"S Africa",fl:"🇿🇦",em:"⚡",st:"RF",b:2,rt:90,avg:null,sr:null,eco:7.4,m:72,fm:["W","L","W","W","H"],pp:"86%",pv:"PBKS"},
+  {id:44,n:"Trent Boult",r:"BOWL",nat:"New Zealand",fl:"🇳🇿",em:"💧",st:"LFM",b:1.5,rt:87,avg:null,sr:null,eco:8.1,m:89,fm:["W","W","W","L","W"],pp:"80%",pv:"RR"},
+  {id:45,n:"Rashid Khan",r:"BOWL",nat:"Afghanistan",fl:"🇦🇫",em:"🕷️",st:"LBG",b:2,rt:93,avg:null,sr:null,eco:6.5,m:92,fm:["W","W","W","H","W"],pp:"92%",pv:"GT"},
+  {id:46,n:"Yuzvendra Chahal",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌀",st:"LBG",b:1,rt:85,avg:null,sr:null,eco:7.8,m:144,fm:["H","W","W","W","L"],pp:"80%",pv:"RR"},
+  {id:47,n:"Kuldeep Yadav",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌀",st:"SLC",b:1,rt:84,avg:null,sr:null,eco:7.5,m:100,fm:["W","W","L","W","W"],pp:"78%",pv:"DC"},
+  {id:48,n:"Arshdeep Singh",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🏹",st:"LFM",b:1,rt:82,avg:null,sr:null,eco:8.3,m:59,fm:["W","W","W","H","L"],pp:"75%",pv:"PBKS"},
+  {id:49,n:"Bhuvneshwar Kumar",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌊",st:"RFM",b:1,rt:82,avg:null,sr:null,eco:7.9,m:160,fm:["W","W","L","H","W"],pp:"76%",pv:"SRH"},
+  {id:50,n:"Mohammed Siraj",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🎯",st:"RFM",b:0.75,rt:80,avg:null,sr:null,eco:8.4,m:87,fm:["W","W","L","W","H"],pp:"72%",pv:"RCB"},
+  {id:51,n:"Harshal Patel",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🎭",st:"RFM",b:1,rt:81,avg:null,sr:null,eco:9.0,m:72,fm:["W","H","W","W","L"],pp:"74%",pv:"RCB"},
+  {id:52,n:"T Natarajan",r:"BOWL",nat:"India",fl:"🇮🇳",em:"💦",st:"LFM",b:0.5,rt:79,avg:null,sr:null,eco:8.2,m:44,fm:["W","H","W","L","W"],pp:"68%",pv:"SRH"},
+  {id:53,n:"Mark Wood",r:"BOWL",nat:"England",fl:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",em:"🌪️",st:"RF",b:1.5,rt:83,avg:null,sr:null,eco:9.0,m:14,fm:["W","H","W","L","W"],pp:"74%",pv:"LSG"},
+  {id:54,n:"Josh Hazlewood",r:"BOWL",nat:"Australia",fl:"🇦🇺",em:"🦘",st:"RF",b:1.5,rt:84,avg:null,sr:null,eco:7.5,m:38,fm:["W","W","H","L","W"],pp:"77%",pv:"RCB"},
+  {id:55,n:"Lockie Ferguson",r:"BOWL",nat:"New Zealand",fl:"🇳🇿",em:"💨",st:"RF",b:1,rt:80,avg:null,sr:null,eco:8.8,m:39,fm:["H","W","L","W","W"],pp:"68%",pv:"GT"},
+  {id:56,n:"Varun Chakravarthy",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🎭",st:"RM",b:0.75,rt:77,avg:null,sr:null,eco:7.6,m:61,fm:["W","W","L","W","H"],pp:"65%",pv:"KKR"},
+  {id:57,n:"Ravi Bishnoi",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🕷️",st:"LBG",b:0.6,rt:77,avg:null,sr:null,eco:7.9,m:44,fm:["W","W","H","L","W"],pp:"65%",pv:"LSG"},
+  {id:58,n:"Matheesha Pathirana",r:"BOWL",nat:"Sri Lanka",fl:"🇱🇰",em:"🌀",st:"RF",b:0.5,rt:78,avg:null,sr:null,eco:8.3,m:24,fm:["W","H","W","W","L"],pp:"68%",pv:"CSK"},
+  {id:59,n:"Alzarri Joseph",r:"BOWL",nat:"W Indies",fl:"🌴",em:"⚡",st:"RF",b:0.75,rt:77,avg:null,sr:null,eco:8.6,m:27,fm:["L","W","W","H","W"],pp:"65%",pv:"MI"},
+  {id:60,n:"Noor Ahmad",r:"BOWL",nat:"Afghanistan",fl:"🇦🇫",em:"🌙",st:"SLC",b:0.5,rt:75,avg:null,sr:null,eco:7.8,m:20,fm:["W","H","W","L","W"],pp:"60%",pv:"GT"},
+  {id:61,n:"Washington Sundar",r:"AR",nat:"India",fl:"🇮🇳",em:"☀️",st:"RHB/OB",b:0.75,rt:79,avg:18.0,sr:136,eco:7.2,m:70,fm:["W","W","L","H","W"],pp:"70%",pv:"SRH"},
+  {id:62,n:"Shardul Thakur",r:"AR",nat:"India",fl:"🇮🇳",em:"⚡",st:"RHB/RFM",b:0.5,rt:76,avg:14.0,sr:142,eco:9.3,m:80,fm:["W","H","L","W","W"],pp:"63%",pv:"KKR"},
+  {id:63,n:"Shivam Dube",r:"AR",nat:"India",fl:"🇮🇳",em:"💥",st:"LHB/RM",b:0.6,rt:74,avg:22.0,sr:158,eco:9.8,m:35,fm:["W","W","H","L","W"],pp:"62%",pv:"CSK"},
+  {id:64,n:"Rahul Tewatia",r:"AR",nat:"India",fl:"🇮🇳",em:"🎲",st:"LHB/LBG",b:0.5,rt:72,avg:20.0,sr:147,eco:9.5,m:55,fm:["W","L","W","H","W"],pp:"58%",pv:"GT"},
+  {id:65,n:"Abhishek Sharma",r:"AR",nat:"India",fl:"🇮🇳",em:"🚀",st:"LHB/OB",b:0.5,rt:74,avg:25.0,sr:162,eco:9.5,m:32,fm:["H","W","W","L","W"],pp:"66%",pv:"SRH"},
+  {id:66,n:"Sai Sudharsan",r:"BAT",nat:"India",fl:"🇮🇳",em:"🌱",st:"LHB",b:0.6,rt:75,avg:27.2,sr:138,eco:null,m:28,fm:["W","W","W","H","L"],pp:"63%",pv:"GT"},
+  {id:67,n:"Jaydev Unadkat",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🔵",st:"LFM",b:0.5,rt:73,avg:null,sr:null,eco:8.8,m:80,fm:["W","H","L","W","W"],pp:"60%",pv:"RR"},
+  {id:68,n:"Deepak Hooda",r:"AR",nat:"India",fl:"🇮🇳",em:"🌙",st:"RHB/OB",b:0.5,rt:74,avg:20.5,sr:140,eco:8.5,m:50,fm:["L","W","W","L","H"],pp:"60%",pv:"LSG"},
+  {id:69,n:"Nitish Rana",r:"AR",nat:"India",fl:"🇮🇳",em:"🔥",st:"LHB/OB",b:0.5,rt:72,avg:21.0,sr:135,eco:9.2,m:70,fm:["L","W","W","L","H"],pp:"57%",pv:"KKR"},
+  {id:70,n:"Deepak Chahar",r:"BOWL",nat:"India",fl:"🇮🇳",em:"💫",st:"RFM",b:0.5,rt:79,avg:null,sr:null,eco:8.0,m:66,fm:["L","W","W","H","L"],pp:"68%",pv:"CSK"},
+  {id:71,n:"Ambati Rayudu",r:"BAT",nat:"India",fl:"🇮🇳",em:"🌞",st:"RHB",b:0.5,rt:74,avg:25.8,sr:127,eco:null,m:204,fm:["L","H","W","L","W"],pp:"60%",pv:"CSK"},
+  {id:72,n:"Chris Gayle",r:"BAT",nat:"W Indies",fl:"🌴",em:"👾",st:"LHB",b:1,rt:83,avg:38.5,sr:148,eco:null,m:142,fm:["L","W","H","W","W"],pp:"80%",pv:"PBKS"},
+  {id:73,n:"Suresh Raina",r:"BAT",nat:"India",fl:"🇮🇳",em:"💛",st:"LHB",b:1,rt:80,avg:32.0,sr:137,eco:null,m:205,fm:["W","H","W","W","L"],pp:"78%",pv:"CSK"},
+  {id:74,n:"AB de Villiers",r:"BAT",nat:"S Africa",fl:"🇿🇦",em:"💎",st:"RHB",b:2,rt:95,avg:38.0,sr:168,eco:null,m:184,fm:["W","W","W","H","W"],pp:"96%",pv:"RCB"},
+  {id:75,n:"Kieron Pollard",r:"AR",nat:"W Indies",fl:"🌴",em:"💪",st:"RHB/RM",b:1.5,rt:83,avg:24.0,sr:165,eco:9.0,m:87,fm:["L","W","H","W","L"],pp:"76%",pv:"MI"},
+  {id:76,n:"Nicholas Pooran",r:"WK",nat:"W Indies",fl:"🌴",em:"🌴",st:"LHB/WK",b:1.5,rt:82,avg:35.0,sr:164,eco:null,m:87,fm:["W","H","W","L","W"],pp:"74%",pv:"SRH"},
+  {id:77,n:"Shivam Mavi",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌩️",st:"RF",b:0.75,rt:74,avg:null,sr:null,eco:8.7,m:40,fm:["W","L","H","W","W"],pp:"61%",pv:"KKR"},
+  {id:78,n:"Umran Malik",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🚀",st:"RF",b:0.5,rt:72,avg:null,sr:null,eco:9.5,m:35,fm:["L","W","L","H","W"],pp:"58%",pv:"SRH"},
+  {id:79,n:"Shahbaz Ahmed",r:"AR",nat:"India",fl:"🇮🇳",em:"🌟",st:"LHB/SLA",b:0.4,rt:70,avg:16.0,sr:132,eco:8.6,m:30,fm:["W","L","H","W","L"],pp:"48%",pv:"RCB"},
+  {id:80,n:"Mohit Sharma",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🏹",st:"RM",b:0.5,rt:76,avg:null,sr:null,eco:8.5,m:90,fm:["W","L","H","W","W"],pp:"63%",pv:"GT"},
+  {id:81,n:"Ayush Badoni",r:"AR",nat:"India",fl:"🇮🇳",em:"⭐",st:"RHB/RM",b:0.4,rt:68,avg:19.0,sr:138,eco:10.0,m:30,fm:["H","W","L","W","W"],pp:"50%",pv:"LSG"},
+  {id:82,n:"Sarfaraz Khan",r:"BAT",nat:"India",fl:"🇮🇳",em:"🐉",st:"RHB",b:0.5,rt:73,avg:27.0,sr:140,eco:null,m:32,fm:["W","H","W","L","W"],pp:"58%",pv:"MI"},
+  {id:83,n:"Shahrukh Khan",r:"BAT",nat:"India",fl:"🇮🇳",em:"👑",st:"RHB",b:0.5,rt:71,avg:21.0,sr:160,eco:null,m:30,fm:["L","W","W","L","H"],pp:"55%",pv:"PBKS"},
+  {id:84,n:"Mohd Arshad Khan",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌿",st:"RM",b:0.2,rt:61,avg:null,sr:null,eco:9.5,m:15,fm:["L","W","H","L","W"],pp:"38%",pv:"DC"},
+  {id:85,n:"Yash Dayal",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌙",st:"LFM",b:0.2,rt:63,avg:null,sr:null,eco:9.3,m:15,fm:["H","W","L","W","L"],pp:"40%",pv:"GT"},
+  {id:86,n:"Tanush Kotian",r:"AR",nat:"India",fl:"🇮🇳",em:"🎯",st:"RHB/OB",b:0.2,rt:60,avg:15.0,sr:125,eco:8.8,m:10,fm:["W","L","W","H","L"],pp:"38%",pv:"MI"},
+  {id:87,n:"Simarjeet Singh",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🛡️",st:"RM",b:0.2,rt:65,avg:null,sr:null,eco:8.8,m:14,fm:["W","L","H","W","L"],pp:"42%",pv:"CSK"},
+  {id:88,n:"Harpreet Bhatia",r:"AR",nat:"India",fl:"🇮🇳",em:"🌱",st:"RHB/RM",b:0.2,rt:56,avg:12.0,sr:120,eco:10.5,m:8,fm:["H","W","L","L","W"],pp:"30%",pv:"—"},
+  {id:89,n:"Prabhsimran Singh",r:"WK",nat:"India",fl:"🇮🇳",em:"🌟",st:"RHB/WK",b:0.6,rt:73,avg:28.0,sr:148,eco:null,m:30,fm:["W","L","W","H","W"],pp:"58%",pv:"PBKS"},
+  {id:90,n:"Dhruv Jurel",r:"WK",nat:"India",fl:"🇮🇳",em:"⭐",st:"RHB/WK",b:0.4,rt:69,avg:24.0,sr:138,eco:null,m:12,fm:["W","W","L","H","W"],pp:"52%",pv:"RR"},
+  {id:91,n:"Yusuf Pathan",r:"AR",nat:"India",fl:"🇮🇳",em:"🌟",st:"RHB/OB",b:0.5,rt:76,avg:22.0,sr:155,eco:10.0,m:174,fm:["L","W","H","L","W"],pp:"62%",pv:"—"},
+  {id:92,n:"Mukesh Choudhary",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🏹",st:"LFM",b:0.2,rt:65,avg:null,sr:null,eco:9.1,m:18,fm:["W","L","W","L","H"],pp:"42%",pv:"CSK"},
+  {id:93,n:"Rinku Singh",r:"BAT",nat:"India",fl:"🇮🇳",em:"💫",st:"LHB",b:0.5,rt:76,avg:29.5,sr:152,eco:null,m:38,fm:["W","W","L","W","W"],pp:"70%",pv:"KKR"},
+  {id:94,n:"Vidwath Kaverappa",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌀",st:"RF",b:0.2,rt:57,avg:null,sr:null,eco:9.6,m:10,fm:["W","L","L","H","W"],pp:"30%",pv:"GT"},
+  {id:95,n:"Darshan Nalkande",r:"BOWL",nat:"India",fl:"🇮🇳",em:"⚡",st:"RM",b:0.2,rt:56,avg:null,sr:null,eco:9.9,m:8,fm:["H","L","W","L","W"],pp:"28%",pv:"GT"},
+  {id:96,n:"Baba Indrajith",r:"BAT",nat:"India",fl:"🇮🇳",em:"💫",st:"RHB",b:0.2,rt:54,avg:16.0,sr:112,eco:null,m:12,fm:["W","H","L","L","W"],pp:"26%",pv:"—"},
+  {id:97,n:"Suyash Sharma",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌙",st:"LBG",b:0.2,rt:59,avg:null,sr:null,eco:8.9,m:12,fm:["W","W","L","H","L"],pp:"35%",pv:"KKR"},
+  {id:98,n:"Naman Dhir",r:"AR",nat:"India",fl:"🇮🇳",em:"🎯",st:"RHB/RM",b:0.2,rt:58,avg:14.0,sr:130,eco:9.8,m:8,fm:["W","L","H","W","L"],pp:"32%",pv:"MI"},
+  {id:99,n:"Gurjapneet Singh",r:"BOWL",nat:"India",fl:"🇮🇳",em:"🌩️",st:"RF",b:0.2,rt:58,avg:null,sr:null,eco:9.8,m:6,fm:["L","W","H","L","W"],pp:"32%",pv:"RCB"},
+  {id:100,n:"Arpit Vasavada",r:"BAT",nat:"India",fl:"🇮🇳",em:"🌟",st:"LHB",b:0.2,rt:55,avg:18.0,sr:120,eco:null,m:10,fm:["L","W","H","W","L"],pp:"28%",pv:"—"},
+];
+
+// ===== TEAMS CONFIG =====
+const TCFG=[
+  {id:'csk',name:"Chennai Super Kings",abbr:"CSK",color:"#f5c842",em:"🦁",pers:"Experience & veterans",strat:"senior"},
+  {id:'mi',name:"Mumbai Indians",abbr:"MI",color:"#005eb8",em:"🔵",pers:"Youth & big spenders",strat:"young"},
+  {id:'rcb',name:"Royal Challengers",abbr:"RCB",color:"#d82600",em:"🔴",pers:"Aggressive batting",strat:"batting"},
+  {id:'srh',name:"Sunrisers Hyderabad",abbr:"SRH",color:"#ff7f3f",em:"🟠",pers:"Pace specialists",strat:"bowling"},
+  {id:'kkr',name:"Kolkata Knight Riders",abbr:"KKR",color:"#7b2fff",em:"🟣",pers:"Balanced all-rounders",strat:"allround"},
+];
+
+// ===== ACHIEVEMENTS =====
+const ADEFS=[
+  {id:'first_bid',n:"First Bid",d:"Place your first bid",ico:"🎯",xp:50},
+  {id:'first_buy',n:"First Signing",d:"Acquire your first player",ico:"✍️",xp:100},
+  {id:'big_spender',n:"Big Spender",d:"Spend ₹10+ Cr on one player",ico:"💸",xp:200},
+  {id:'budget_king',n:"Budget King",d:"End with ₹30+ Cr remaining",ico:"👑",xp:300},
+  {id:'auction_master',n:"Auction Master",d:"Win 10 bidding wars vs AI",ico:"🏆",xp:500},
+  {id:'squad_builder',n:"Squad Builder",d:"Sign 15 players",ico:"🏏",xp:400},
+  {id:'overseas',n:"Overseas Specialist",d:"Sign 4 overseas players",ico:"✈️",xp:250},
+  {id:'pace_army',n:"Pace Army",d:"Sign 5+ bowlers",ico:"⚡",xp:200},
+  {id:'complete',n:"Complete Squad",d:"Fill all 25 spots",ico:"🌟",xp:1000},
+  {id:'bargain',n:"Bargain Hunter",d:"Buy a player at base price",ico:"🎁",xp:150},
+  {id:'bid50',n:"Bid Warrior",d:"Place 50 total bids",ico:"⚔️",xp:300},
+  {id:'top_buyer',n:"Top Buyer",d:"Highest total spend among all teams",ico:"💰",xp:400},
+];
+
+// ===== STATE =====
+let S={
+  myPurse:100,mySpent:0,myPlayers:[],
+  aiTeams:[],queue:[],idx:0,
+  curBid:0,curBidder:null,
+  running:false,paused:false,
+  timerVal:30,timerMax:30,
+  sold:[],unsold:[],
+  totalBids:0,warsWon:0,
+  achievements:{},xp:0,level:1,
+  theme:'dark',bidHistory:[],
+  sett:{timer:30,purse:100,ai:'normal',confetti:true,notif:true},
+};
+
+function loadS(){try{const d=localStorage.getItem('bp2');if(d)Object.assign(S,JSON.parse(d));}catch(e){}}
+function saveS(){try{localStorage.setItem('bp2',JSON.stringify(S));}catch(e){}}
+
+function initAI(){
+  if(S.aiTeams.length>0)return;
+  S.aiTeams=TCFG.map(t=>({...t,purse:S.sett.purse,spent:0,players:[]}));
+}
+
+function setupQ(){
+  S.queue=[...PDB].sort(()=>Math.random()-.5).map(p=>({...p,status:'upcoming',soldPrice:null,soldTo:null}));
+}
+
+// ===== NAVIGATION =====
+function go(pg){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  const target = document.getElementById('pg-'+pg);
+  if(target) target.classList.add('on');
+  // Desktop nav highlight
+  document.querySelectorAll('.navlinks .nb').forEach(b=>{
+    if(b.textContent.toLowerCase().includes(pg.slice(0,4))) b.classList.add('on');
+  });
+  // Drawer nav highlight
+  document.querySelectorAll('.mob-drawer .nb').forEach(b=>{
+    if(b.textContent.toLowerCase().includes(pg.slice(0,4))) b.classList.add('on');
+  });
+  // Bottom tab bar highlight
+  document.querySelectorAll('.bnb').forEach(b=>b.classList.remove('on'));
+  const bnb = document.getElementById('bnb-'+pg);
+  if(bnb) bnb.classList.add('on');
+  // Scroll to top on page change
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(pg==='teams') renderTeams();
+  if(pg==='analytics'){setTimeout(renderAnalytics,100);}
+  if(pg==='players') renderPlayers();
+  if(pg==='achievements') renderAch();
+}
+
+// ===== MOBILE DRAWER =====
+function toggleDrawer(){
+  const drawer = document.getElementById('mob-drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+  const ham = document.getElementById('ham-btn');
+  const isOpen = drawer.classList.contains('open');
+  if(isOpen){ closeDrawer(); }
+  else {
+    drawer.classList.add('open');
+    backdrop.style.display='block';
+    ham.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+}
+function closeDrawer(){
+  const drawer = document.getElementById('mob-drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+  const ham = document.getElementById('ham-btn');
+  drawer.classList.remove('open');
+  backdrop.style.display='none';
+  ham.classList.remove('open');
+  document.body.style.overflow='';
+}
+// Close drawer on ESC
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawer(); });
+
+// ===== HOME COUNTERS =====
+function animCtr(id,target){
+  const el=document.getElementById(id);if(!el)return;
+  let v=0;const s=Math.max(1,Math.ceil(target/55));
+  const t=setInterval(()=>{v=Math.min(v+s,target);el.textContent=v;if(v>=target)clearInterval(t);},18);
+}
+function initHome(){
+  animCtr('hs1',PDB.length);animCtr('hs2',6);animCtr('hs3',600);
+  document.getElementById('hs4').textContent=S.sold.length;
+}
+
+// ===== AUCTION ENGINE =====
+let timerInt=null;
+
+function startAuction(){
+  S.running=true;S.paused=false;
+  S.myPurse=S.sett.purse;S.mySpent=0;S.myPlayers=[];
+  S.aiTeams=TCFG.map(t=>({...t,purse:S.sett.purse,spent:0,players:[]}));
+  S.queue=[];setupQ();
+  S.idx=0;S.sold=[];S.unsold=[];S.totalBids=0;S.warsWon=0;S.bidHistory=[];
+  go('auction');
+  log('sys','⚡ BidPremier Mega Auction 2025 has begun! Good luck!');
+  log('sys','⌨️ Keys 1-5=bid · P=pause · Esc=pass player');
+  setTimeout(()=>nextP(),400);
+  saveS();
+}
+
+function nextP(){
+  const p=S.queue[S.idx];
+  if(!p){endAuction();return;}
+  S.curBid=p.b;S.curBidder=null;
+  document.getElementById('sov').classList.remove('on');
+  document.getElementById('stlbl').textContent='⚡ LIVE AUCTION';
+  document.getElementById('lotn').textContent=S.idx+1;
+  document.getElementById('lott').textContent=S.queue.length;
+  renderSpot(p);updateBidUI();startTimer();
+  log('sys',`🏏 Lot #${S.idx+1}: ${p.n} (Base ₹${p.b} Cr · ${p.r})`);
+  renderUpNext();renderAISB();renderSidePurse();
+}
+
+function renderSpot(p){
+  document.getElementById('pemoji').textContent=p.em||'🏏';
+  document.getElementById('pname').textContent=p.n;
+  document.getElementById('pflag').textContent=p.fl||'🏴';
+  document.getElementById('pnat').textContent=p.nat;
+  document.getElementById('pstyle').textContent=p.st||'—';
+  document.getElementById('pprev').textContent=p.pv?`Prev: ${p.pv}`:'Uncapped';
+  const rb=document.getElementById('prbadge');rb.textContent=p.r;rb.className=`rbadge rb-${p.r}`;
+  document.getElementById('sa1').textContent=p.avg||'—';
+  document.getElementById('sa2').textContent=p.sr||'—';
+  document.getElementById('sa3').textContent=p.rt||'—';
+  document.getElementById('sa4').textContent=p.m||'—';
+  document.getElementById('sa5').textContent=p.eco||'—';
+  document.getElementById('sa6').textContent=p.pp||'—';
+  const fd=document.getElementById('fdots');
+  fd.innerHTML=(p.fm||[]).map(f=>`<div class="fd ${f}"></div>`).join('');
+}
+
+function updateBidUI(){
+  const el=document.getElementById('curbid');
+  el.textContent=`₹${S.curBid.toFixed(2)} Cr`;
+  el.classList.remove('up');void el.offsetWidth;el.classList.add('up');
+  document.getElementById('hbidder').textContent=S.curBidder||'No bids yet';
+  document.getElementById('npurse').textContent=`₹${S.myPurse.toFixed(1)} Cr`;
+}
+
+function startTimer(){
+  clearInterval(timerInt);
+  S.timerVal=S.timerMax;
+  updTimer();
+  timerInt=setInterval(()=>{
+    if(S.paused)return;
+    S.timerVal--;updTimer();
+    if(S.timerVal>0&&S.timerVal%6===0)aiTick();
+    if(S.timerVal===3)log('sys','⏳ Going Once...');
+    if(S.timerVal===1)log('sys','⏳ Going Twice...');
+    if(S.timerVal<=0){clearInterval(timerInt);soldP();}
+  },1000);
+}
+
+function updTimer(){
+  const el=document.getElementById('timer');
+  el.textContent=S.timerVal;
+  if(S.timerVal<=5)el.classList.add('urg');else el.classList.remove('urg');
+}
+
+function aiTick(){
+  const p=S.queue[S.idx];if(!p)return;
+  const aggr=S.sett.ai==='hard'?1.35:S.sett.ai==='easy'?0.65:1.0;
+  S.aiTeams.forEach(team=>{
+    if(Math.random()>0.35*aggr)return;
+    if(team.purse<S.curBid+0.25)return;
+    if(team.players.length>=25)return;
+    if(team.purse<2)return;
+    let want=false;
+    if(team.strat==='batting'&&(p.r==='BAT'||p.r==='WK'))want=true;
+    if(team.strat==='bowling'&&p.r==='BOWL')want=true;
+    if(team.strat==='allround'&&p.r==='AR')want=true;
+    if(team.strat==='young'&&p.rt<85)want=true;
+    if(team.strat==='senior'&&p.rt>=85)want=true;
+    if(!want&&Math.random()<0.18)want=true;
+    if(!want)return;
+    const maxOff=Math.min(p.b*7*aggr,team.purse*0.38,18);
+    if(S.curBid>=maxOff||S.curBidder===team.name)return;
+    const inc=[0.25,0.5,0.5,1,1,2][Math.floor(Math.random()*6)];
+    const nb=parseFloat(Math.min(S.curBid+inc,maxOff).toFixed(2));
+    if(nb>S.curBid){
+      S.curBid=nb;S.curBidder=team.name;S.totalBids++;
+      log('bid',`🤖 <span class="lt">${team.name}</span> bids <span class="la">₹${S.curBid} Cr</span>`);
+      updateBidUI();
+    }
+  });
+}
+
+function bid(inc){
+  if(!S.running||S.paused){notify('Start an auction first!','r');return;}
+  const p=S.queue[S.idx];if(!p)return;
+  const nb=parseFloat((S.curBid+inc).toFixed(2));
+  if(nb>S.myPurse){notify('Insufficient purse! 💸','r');return;}
+  if(S.myPlayers.length>=25){notify('Squad full! (25/25)','r');return;}
+  S.curBid=nb;S.curBidder='Your Team';S.totalBids++;
+  log('bid',`💰 <span class="lt">You</span> bid <span class="la">₹${S.curBid} Cr</span> for ${p.n}`);
+  updateBidUI();
+  S.timerVal=Math.min(S.timerMax,S.timerVal+7);
+  checkAch('first_bid');
+  if(S.totalBids>=50)checkAch('bid50');
+  setTimeout(()=>aiTick(),500+Math.random()*1100);
+  saveS();
+}
+
+function soldP(){
+  const p=S.queue[S.idx];if(!p)return;
+  const soldTo=S.curBidder,soldPrice=S.curBid;
+  p.status='sold';p.soldPrice=soldPrice;p.soldTo=soldTo;
+  S.sold.push({...p});S.bidHistory.push(soldPrice);
+  if(soldTo==='Your Team'){
+    S.myPlayers.push({...p,price:soldPrice});
+    S.myPurse=parseFloat((S.myPurse-soldPrice).toFixed(2));
+    S.mySpent=parseFloat((S.mySpent+soldPrice).toFixed(2));
+    log('sold',`🔨 SOLD! ${p.n} → <span class="lt">Your Team</span> for <span class="la">₹${soldPrice} Cr</span>`);
+    notify(`✅ Signed ${p.n} for ₹${soldPrice} Cr!`,'g');
+    showSoldOv(p.n,'Your Team',soldPrice);
+    checkAch('first_buy');
+    if(soldPrice>=10)checkAch('big_spender');
+    if(S.myPlayers.length>=15)checkAch('squad_builder');
+    if(S.myPlayers.length>=25)checkAch('complete');
+    if(Math.abs(soldPrice-p.b)<0.01)checkAch('bargain');
+    const ov=S.myPlayers.filter(pl=>pl.nat!=='India').length;
+    if(ov>=4)checkAch('overseas');
+    const bwl=S.myPlayers.filter(pl=>pl.r==='BOWL').length;
+    if(bwl>=5)checkAch('pace_army');
+    S.warsWon++;if(S.warsWon>=10)checkAch('auction_master');
+    if(S.sett.confetti)confetti();
+    renderMySq();
+  } else if(soldTo){
+    const ai=S.aiTeams.find(t=>t.name===soldTo);
+    if(ai){ai.players.push({...p,price:soldPrice});ai.purse=parseFloat((ai.purse-soldPrice).toFixed(2));ai.spent=parseFloat((ai.spent+soldPrice).toFixed(2));}
+    log('sold',`🔨 SOLD! ${p.n} → <span class="lt">${soldTo}</span> for <span class="la">₹${soldPrice} Cr</span>`);
+    showSoldOv(p.n,soldTo,soldPrice);
+  } else {
+    p.status='unsold';S.unsold.push({...p});
+    log('unsold',`❌ ${p.n} — UNSOLD at ₹${p.b} Cr`);
+  }
+  renderAISB();renderSidePurse();
+  document.getElementById('hs4').textContent=S.sold.length;
+  saveS();
+  setTimeout(()=>{
+    document.getElementById('sov').classList.remove('on');
+    S.idx++;
+    if(S.idx<S.queue.length)nextP();else endAuction();
+  },2600);
+}
+
+function showSoldOv(pl,tm,pr){
+  document.getElementById('sov').classList.add('on');
+  document.getElementById('sbanner').textContent='SOLD!';
+  document.getElementById('spln').textContent=pl;
+  document.getElementById('splt').textContent=tm;
+  document.getElementById('spla').textContent=`₹${pr} Cr`;
+}
+
+function endAuction(){
+  S.running=false;clearInterval(timerInt);
+  log('sys','🏆 Auction Complete! All lots processed.');
+  notify('🏆 Auction Complete! Check Analytics for results.','g');
+  if(S.myPurse>=30)checkAch('budget_king');
+  const allSpent=[S.mySpent,...S.aiTeams.map(t=>t.spent)];
+  if(S.mySpent===Math.max(...allSpent))checkAch('top_buyer');
+  saveS();
+}
+
+function passP(){
+  if(!S.running){notify('Start an auction first!','r');return;}
+  clearInterval(timerInt);soldP();
+}
+function skipN(){
+  if(!S.running){notify('Start an auction first!','r');return;}
+  clearInterval(timerInt);
+  const p=S.queue[S.idx];
+  if(p){p.status='unsold';S.unsold.push({...p});log('unsold',`⏭ Skipped: ${p.n}`);}
+  S.idx++;
+  if(S.idx<S.queue.length)nextP();else endAuction();
+}
+function togPause(){
+  S.paused=!S.paused;
+  const b=document.getElementById('pbtn');
+  b.textContent=S.paused?'▶ Resume':'⏸ Pause';
+  if(!S.paused)startTimer();
+  log('sys',S.paused?'⏸ Auction paused':'▶ Auction resumed');
+}
+
+// ===== LOG =====
+function log(type,msg){
+  const feed=document.getElementById('logfeed');if(!feed)return;
+  const d=document.createElement('div');d.className=`le ${type}`;d.innerHTML=msg;
+  feed.appendChild(d);feed.scrollTop=feed.scrollHeight;
+  const c=document.getElementById('logc');if(c)c.textContent=`${feed.children.length} entries`;
+}
+
+// ===== SIDEBAR RENDERS =====
+function renderAISB(){
+  const el=document.getElementById('aisb');if(!el)return;
+  el.innerHTML=S.aiTeams.map(t=>`
+    <div class="airow">
+      <div class="aicol" style="background:${t.color}"></div>
+      <div class="aii">
+        <div class="ain">${t.em} ${t.abbr}</div>
+        <div class="aip">₹${(t.purse||0).toFixed(1)} Cr left</div>
+        <div class="pbar"><div class="pfill" style="background:${t.color};width:${Math.min(100,(t.purse||0)/S.sett.purse*100)}%"></div></div>
+      </div>
+      <div class="aic">${t.players.length}<br><span style="font-size:9px;color:var(--t3)">plrs</span></div>
+    </div>`).join('');
+}
+
+function renderUpNext(){
+  const el=document.getElementById('upnext');if(!el)return;
+  const nxt=S.queue.slice(S.idx+1,S.idx+5);
+  el.innerHTML=nxt.map(p=>`
+    <div class="qi">
+      <div class="qav">${p.em}</div>
+      <div><div class="qn">${p.n}</div><div class="qb">₹${p.b} Cr · ${p.r}</div></div>
+    </div>`).join('');
+}
+
+function renderSidePurse(){
+  const v=`₹${S.myPurse.toFixed(1)} Cr`;
+  const sp=document.getElementById('sidpurse');if(sp)sp.textContent=v;
+  const ss=document.getElementById('sidspent');if(ss)ss.textContent=`₹${S.mySpent.toFixed(1)}`;
+  const sl=document.getElementById('sidpl');if(sl)sl.textContent=S.myPlayers.length;
+  const pb=document.getElementById('mpbar');if(pb)pb.style.width=Math.max(0,S.myPurse/S.sett.purse*100)+'%';
+  const sc=document.getElementById('sqc');if(sc)sc.textContent=`${S.myPlayers.length}/25`;
+  const np=document.getElementById('npurse');if(np)np.textContent=v;
+  const dp=document.getElementById('drawer-purse');if(dp)dp.textContent=v;
+}
+
+function renderMySq(){
+  const el=document.getElementById('mysq');if(!el)return;
+  el.innerHTML=S.myPlayers.map(p=>`
+    <div style="display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:7px;background:rgba(0,229,200,.05);border:1px solid rgba(0,229,200,.1)">
+      <span style="font-size:18px">${p.em}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:var(--fh);font-size:12px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.n}</div>
+        <div style="font-family:var(--fh);font-size:10px;color:var(--t3)">${p.r} · ₹${(p.price||0).toFixed(2)} Cr</div>
+      </div>
+    </div>`).join('');
+}
+
+// ===== TEAMS PAGE =====
+function renderTeams(){
+  const el=document.getElementById('tgrid');if(!el)return;
+  const myT={name:"Your Team",abbr:"YOU",color:"var(--teal)",em:"🏏",pers:"Your picks",purse:S.myPurse,spent:S.mySpent,players:S.myPlayers};
+  const all=[myT,...S.aiTeams];
+  el.innerHTML=all.map(team=>{
+    const str=team.players.length?Math.round(team.players.reduce((a,p)=>a+(p.rt||75),0)/team.players.length):0;
+    const chips=team.players.slice(0,10).map(p=>{
+      const cls=p.r==='BAT'?'bat':p.r==='BOWL'?'bowl':p.r==='AR'?'ar':'wk';
+      return `<span class="chip ${cls}">${p.em} ${p.n.split(' ')[0]}</span>`;
+    }).join('');
+    const empty=Math.max(0,4-team.players.length);
+    const empties=Array.from({length:empty}).map(()=>`<span class="chip emp">+ Empty</span>`).join('');
+    return `<div class="tc">
+      <div class="tch" style="border-top:3px solid ${team.color}">
+        <div class="tlb" style="background:${team.color}22">${team.em}</div>
+        <div><div class="tnb">${team.name}</div><div class="tper">${team.pers}</div></div>
+        <div class="trat" style="color:${team.color}">${str||'—'}</div>
+      </div>
+      <div class="tsr">
+        <div class="tsc"><div class="tsv" style="color:${team.color}">₹${(team.purse||0).toFixed(1)}</div><div class="tsl">Purse Left</div></div>
+        <div class="tsc"><div class="tsv">${team.players.length}</div><div class="tsl">Players</div></div>
+        <div class="tsc"><div class="tsv">₹${(team.spent||0).toFixed(1)}</div><div class="tsl">Spent</div></div>
+      </div>
+      <div class="tpl"><div class="tplt">Squad</div><div class="chips">${chips||'<span class="chip emp">No players yet</span>'}${empties}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ===== PLAYERS PAGE =====
+let rFilter='all';
+function renderPlayers(){filterP();}
+function fRole(r,btn){
+  rFilter=r;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');filterP();
+}
+function filterP(){
+  const s=(document.getElementById('psearch')?.value||'').toLowerCase();
+  const el=document.getElementById('pgrid');if(!el)return;
+  const myIds=new Set(S.myPlayers.map(p=>p.id));
+  const soldIds=new Set(S.sold.map(p=>p.id));
+  const fl=PDB.filter(p=>{
+    const mr=rFilter==='all'||p.r===rFilter;
+    const ms=!s||p.n.toLowerCase().includes(s)||p.nat.toLowerCase().includes(s);
+    return mr&&ms;
+  });
+  el.innerHTML=fl.map(p=>{
+    const isMine=myIds.has(p.id);
+    const isSold=soldIds.has(p.id);
+    const status=isMine?'sd':isSold?'sd':'av';
+    const stlbl=isMine?'In Your Squad':isSold?'Sold':'Available';
+    return `<div class="pdc">
+      <div class="pdtop">${p.em}<div style="position:absolute;top:6px;right:6px"><span class="rbadge rb-${p.r}">${p.r}</span></div></div>
+      <div class="pdbody">
+        <div class="pdn">${p.n}</div>
+        <div class="pdrr"><span style="font-size:13px">${p.fl}</span><span style="font-family:var(--fh);font-size:10px;color:var(--t3)">${p.nat}</span></div>
+        <div class="pdstats">
+          <div class="pdsi"><div class="pdsv">${p.rt}</div><div class="pdsl">Rating</div></div>
+          <div class="pdsi"><div class="pdsv">${p.avg||'—'}</div><div class="pdsl">Avg</div></div>
+          <div class="pdsi"><div class="pdsv">${p.eco||'—'}</div><div class="pdsl">Eco</div></div>
+        </div>
+        <div class="pdpr">
+          <div><div class="pdb">Base Price</div><div class="pdv">₹${p.b} Cr</div></div>
+          <span class="pst ${status}">${stlbl}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== ANALYTICS =====
+let pchart,rchart,bchart;
+function renderAnalytics(){
+  renderLB();renderTopS();
+  if(typeof Chart==='undefined')return;
+  setTimeout(()=>{renderPC();renderRC();renderBC();},50);
+}
+function renderLB(){
+  const el=document.getElementById('lbody');if(!el)return;
+  const myT={name:"Your Team",em:"🏏",players:S.myPlayers,spent:S.mySpent,purse:S.myPurse};
+  const all=[myT,...S.aiTeams].sort((a,b)=>(b.spent||0)-(a.spent||0));
+  el.innerHTML=all.map((t,i)=>{
+    const avg=t.players.length?((t.spent||0)/t.players.length).toFixed(1):0;
+    const str=t.players.length?Math.round(t.players.reduce((a,p)=>a+(p.rt||75),0)/t.players.length):0;
+    const rc=i===0?'g':i===1?'s':i===2?'b':'';
+    return `<tr>
+      <td class="rn ${rc}">${i+1}</td>
+      <td><b>${t.em||'🏏'} ${t.name}</b></td>
+      <td style="color:var(--teal)">${t.players.length}</td>
+      <td style="color:var(--gold)">₹${(t.spent||0).toFixed(1)}</td>
+      <td style="color:var(--t2)">₹${(t.purse||0).toFixed(1)}</td>
+      <td>₹${avg}</td>
+      <td style="color:${str>85?'var(--teal)':str>75?'var(--gold)':'var(--t3)'}">${str||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+function renderTopS(){
+  const el=document.getElementById('tsign');if(!el)return;
+  const top=S.sold.sort((a,b)=>(b.soldPrice||0)-(a.soldPrice||0)).slice(0,5);
+  el.innerHTML=top.length?top.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--br)">
+      <div style="font-family:var(--fd);font-size:14px;font-weight:900;color:var(--t3);width:26px">#${i+1}</div>
+      <span style="font-size:22px">${p.em}</span>
+      <div style="flex:1"><div style="font-family:var(--fh);font-size:13px;font-weight:700">${p.n}</div><div style="font-family:var(--fh);font-size:10px;color:var(--t3)">${p.soldTo||'—'}</div></div>
+      <div style="font-family:var(--fd);font-size:14px;font-weight:700;color:var(--gold)">₹${(p.soldPrice||0).toFixed(1)} Cr</div>
+    </div>`)
+    .join(''):'<div style="font-family:var(--fh);font-size:12px;color:var(--t3);padding:10px 0">No players sold yet. Start an auction!</div>';
+}
+function renderPC(){
+  const ctx=document.getElementById('pc');if(!ctx)return;
+  if(pchart)pchart.destroy();
+  const myT={abbr:'YOU',spent:S.mySpent,purse:S.myPurse};
+  const all=[myT,...S.aiTeams];
+  const cfg={type:'bar',data:{labels:all.map(t=>t.abbr||'YOU'),datasets:[
+    {label:'Spent',data:all.map(t=>+(t.spent||0).toFixed(1)),backgroundColor:'rgba(245,200,66,.75)',borderRadius:5},
+    {label:'Remaining',data:all.map(t=>+(t.purse||0).toFixed(1)),backgroundColor:'rgba(0,229,200,.3)',borderRadius:5}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8ba0c0',font:{size:11}}}},scales:{x:{ticks:{color:'#8ba0c0'},grid:{color:'rgba(79,159,255,.05)'}},y:{ticks:{color:'#8ba0c0'},grid:{color:'rgba(79,159,255,.05)'}}}}};
+  pchart=new Chart(ctx,cfg);
+}
+function renderRC(){
+  const ctx=document.getElementById('rc');if(!ctx)return;
+  if(rchart)rchart.destroy();
+  const roles={BAT:0,BOWL:0,AR:0,WK:0};
+  S.myPlayers.forEach(p=>{if(roles[p.r]!==undefined)roles[p.r]++;});
+  rchart=new Chart(ctx,{type:'doughnut',data:{labels:['Batters','Bowlers','All-Rounders','Keepers'],datasets:[{data:Object.values(roles),backgroundColor:['rgba(245,200,66,.8)','rgba(0,229,200,.8)','rgba(255,79,139,.8)','rgba(79,159,255,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8ba0c0',padding:10,font:{size:11}}}}}});
+}
+function renderBC(){
+  const ctx=document.getElementById('bc');if(!ctx)return;
+  if(bchart)bchart.destroy();
+  const data=S.bidHistory.length?S.bidHistory:Array.from({length:8},()=>+(Math.random()*9+1).toFixed(1));
+  bchart=new Chart(ctx,{type:'line',data:{labels:data.map((_,i)=>`#${i+1}`),datasets:[{label:'Price (Cr)',data,borderColor:'var(--teal)',backgroundColor:'rgba(0,229,200,.08)',tension:0.4,fill:true,pointRadius:4,pointBackgroundColor:'var(--gold)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8ba0c0',font:{size:11}}}},scales:{x:{ticks:{color:'#8ba0c0'},grid:{display:false}},y:{ticks:{color:'#8ba0c0'},grid:{color:'rgba(79,159,255,.05)'}}}}});
+}
+
+// ===== ACHIEVEMENTS =====
+function renderAch(){
+  const el=document.getElementById('achgrid');if(!el)return;
+  el.innerHTML=ADEFS.map(a=>{
+    const un=!!S.achievements[a.id];
+    return `<div class="achc ${un?'un':'lk'}">
+      <div class="acbadge ${un?'y':'n'}">${un?'✓':'?'}</div>
+      <div class="aci">${a.ico}</div>
+      <div class="acn">${a.n}</div>
+      <div class="acd">${a.d}</div>
+      <div class="acx">+${a.xp} XP</div>
+    </div>`;
+  }).join('');
+  updateXP();
+}
+function checkAch(id){
+  if(S.achievements[id])return;
+  const def=ADEFS.find(a=>a.id===id);if(!def)return;
+  S.achievements[id]=true;S.xp+=def.xp;S.level=Math.floor(S.xp/500)+1;
+  showAchPop(def);notify(`🏆 Achievement: ${def.n}!`,'g');
+  renderAch();saveS();
+}
+function showAchPop(def){
+  const p=document.getElementById('achpop');
+  document.getElementById('apico').textContent=def.ico;
+  document.getElementById('apname').textContent=def.n;
+  p.classList.add('on');
+  setTimeout(()=>p.classList.remove('on'),3200);
+}
+function updateXP(){
+  const xpp=500,inL=S.xp%xpp,pct=(inL/xpp)*100;
+  const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  el('xlv',S.level);el('xxp',S.xp);el('xnxt',xpp);el('xpl',`${inL} / ${xpp} XP to next level`);
+  const xf=document.getElementById('xpf');if(xf)xf.style.width=pct+'%';
+}
+
+// ===== NOTIFICATIONS =====
+function notify(msg,type=''){
+  if(!S.sett.notif&&type!=='g')return;
+  const c=document.getElementById('nots');
+  const d=document.createElement('div');d.className=`not ${type}`;d.textContent=msg;
+  c.appendChild(d);
+  setTimeout(()=>{d.style.animation='no .4s ease forwards';setTimeout(()=>d.remove(),400);},3000);
+}
+
+// ===== CONFETTI =====
+function confetti(){
+  const cols=['var(--gold)','var(--teal)','var(--pink)','var(--blue)','#fff'];
+  for(let i=0;i<55;i++){
+    const p=document.createElement('div');p.className='cf';
+    const sz=Math.random()*9+4;
+    p.style.cssText=`left:${Math.random()*100}vw;width:${sz}px;height:${sz}px;background:${cols[i%cols.length]};animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*.5}s;border-radius:${Math.random()>.5?'50%':'2px'}`;
+    document.body.appendChild(p);setTimeout(()=>p.remove(),4000);
+  }
+}
+
+// ===== THEME =====
+const THEMES=['dark','neon','stadium'];let thi=0;
+function cycleTheme(){thi=(thi+1)%THEMES.length;setTheme(THEMES[thi]);}
+function setTheme(name,btn){
+  document.documentElement.setAttribute('data-theme',name==='dark'||name==='default'?'':name);
+  S.theme=name;
+  document.querySelectorAll('.thop').forEach(o=>o.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  saveS();
+}
+
+// ===== SETTINGS =====
+function saveSett(){
+  S.sett.timer=+document.getElementById('tset').value;
+  S.sett.purse=+document.getElementById('pset').value;
+  S.sett.ai=document.getElementById('aiset').value;
+  S.sett.confetti=document.getElementById('cfset').checked;
+  S.sett.notif=document.getElementById('nfset').checked;
+  S.timerMax=S.sett.timer;
+  saveS();notify('Settings saved ✓','');
+}
+function applySett(){
+  const ts=document.getElementById('tset');const ps=document.getElementById('pset');
+  const as=document.getElementById('aiset');const cs=document.getElementById('cfset');
+  const ns=document.getElementById('nfset');
+  if(ts)ts.value=S.sett.timer;if(ps)ps.value=S.sett.purse;
+  if(as)as.value=S.sett.ai;if(cs)cs.checked=S.sett.confetti;
+  if(ns)ns.checked=S.sett.notif;
+  S.timerMax=S.sett.timer;
+}
+function resetAll(){if(!confirm('Reset all progress? This cannot be undone!'))return;localStorage.removeItem('bp2');location.reload();}
+function resetAch(){S.achievements={};S.xp=0;S.level=1;saveS();renderAch();notify('Achievements cleared','');}
+
+// ===== NEWS TICKER =====
+const NEWS=[
+  "🏏 Virat Kohli breaks another IPL record with stunning century",
+  "💰 MI preparing mammoth ₹15 Cr bid for mystery overseas player",
+  "🔥 Jasprit Bumrah named Player of the Season for record-breaking spell",
+  "📊 CSK squad analytics reveal average player age at all-time low",
+  "⚡ SRH unveils aggressive pace-heavy strategy for mega auction",
+  "🌟 Yashasvi Jaiswal expected to fetch 10x base price at auction",
+  "🏟️ IPL 2025 to feature expanded mega auction with 1000+ registrations",
+  "📱 Fantasy cricket apps report record 200M signups ahead of IPL season",
+  "💎 Overseas slots hotly contested as T20 specialists flood the pool",
+  "🤖 AI bidding strategies now power 5 out of 10 IPL franchises",
+  "🏆 Auction war: CSK vs MI expected for Hardik Pandya signing rights",
+  "🎯 RCB announces ₹120 Cr purse strategy focused on top-order batters",
+];
+function setupTicker(){
+  const el=document.getElementById('tscr');if(!el)return;
+  const d=[...NEWS,...NEWS];
+  el.innerHTML=d.map(n=>`<span class="titem"><span class="tdot"></span>${n}</span>`).join('');
+}
+
+// ===== KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown',e=>{
+  if(e.key==='1')bid(0.25);
+  if(e.key==='2')bid(0.5);
+  if(e.key==='3')bid(1);
+  if(e.key==='4')bid(2);
+  if(e.key==='5')bid(5);
+  if(e.key==='p'||e.key==='P')togPause();
+  if(e.key==='Escape')passP();
+});
+
+// ===== INIT =====
+window.addEventListener('load',()=>{
+  loadS();initAI();setupQ();
+  applySett();
+  if(S.theme&&S.theme!=='dark')setTheme(S.theme);
+  initHome();
+  renderPlayers();
+  renderAch();
+  setupTicker();
+  renderAISB();renderSidePurse();
+  // Restore any in-progress auction visuals
+  if(S.myPlayers.length>0)renderMySq();
+});
+
+</script>
+</body>
+</html>

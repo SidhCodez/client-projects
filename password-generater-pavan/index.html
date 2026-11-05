@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vault — Password Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Variables ──────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0e0f11;
+      --surface:   #16181c;
+      --surface2:  #1e2127;
+      --border:    #2a2d35;
+      --accent:    #c8f04e;
+      --accent2:   #5ef0c8;
+      --text:      #e8eaf0;
+      --muted:     #6b7080;
+      --danger:    #f05e5e;
+      --radius:    12px;
+      --mono:      'DM Mono', monospace;
+      --serif:     'Fraunces', Georgia, serif;
+      --nav-h:     60px;
+      --shadow:    0 4px 24px rgba(0,0,0,.45);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── Noise texture overlay ──────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── Nav ────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--nav-h);
+      background: rgba(14,15,17,.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 24px;
+      gap: 32px;
+    }
+
+    .nav-brand {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -.5px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .nav-brand span { color: var(--text); font-style: italic; font-weight: 300; }
+
+    .nav-links {
+      display: flex; gap: 4px;
+      list-style: none;
+    }
+
+    .nav-links button {
+      background: none; border: none; cursor: pointer;
+      font-family: var(--mono); font-size: 13px;
+      color: var(--muted);
+      padding: 6px 14px; border-radius: 8px;
+      transition: color .15s, background .15s;
+    }
+    .nav-links button:hover { color: var(--text); background: var(--surface2); }
+    .nav-links button.active { color: var(--accent); background: rgba(200,240,78,.08); }
+
+    .nav-spacer { flex: 1; }
+
+    .nav-count {
+      font-size: 12px; color: var(--muted);
+      background: var(--surface2);
+      padding: 4px 10px; border-radius: 20px;
+    }
+
+    /* ── Layout ─────────────────────────────────────────── */
+    main {
+      position: relative; z-index: 1;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 36px 20px 80px;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; animation: fadeUp .25s ease; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Section header ─────────────────────────────────── */
+    .section-header {
+      margin-bottom: 28px;
+    }
+    .section-header h1 {
+      font-family: var(--serif);
+      font-size: 32px; font-weight: 300;
+      letter-spacing: -.5px;
+      line-height: 1.2;
+    }
+    .section-header h1 em { color: var(--accent); font-style: italic; }
+    .section-header p { color: var(--muted); margin-top: 6px; font-size: 13px; }
+
+    /* ── Card ───────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ── Form elements ──────────────────────────────────── */
+    label {
+      display: block;
+      font-size: 12px; color: var(--muted);
+      margin-bottom: 6px; margin-top: 14px;
+    }
+    label:first-child { margin-top: 0; }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="url"],
+    input[type="number"],
+    select, textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 15px; height: 15px;
+      cursor: pointer;
+    }
+
+    .check-group {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 4px;
+    }
+    .check-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--text);
+      cursor: pointer; margin-top: 0;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-family: var(--mono); font-size: 13px;
+      padding: 9px 18px; border-radius: 8px;
+      border: none; cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      font-weight: 500;
+    }
+    .btn:active { transform: scale(.97); }
+
+    .btn-primary {
+      background: var(--accent); color: #0e0f11;
+    }
+    .btn-primary:hover { opacity: .85; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-ghost {
+      background: none; border: none; color: var(--muted);
+      padding: 6px 8px; font-size: 16px;
+    }
+    .btn-ghost:hover { color: var(--text); }
+
+    .btn-danger { color: var(--danger); }
+    .btn-danger:hover { background: rgba(240,94,94,.1); }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    .btn-row {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    /* ── Password output ─────────────────────────────────── */
+    .pw-output-wrap {
+      position: relative;
+      margin-top: 20px;
+    }
+
+    #pw-output {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      color: var(--accent2);
+      font-family: var(--mono);
+      font-size: 16px;
+      padding: 14px 52px 14px 16px;
+      letter-spacing: .04em;
+      word-break: break-all;
+      min-height: 52px;
+    }
+
+    .pw-copy-btn {
+      position: absolute; right: 10px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 18px;
+      padding: 4px; border-radius: 6px;
+      transition: color .15s;
+    }
+    .pw-copy-btn:hover { color: var(--accent); }
+
+    .strength-bar {
+      height: 4px; border-radius: 2px;
+      background: var(--border);
+      margin-top: 10px; overflow: hidden;
+    }
+    .strength-fill {
+      height: 100%; border-radius: 2px;
+      transition: width .3s, background .3s;
+    }
+    .strength-label {
+      font-size: 11px; color: var(--muted);
+      margin-top: 5px; text-align: right;
+    }
+
+    /* ── Vault / entries ─────────────────────────────────── */
+    .search-bar {
+      display: flex; gap: 10px; align-items: center;
+      margin-bottom: 20px;
+    }
+    .search-bar input { flex: 1; }
+
+    .entries-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .entry-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      transition: border-color .15s;
+    }
+    .entry-card:hover { border-color: var(--surface2); }
+
+    .entry-head {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .entry-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .entry-info { flex: 1; min-width: 0; }
+    .entry-name {
+      font-family: var(--serif); font-size: 16px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .entry-user {
+      font-size: 12px; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .entry-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    .entry-body {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      animation: fadeUp .2s ease;
+    }
+    .entry-body.open { display: block; }
+
+    .entry-field { margin-bottom: 10px; }
+    .entry-field-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+    .entry-field-val {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px;
+    }
+    .entry-field-val span { flex: 1; font-family: var(--mono); word-break: break-all; }
+
+    /* ── Modal ───────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 100%; max-width: 480px;
+      box-shadow: var(--shadow);
+      animation: fadeUp .2s ease;
+    }
+    .modal h2 {
+      font-family: var(--serif); font-size: 22px; font-weight: 300;
+      margin-bottom: 20px;
+    }
+    .modal-footer {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    /* ── Toast ───────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; z-index: 300;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px; padding: 10px 20px;
+      border-radius: 30px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s, transform .2s;
+      white-space: nowrap;
+    }
+    #toast.show {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Security note ───────────────────────────────────── */
+    .security-note {
+      background: rgba(240,94,94,.07);
+      border: 1px solid rgba(240,94,94,.25);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .security-note strong { color: var(--danger); }
+
+    /* ── Empty state ─────────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 40px; margin-bottom: 14px; }
+    .empty-state p { font-size: 13px; }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 520px) {
+      nav { padding: 0 14px; gap: 14px; }
+      .nav-brand { font-size: 18px; }
+      .nav-links button { padding: 5px 10px; font-size: 12px; }
+      main { padding: 24px 14px 60px; }
+      .section-header h1 { font-size: 26px; }
+      .card { padding: 18px; }
+      .modal { padding: 20px; }
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">vault<span>.</span></div>
+  <ul class="nav-links">
+    <li><button class="active" data-tab="generator">Generator</button></li>
+    <li><button data-tab="vault">Vault</button></li>
+    <li><button data-tab="about">About</button></li>
+  </ul>
+  <div class="nav-spacer"></div>
+  <div class="nav-count" id="nav-count">0 entries</div>
+</nav>
+
+<main>
+
+  <!-- ── GENERATOR ── -->
+  <section class="section active" id="tab-generator">
+    <div class="section-header">
+      <h1>Generate a <em>strong</em> password</h1>
+      <p>Configure, copy, and save in one place.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Configuration</div>
+
+      <label for="pw-length">Length — <strong id="len-val">18</strong> characters</label>
+      <input type="range" id="pw-length" min="8" max="64" value="18" />
+
+      <label>Character sets</label>
+      <div class="check-group">
+        <label class="check-label">
+          <input type="checkbox" id="use-upper" checked /> Uppercase (A–Z)
+        </label>
+        <label class="check-label">
+          <input type="checkbox" id="use-lower" checked /> Lowercase (a–z)
+        </label>
+        <label class="check-label">
+          <input type="checkbox" id="use-nums" checked /> Numbers (0–9)
+        </label>
+        <label class="check-label">
+          <input type="checkbox" id="use-sym" checked /> Symbols (!@#…)
+        </label>
+        <label class="check-label">
+          <input type="checkbox" id="use-ambig" /> Exclude ambiguous (0Oll)
+        </label>
+      </div>
+
+      <div class="pw-output-wrap">
+        <div id="pw-output" aria-label="Generated password" aria-live="polite">—</div>
+        <button class="pw-copy-btn" id="copy-btn" title="Copy password" aria-label="Copy password">⧉</button>
+      </div>
+
+      <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+      <div class="strength-label" id="strength-label">—</div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="gen-btn">⟳ Generate</button>
+        <button class="btn btn-outline" id="save-gen-btn">＋ Save to Vault</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── VAULT ── -->
+  <section class="section" id="tab-vault">
+    <div class="section-header">
+      <h1>Your <em>vault</em></h1>
+      <p>All entries stored locally in your browser.</p>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search by name or username…" aria-label="Search entries" />
+      <button class="btn btn-primary btn-sm" id="add-entry-btn">＋ Add</button>
+    </div>
+
+    <div class="entries-list" id="entries-list"></div>
+  </section>
+
+  <!-- ── ABOUT ── -->
+  <section class="section" id="tab-about">
+    <div class="section-header">
+      <h1>About <em>vault</em></h1>
+      <p>A private, local-first password manager.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">How to run</div>
+      <p style="color:var(--muted); font-size:13px; line-height:1.8">
+        1. Save <code style="color:var(--accent2)">index.html</code> anywhere on your computer.<br>
+        2. Double-click it, or open it in any modern browser.<br>
+        3. No server, no install, no internet required after first load.<br>
+        4. Your data lives in <code style="color:var(--accent2)">localStorage</code> — only accessible by this browser on this device.
+      </p>
+    </div>
+
+    <div class="security-note">
+      <strong>⚠ Security note</strong><br>
+      Passwords are stored in <strong>plain text</strong> in your browser's localStorage. This is fine for personal, low-risk use on a device only you control. Do <em>not</em> use this on a shared or public computer. For high-security needs, use a dedicated password manager like Bitwarden (open-source) or 1Password.
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-title">Optional enhancements</div>
+      <p style="color:var(--muted); font-size:13px; line-height:1.8">
+        • AES-256 encryption (using Web Crypto API) with a master password<br>
+        • Import / export vault as an encrypted JSON file<br>
+        • Password history per entry<br>
+        • TOTP / 2FA code storage<br>
+        • Auto-lock after inactivity timeout<br>
+        • Browser extension for auto-fill<br>
+        • Offline PWA (installable, works without network)
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── MODAL: Add / Edit Entry ── -->
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <h2 id="modal-title">New entry</h2>
+
+    <label for="m-name">Account name *</label>
+    <input type="text" id="m-name" placeholder="e.g. GitHub" />
+
+    <label for="m-user">Username / Email</label>
+    <input type="text" id="m-user" placeholder="you@example.com" />
+
+    <label for="m-url">URL</label>
+    <input type="url" id="m-url" placeholder="https://github.com" />
+
+    <label for="m-pw">Password *</label>
+    <div style="position:relative">
+      <input type="password" id="m-pw" placeholder="Enter or paste password" style="padding-right:44px" />
+      <button class="pw-copy-btn" id="m-pw-eye" title="Show/hide" aria-label="Toggle password visibility" style="font-size:16px">👁</button>
+    </div>
+
+    <label for="m-notes">Notes</label>
+    <textarea id="m-notes" rows="2" placeholder="Optional notes…" style="resize:vertical"></textarea>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="modal-save">Save entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ── Helpers ─────────────────────────────────────────────── */
+const $  = id => document.getElementById(id);
+const qs = (s, el=document) => el.querySelector(s);
+
+function toast(msg, dur=2000) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function siteIcon(name='') {
+  const icons = {
+    github:'🐙', google:'🌐', twitter:'🐦', facebook:'👤',
+    instagram:'📷', linkedin:'💼', amazon:'📦', netflix:'🎬',
+    spotify:'🎵', apple:'🍎', microsoft:'🪟', discord:'💬',
+    slack:'⚡', notion:'📝', figma:'🎨', dropbox:'📂',
+    paypal:'💳', reddit:'🤖', youtube:'▶️',
+  };
+  const key = name.toLowerCase();
+  for (const [k,v] of Object.entries(icons)) {
+    if (key.includes(k)) return v;
+  }
+  return '🔑';
+}
+
+/* ── LocalStorage ────────────────────────────────────────── */
+const STORE_KEY = 'vault_entries_v1';
+
+function loadEntries() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveEntries(entries) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(entries));
+  updateNavCount(entries.length);
+}
+
+function updateNavCount(n) {
+  $('nav-count').textContent = `${n} entr${n===1?'y':'ies'}`;
+}
+
+/* ── Navigation ──────────────────────────────────────────── */
+document.querySelectorAll('.nav-links button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    $('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'vault') renderEntries();
+  });
+});
+
+/* ── Password Generator ──────────────────────────────────── */
+const UPPER  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const LOWER  = 'abcdefghijklmnopqrstuvwxyz';
+const NUMS   = '0123456789';
+const SYMS   = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+const AMBIG  = /[0Oll1I]/g;
+
+let lastPassword = '';
+
+function buildCharset() {
+  let s = '';
+  if ($('use-upper').checked) s += UPPER;
+  if ($('use-lower').checked) s += LOWER;
+  if ($('use-nums').checked)  s += NUMS;
+  if ($('use-sym').checked)   s += SYMS;
+  if ($('use-ambig').checked) s = s.replace(AMBIG, '');
+  return s;
+}
+
+function generate() {
+  const len = parseInt($('pw-length').value);
+  const charset = buildCharset();
+  if (!charset) { toast('Select at least one character set.'); return; }
+
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  const pw = Array.from(arr).map(n => charset[n % charset.length]).join('');
+
+  lastPassword = pw;
+  $('pw-output').textContent = pw;
+  updateStrength(pw);
+}
+
+function updateStrength(pw) {
+  let score = 0;
+  if (pw.length >= 12) score++;
+  if (pw.length >= 18) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  const labels = ['', 'Very Weak', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+  const colors = ['', '#f05e5e', '#f08c5e', '#f0c85e', '#b0e05e', '#c8f04e', '#5ef0c8'];
+  const pct    = [0, 14, 28, 46, 64, 82, 100];
+
+  $('strength-fill').style.width      = pct[score] + '%';
+  $('strength-fill').style.background = colors[score];
+  $('strength-label').textContent     = labels[score] || '';
+}
+
+$('pw-length').addEventListener('input', () => {
+  $('len-val').textContent = $('pw-length').value;
+  if (lastPassword) generate();
+});
+
+$('gen-btn').addEventListener('click', generate);
+
+$('copy-btn').addEventListener('click', () => {
+  if (!lastPassword) return;
+  navigator.clipboard.writeText(lastPassword)
+    .then(() => toast('✓ Copied to clipboard'))
+    .catch(() => toast('Copy failed — select manually'));
+});
+
+$('save-gen-btn').addEventListener('click', () => {
+  if (!lastPassword) { generate(); }
+  openModal(null, lastPassword);
+});
+
+// Generate on load
+generate();
+
+/* ── Vault Render ────────────────────────────────────────── */
+function renderEntries(filter='') {
+  const entries = loadEntries();
+  const list = $('entries-list');
+  const q = filter.toLowerCase();
+
+  const filtered = q
+    ? entries.filter(e =>
+        e.name.toLowerCase().includes(q) ||
+        (e.username||'').toLowerCase().includes(q))
+    : entries;
+
+  updateNavCount(entries.length);
+
+  if (!filtered.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">${q ? '🔍' : '🔐'}</div>
+        <p>${q ? 'No entries match your search.' : 'No saved passwords yet.<br>Generate and save one!'}</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  filtered.forEach(entry => {
+    const card = document.createElement('article');
+    card.className = 'entry-card';
+    card.dataset.id = entry.id;
+    card.innerHTML = `
+      <div class="entry-head">
+        <div class="entry-icon">${siteIcon(entry.name)}</div>
+        <div class="entry-info">
+          <div class="entry-name">${escHtml(entry.name)}</div>
+          <div class="entry-user">${escHtml(entry.username||'—')}</div>
+        </div>
+        <div class="entry-actions">
+          <button class="btn-ghost" title="Expand" data-action="toggle">▾</button>
+          <button class="btn-ghost" title="Edit" data-action="edit">✏️</button>
+          <button class="btn-ghost btn-danger" title="Delete" data-action="delete">🗑</button>
+        </div>
+      </div>
+      <div class="entry-body" id="body-${entry.id}">
+        ${entry.url ? `
+        <div class="entry-field">
+          <div class="entry-field-label">URL</div>
+          <div class="entry-field-val">
+            <span><a href="${escHtml(entry.url)}" target="_blank" rel="noopener" style="color:var(--accent2)">${escHtml(entry.url)}</a></span>
+          </div>
+        </div>` : ''}
+        <div class="entry-field">
+          <div class="entry-field-label">Username / Email</div>
+          <div class="entry-field-val">
+            <span>${escHtml(entry.username||'—')}</span>
+            ${entry.username ? `<button class="btn-ghost" style="font-size:14px" title="Copy username" data-copy="${escHtml(entry.username)}">⧉</button>` : ''}
+          </div>
+        </div>
+        <div class="entry-field">
+          <div class="entry-field-label">Password</div>
+          <div class="entry-field-val">
+            <span class="pw-mask" data-pw="${escHtml(entry.password)}">••••••••••••</span>
+            <button class="btn-ghost" style="font-size:14px" title="Reveal" data-reveal>👁</button>
+            <button class="btn-ghost" style="font-size:14px" title="Copy password" data-copy="${escHtml(entry.password)}">⧉</button>
+          </div>
+        </div>
+        ${entry.notes ? `
+        <div class="entry-field">
+          <div class="entry-field-label">Notes</div>
+          <div class="entry-field-val"><span>${escHtml(entry.notes)}</span></div>
+        </div>` : ''}
+        <div style="font-size:11px; color:var(--muted); margin-top:10px">
+          Saved ${new Date(entry.created).toLocaleDateString()}
+        </div>
+      </div>`;
+
+    card.addEventListener('click', e => {
+      const action = e.target.dataset.action || e.target.closest('[data-action]')?.dataset.action;
+      const copyVal = e.target.dataset.copy || e.target.closest('[data-copy]')?.dataset.copy;
+      const reveal  = e.target.dataset.reveal !== undefined || e.target.closest('[data-reveal]') !== null;
+
+      if (action === 'toggle') {
+        const body = $('body-' + entry.id);
+        body.classList.toggle('open');
+        const btn = card.querySelector('[data-action=toggle]');
+        btn.textContent = body.classList.contains('open') ? '▴' : '▾';
+      }
+      if (action === 'edit') openModal(entry);
+      if (action === 'delete') deleteEntry(entry.id);
+      if (copyVal) {
+        navigator.clipboard.writeText(copyVal)
+          .then(() => toast('✓ Copied'))
+          .catch(() => toast('Copy failed'));
+      }
+      if (reveal) {
+        const span = card.querySelector('.pw-mask');
+        const isHidden = span.textContent.startsWith('•');
+        span.textContent = isHidden ? span.dataset.pw : '••••••••••••';
+        e.target.closest('[data-reveal]').textContent = isHidden ? '🙈' : '👁';
+      }
+    });
+
+    list.appendChild(card);
+  });
+}
+
+function escHtml(str='') {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+$('search-input').addEventListener('input', e => renderEntries(e.target.value));
+$('add-entry-btn').addEventListener('click', () => openModal(null));
+
+function deleteEntry(id) {
+  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  const entries = loadEntries().filter(e => e.id !== id);
+  saveEntries(entries);
+  renderEntries($('search-input').value);
+  toast('Entry deleted.');
+}
+
+/* ── Modal ───────────────────────────────────────────────── */
+let editingId = null;
+
+function openModal(entry=null, prefillPw='') {
+  editingId = entry ? entry.id : null;
+  $('modal-title').textContent = entry ? 'Edit entry' : 'New entry';
+  $('m-name').value  = entry?.name     || '';
+  $('m-user').value  = entry?.username || '';
+  $('m-url').value   = entry?.url      || '';
+  $('m-pw').value    = entry?.password || prefillPw;
+  $('m-notes').value = entry?.notes    || '';
+  $('m-pw').type     = 'password';
+  $('m-pw-eye').textContent = '👁';
+  $('modal-overlay').classList.add('open');
+  setTimeout(() => $('m-name').focus(), 50);
+}
+
+function closeModal() {
+  $('modal-overlay').classList.remove('open');
+  editingId = null;
+}
+
+$('modal-cancel').addEventListener('click', closeModal);
+$('modal-overlay').addEventListener('click', e => {
+  if (e.target === $('modal-overlay')) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+$('m-pw-eye').addEventListener('click', () => {
+  const inp = $('m-pw');
+  const vis = inp.type === 'text';
+  inp.type = vis ? 'password' : 'text';
+  $('m-pw-eye').textContent = vis ? '👁' : '🙈';
+});
+
+$('modal-save').addEventListener('click', () => {
+  const name = $('m-name').value.trim();
+  const pw   = $('m-pw').value;
+  if (!name) { $('m-name').focus(); toast('Account name is required.'); return; }
+  if (!pw)   { $('m-pw').focus();   toast('Password is required.');     return; }
+
+  const entries = loadEntries();
+
+  if (editingId) {
+    const idx = entries.findIndex(e => e.id === editingId);
+    if (idx > -1) {
+      entries[idx] = { ...entries[idx],
+        name, username: $('m-user').value.trim(),
+        url: $('m-url').value.trim(), password: pw,
+        notes: $('m-notes').value.trim() };
+    }
+    toast('Entry updated.');
+  } else {
+    entries.push({
+      id: uid(), created: Date.now(),
+      name, username: $('m-user').value.trim(),
+      url: $('m-url').value.trim(), password: pw,
+      notes: $('m-notes').value.trim()
+    });
+    toast('✓ Saved to vault!');
+  }
+
+  saveEntries(entries);
+  closeModal();
+  renderEntries($('search-input').value || '');
+
+  // Switch to vault tab if we just saved
+  if (!editingId) {
+    document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelector('[data-tab="vault"]').classList.add('active');
+    $('tab-vault').classList.add('active');
+  }
+});
+
+/* ── Init ────────────────────────────────────────────────── */
+updateNavCount(loadEntries().length);
+renderEntries();
+</script>
+</body>
+</html>

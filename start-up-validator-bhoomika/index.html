@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IdeaProof — Startup Idea Validator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="logo"><i class="fa-solid fa-rocket"></i> IdeaProof</div>
+    <div class="nav-actions">
+      <button class="btn-ghost" id="historyBtn"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
+      <button class="icon-btn" id="themeToggle" title="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <span class="badge">AI-Powered Validation</span>
+    <h1>Validate your startup idea<br/><span class="accent">before you build it.</span></h1>
+    <p class="hero-sub">Get market insights, competitor analysis, SWOT breakdowns, and a validation score — powered by real-time data and AI.</p>
+    <button class="btn-primary btn-lg" onclick="scrollToForm()"><i class="fa-solid fa-bolt"></i> Analyze My Idea</button>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-pill"><span class="stat-num">20+</span><span>Signals</span></div>
+    <div class="stat-pill"><span class="stat-num">Free</span><span>No signup</span></div>
+    <div class="stat-pill"><span class="stat-num">AI</span><span>Powered</span></div>
+  </div>
+</section>
+
+<!-- FORM -->
+<section class="section" id="formSection">
+  <div class="container">
+    <div class="section-label">Step 1 — Your Idea</div>
+    <h2 class="section-title">Tell us about your startup</h2>
+    <div class="form-card" id="ideaForm">
+      <div class="form-grid">
+        <div class="field">
+          <label>Startup Name <span class="req">*</span></label>
+          <input type="text" id="startupName" placeholder="e.g. PathForge" maxlength="60" />
+          <span class="char-count" id="nameCount">0/60</span>
+        </div>
+        <div class="field">
+          <label>Industry <span class="req">*</span></label>
+          <select id="industry">
+            <option value="">Select industry…</option>
+            <option>EdTech</option><option>FinTech</option><option>HealthTech</option>
+            <option>SaaS</option><option>E-Commerce</option><option>AI / ML</option>
+            <option>CleanTech</option><option>FoodTech</option><option>PropTech</option>
+            <option>LegalTech</option><option>HRTech</option><option>Gaming</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Idea Description <span class="req">*</span></label>
+          <textarea id="ideaDesc" placeholder="Describe your startup idea in 2-3 sentences…" maxlength="500" rows="4"></textarea>
+          <span class="char-count" id="descCount">0/500</span>
+        </div>
+        <div class="field">
+          <label>Target Audience <span class="req">*</span></label>
+          <input type="text" id="targetAudience" placeholder="e.g. College students, SMBs" maxlength="100" />
+        </div>
+        <div class="field">
+          <label>Region / Country <span class="req">*</span></label>
+          <input type="text" id="region" placeholder="e.g. India, United States, Global" maxlength="60" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" id="analyzeBtn" onclick="startAnalysis()"><i class="fa-solid fa-magnifying-glass-chart"></i> Analyze Idea</button>
+        <button class="btn-ghost" onclick="clearForm()"><i class="fa-solid fa-xmark"></i> Clear</button>
+      </div>
+      <div class="form-error hidden" id="formError"></div>
+    </div>
+  </div>
+</section>
+
+<!-- LOADING -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <h3>Analyzing your idea…</h3>
+    <div class="steps-list" id="stepsList"></div>
+    <p class="loading-sub" id="loadingSub">Fetching real-time data</p>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<section class="section hidden" id="resultsSection">
+  <div class="container">
+
+    <!-- Score -->
+    <div class="results-header">
+      <div>
+        <div class="section-label">Analysis Complete</div>
+        <h2 class="section-title" id="resultTitle">Results</h2>
+      </div>
+      <div class="result-actions">
+        <button class="btn-ghost" onclick="exportPDF()"><i class="fa-solid fa-file-arrow-down"></i> Export PDF</button>
+        <button class="btn-ghost" onclick="resetToForm()"><i class="fa-solid fa-rotate-left"></i> New Idea</button>
+      </div>
+    </div>
+
+    <!-- Overall Score -->
+    <div class="score-grid">
+      <div class="score-main card">
+        <h3 class="card-title">Validation Score</h3>
+        <div class="gauge-wrap">
+          <svg class="gauge" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 110 A90 90 0 0 1 180 110" fill="none" stroke="var(--border)" stroke-width="16" stroke-linecap="round"/>
+            <path id="gaugeFill" d="M20 110 A90 90 0 0 1 180 110" fill="none" stroke="var(--primary)" stroke-width="16" stroke-linecap="round" stroke-dasharray="0 283"/>
+            <text id="gaugeNum" x="100" y="105" text-anchor="middle" class="gauge-num">0</text>
+            <text x="100" y="118" text-anchor="middle" class="gauge-label">out of 100</text>
+          </svg>
+        </div>
+        <div class="score-verdict" id="scoreVerdict"></div>
+      </div>
+      <div class="score-cats card">
+        <h3 class="card-title">Score Breakdown</h3>
+        <div id="scoreBars"></div>
+      </div>
+    </div>
+
+    <!-- Readiness Meter -->
+    <div class="card" id="readinessCard">
+      <h3 class="card-title">Startup Readiness</h3>
+      <div class="readiness-track" id="readinessTrack"></div>
+    </div>
+
+    <!-- USP -->
+    <div class="card usp-card" id="uspCard">
+      <div class="usp-label"><i class="fa-solid fa-star"></i> Unique Selling Proposition</div>
+      <p class="usp-text" id="uspText"></p>
+    </div>
+
+    <!-- Market Opportunity -->
+    <div class="card">
+      <h3 class="card-title">Market Opportunity</h3>
+      <div class="insight-grid" id="marketGrid"></div>
+    </div>
+
+    <!-- SWOT -->
+    <div class="card">
+      <h3 class="card-title">SWOT Analysis</h3>
+      <div class="swot-grid" id="swotGrid"></div>
+    </div>
+
+    <!-- Competitors -->
+    <div class="card">
+      <h3 class="card-title">Competitor Analysis</h3>
+      <div class="comp-controls">
+        <input type="text" class="search-input" id="compSearch" placeholder="Search competitors…" oninput="filterCompetitors()" />
+        <select id="compSort" onchange="sortCompetitors()">
+          <option value="name">Sort: Name</option>
+          <option value="position">Sort: Market Position</option>
+        </select>
+      </div>
+      <div class="comp-grid" id="compGrid"></div>
+    </div>
+
+    <!-- Competitor Table -->
+    <div class="card">
+      <h3 class="card-title">Competitor Comparison</h3>
+      <div class="table-wrap">
+        <table class="comp-table" id="compTable">
+          <thead><tr><th>Competitor</th><th>Strengths</th><th>Weaknesses</th><th>Position</th><th>Similarity</th></tr></thead>
+          <tbody id="compTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Revenue Models -->
+    <div class="card">
+      <h3 class="card-title">Revenue Model Suggestions</h3>
+      <div class="revenue-grid" id="revenueGrid"></div>
+    </div>
+
+    <!-- Target Audience -->
+    <div class="card">
+      <h3 class="card-title">Target Audience</h3>
+      <div class="audience-grid" id="audienceGrid"></div>
+    </div>
+
+    <!-- Business Model Canvas -->
+    <div class="card">
+      <h3 class="card-title">Business Model Canvas</h3>
+      <div class="canvas-grid" id="canvasGrid"></div>
+    </div>
+
+    <!-- Risk Assessment -->
+    <div class="card">
+      <h3 class="card-title">Risk Assessment</h3>
+      <div class="risk-grid" id="riskGrid"></div>
+    </div>
+
+    <!-- Trend Charts -->
+    <div class="card">
+      <h3 class="card-title">Trend Analysis</h3>
+      <div class="charts-grid">
+        <div class="chart-wrap"><canvas id="trendBar"></canvas></div>
+        <div class="chart-wrap"><canvas id="trendLine"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Improvements -->
+    <div class="card">
+      <h3 class="card-title">Improvement Suggestions</h3>
+      <div id="improvList"></div>
+    </div>
+
+    <!-- Live Data Feed -->
+    <div class="card">
+      <h3 class="card-title">Live Industry Signals</h3>
+      <div id="liveSignals" class="signals-list"></div>
+    </div>
+
+    <!-- AI Advisor -->
+    <div class="card">
+      <h3 class="card-title"><i class="fa-solid fa-robot"></i> AI Startup Advisor</h3>
+      <div class="chat-window" id="chatWindow"></div>
+      <div class="chat-input-row">
+        <div class="quick-questions" id="quickQs"></div>
+        <div class="chat-compose">
+          <input type="text" id="chatInput" placeholder="Ask about your startup…" onkeydown="if(event.key==='Enter')sendChat()" />
+          <button class="btn-primary" onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- HISTORY MODAL -->
+<div class="modal-overlay hidden" id="historyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Analysis History</h3>
+      <button class="icon-btn" onclick="closeHistory()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>IdeaProof — Startup Idea Validator &nbsp;·&nbsp; Powered by AI + real-time APIs &nbsp;·&nbsp; No data stored on servers</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

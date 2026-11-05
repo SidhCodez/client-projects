@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Your saved favorite recipes on RecipeHub.">
+  <title>Favorites – RecipeHub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="navbar__logo">
+    <div class="navbar__logo-icon">🍳</div>
+    Recipe<span>Hub</span>
+  </a>
+  <ul class="navbar__links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="favorites.html">Favorites</a></li>
+    <li><a href="create.html">Create Recipe</a></li>
+  </ul>
+  <div class="navbar__actions">
+    <button class="btn-icon theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    <button class="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mobile-nav">
+  <a href="index.html">🏠 Home</a>
+  <a href="favorites.html">❤️ Favorites</a>
+  <a href="create.html">✏️ Create Recipe</a>
+  <a href="about.html">ℹ️ About</a>
+</div>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <h1>❤️ Your <span class="text-gradient">Favorites</span></h1>
+  <p>All the recipes you've saved, ready whenever you are.</p>
+</div>
+
+<!-- FAVORITES CONTENT -->
+<section class="section" aria-labelledby="favs-title">
+  <div class="section__header">
+    <div>
+      <div class="section__eyebrow">Saved Recipes</div>
+      <h2 class="section__title" id="favs-title">My Favorites</h2>
+    </div>
+    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+      <span id="favCount" style="color:var(--text-3);font-size:.88rem"></span>
+      <button class="btn btn-ghost btn-sm" id="clearAllBtn" style="display:none">🗑 Clear All</button>
+    </div>
+  </div>
+
+  <!-- Search within favorites -->
+  <div style="margin-bottom:2rem;max-width:400px">
+    <div class="search-box" style="background:var(--surface-2);border:2px solid var(--border)">
+      <span class="search-icon" style="color:var(--text-3)">🔍</span>
+      <input type="text" id="favSearch" placeholder="Search favorites…" aria-label="Search favorites"
+             style="color:var(--text)">
+    </div>
+  </div>
+
+  <div class="cards-grid" id="favsGrid" aria-label="Favorite recipes" aria-live="polite"></div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer__grid">
+    <div class="footer__brand">
+      <div class="logo">🍳 Recipe<span style="color:var(--text)">Hub</span></div>
+      <p>Your all-in-one recipe discovery platform.</p>
+    </div>
+    <div class="footer__col">
+      <h4>Explore</h4>
+      <a href="index.html">Home</a>
+      <a href="create.html">Create Recipe</a>
+      <a href="about.html">About</a>
+    </div>
+    <div class="footer__col">
+      <h4>Resources</h4>
+      <a href="https://www.themealdb.com" target="_blank" rel="noopener">TheMealDB API</a>
+    </div>
+    <div class="footer__col">
+      <h4>Support</h4>
+      <a href="about.html">About</a>
+    </div>
+  </div>
+  <div class="footer__bottom">
+    <span>© 2025 RecipeHub</span>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+/* ============================================================
+   favorites.html – page script
+   ============================================================ */
+
+let allFavs = [];
+
+function renderFavs(meals) {
+  const grid = document.getElementById('favsGrid');
+  if (!meals.length) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">💔</div>
+        <h3>No favorites yet</h3>
+        <p>Start exploring recipes and save the ones you love!</p>
+        <a href="index.html" class="btn btn-primary" style="margin-top:.5rem">🔍 Browse Recipes</a>
+      </div>`;
+    document.getElementById('clearAllBtn').style.display = 'none';
+    return;
+  }
+
+  grid.innerHTML = meals.map(meal => {
+    const card = buildCard(meal);
+    // Add remove button
+    return card.replace('</div>\n    </article>', `
+      <button class="btn btn-ghost btn-sm remove-fav-btn" data-id="${meal.idMeal}" style="flex:1;justify-content:center;color:#ef4444" aria-label="Remove from favorites">
+        🗑 Remove
+      </button>
+    </div>
+    </article>`);
+  }).join('');
+
+  attachFavEvents(grid);
+
+  // Remove buttons
+  grid.querySelectorAll('.remove-fav-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      Favorites.remove(id);
+      allFavs = Favorites.getAll();
+      renderFavs(allFavs);
+      updateCount(allFavs.length);
+      toast('Removed from favorites.', 'info');
+    });
+  });
+
+  document.getElementById('clearAllBtn').style.display = '';
+}
+
+function updateCount(n) {
+  document.getElementById('favCount').textContent = n ? `${n} recipe${n === 1 ? '' : 's'} saved` : '';
+}
+
+function init() {
+  allFavs = Favorites.getAll();
+  renderFavs(allFavs);
+  updateCount(allFavs.length);
+
+  // Search within favorites
+  document.getElementById('favSearch').addEventListener('input', debounce(e => {
+    const q = e.target.value.toLowerCase().trim();
+    const filtered = q ? allFavs.filter(m => m.strMeal.toLowerCase().includes(q) || (m.strCategory||'').toLowerCase().includes(q)) : allFavs;
+    renderFavs(filtered);
+  }, 250));
+
+  // Clear all
+  document.getElementById('clearAllBtn').addEventListener('click', () => {
+    if (confirm('Remove all saved favorites? This cannot be undone.')) {
+      LS.remove('rh_favorites');
+      allFavs = [];
+      renderFavs([]);
+      updateCount(0);
+      toast('All favorites cleared.', 'info');
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

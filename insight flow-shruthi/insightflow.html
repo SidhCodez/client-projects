@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsightFlow AI – Smart CSV Analytics Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+/* ============================================================
+   InsightFlow AI – styles.css
+   Design: Dark SaaS Dashboard · Glassmorphism · Modern BI
+   ============================================================ */
+
+/* ── RESET & TOKENS ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-primary:   #30343F;
+  --bg-secondary: #FAFAFF;
+  --bg-card:      rgba(255,255,255,0.06);
+  --bg-card-hover:rgba(255,255,255,0.10);
+  --accent:       #E4D9FF;
+  --accent-dim:   rgba(228,217,255,0.15);
+  --accent-glow:  rgba(228,217,255,0.08);
+  --success:      #22C55E;
+  --warning:      #F59E0B;
+  --danger:       #EF4444;
+  --text-primary: #FAFAFF;
+  --text-muted:   rgba(250,250,255,0.55);
+  --text-dim:     rgba(250,250,255,0.35);
+  --border:       rgba(228,217,255,0.12);
+  --border-focus: rgba(228,217,255,0.4);
+  --radius:       16px;
+  --radius-sm:    10px;
+  --radius-xs:    6px;
+  --shadow:       0 8px 32px rgba(0,0,0,0.4);
+  --shadow-sm:    0 2px 12px rgba(0,0,0,0.3);
+  --font-display: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --transition:   0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-display);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GLASS UTILITY ──────────────────────────────────────────── */
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* ── TYPOGRAPHY ─────────────────────────────────────────────── */
+h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.1; }
+h2 { font-size: 1.4rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+p  { line-height: 1.6; color: var(--text-muted); }
+code {
+  background: rgba(228,217,255,0.1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-family: 'Courier New', monospace;
+  color: var(--accent);
+  word-break: break-all;
+}
+pre {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-top: 8px;
+  font-size: 0.72rem;
+  font-family: 'Courier New', monospace;
+  color: var(--text-muted);
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+.accent { color: var(--accent); }
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent), #A78BFA, #60A5FA);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── BUTTONS ────────────────────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,58,237,0.4); }
+.btn-primary.btn-lg { padding: 14px 32px; font-size: 1rem; border-radius: var(--radius); }
+.btn-primary.btn-sm { padding: 7px 16px; font-size: 0.8rem; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border-focus);
+  padding: 10px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-outline:hover { background: var(--accent-dim); transform: translateY(-2px); }
+.btn-outline.btn-lg { padding: 14px 32px; font-size: 1rem; border-radius: var(--radius); }
+.btn-outline.btn-sm { padding: 7px 16px; font-size: 0.8rem; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-ghost:hover { color: var(--text-primary); background: var(--accent-dim); }
+.btn-ghost.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+/* ── NAVBAR ─────────────────────────────────────────────────── */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 40px;
+  background: rgba(48,52,63,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; }
+.nav-logo { font-size: 1.5rem; }
+.nav-title { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); }
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+
+/* ── HERO ────────────────────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 60px;
+  padding: 120px 80px 80px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 60% at 70% 50%, rgba(124,58,237,0.12), transparent),
+              radial-gradient(ellipse 40% 40% at 20% 80%, rgba(228,217,255,0.05), transparent);
+  pointer-events: none;
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent-dim);
+  border: 1px solid var(--border-focus);
+  border-radius: 99px;
+  padding: 6px 16px;
+  font-size: 0.82rem; font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 24px;
+  animation: fadeInDown 0.6s ease;
+}
+.hero-title { margin-bottom: 20px; animation: fadeInUp 0.7s ease 0.1s both; }
+.hero-subtitle {
+  font-size: 1.1rem; color: var(--text-muted); margin-bottom: 36px;
+  animation: fadeInUp 0.7s ease 0.2s both;
+}
+.hero-btns { display: flex; gap: 16px; flex-wrap: wrap; animation: fadeInUp 0.7s ease 0.3s both; }
+.hero-stats {
+  display: flex; align-items: center; gap: 24px;
+  margin-top: 48px;
+  animation: fadeInUp 0.7s ease 0.4s both;
+}
+.stat { display: flex; flex-direction: column; }
+.stat-num { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+.stat-label { font-size: 0.75rem; color: var(--text-muted); }
+.stat-divider { width: 1px; height: 36px; background: var(--border); }
+
+/* Hero preview card */
+.hero-preview { display: flex; justify-content: center; align-items: center; animation: fadeInRight 0.8s ease 0.2s both; }
+.preview-card {
+  width: 100%; max-width: 400px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+.preview-header { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+.preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+.preview-dot.red { background: #EF4444; }
+.preview-dot.yellow { background: #F59E0B; }
+.preview-dot.green { background: #22C55E; }
+.preview-label { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; }
+.preview-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+.preview-kpi { text-align: center; background: var(--accent-glow); border-radius: var(--radius-sm); padding: 12px 8px; }
+.pkpi-val { font-size: 1.2rem; font-weight: 800; color: var(--accent); }
+.pkpi-label { font-size: 0.68rem; color: var(--text-muted); }
+.preview-bars { display: flex; flex-direction: column; gap: 8px; }
+.bar-wrap { background: rgba(255,255,255,0.06); border-radius: 99px; height: 8px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; animation: growBar 1.5s ease forwards; }
+@keyframes growBar { from { width: 0; } }
+@keyframes fadeInDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:none; } }
+@keyframes fadeInUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:none; } }
+@keyframes fadeInRight{ from { opacity:0; transform:translateX(30px);  } to { opacity:1; transform:none; } }
+
+/* pulse */
+.animate-pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.6; } }
+
+/* ── FORMAT NOTICE ──────────────────────────────────────────── */
+.format-notice {
+  display: flex; align-items: flex-start; gap: 16px;
+  margin: 0 40px 24px;
+  padding: 20px 24px;
+  border-left: 3px solid var(--accent);
+  position: relative;
+}
+.fn-icon { font-size: 1.6rem; flex-shrink: 0; }
+.fn-body strong { display: block; margin-bottom: 6px; color: var(--text-primary); }
+.fn-body p { font-size: 0.82rem; margin-bottom: 8px; }
+.fn-body code { display: block; margin: 4px 0 8px; }
+.fn-note { font-size: 0.75rem; color: var(--text-dim); }
+.fn-body details summary { font-size: 0.8rem; color: var(--accent); cursor: pointer; margin-bottom: 4px; }
+.fn-close {
+  position: absolute; top: 12px; right: 16px;
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: 1rem; transition: var(--transition);
+}
+.fn-close:hover { color: var(--danger); }
+
+/* ── UPLOAD SECTION ──────────────────────────────────────────── */
+.upload-section { padding: 40px 80px 60px; }
+.section-header { margin-bottom: 28px; }
+.section-header h2 { margin-bottom: 6px; }
+.section-header p { font-size: 0.9rem; }
+.drop-zone {
+  border: 2px dashed var(--border-focus);
+  border-radius: var(--radius);
+  padding: 60px 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--accent-glow);
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  transform: scale(1.01);
+}
+.dz-icon { font-size: 3rem; margin-bottom: 12px; }
+.dz-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+.dz-sub { color: var(--text-muted); margin-bottom: 16px; font-size: 0.85rem; }
+.dz-hint { margin-top: 16px; font-size: 0.78rem; color: var(--text-dim); }
+.upload-progress { margin-top: 24px; }
+.up-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+.progress-bar { background: rgba(255,255,255,0.08); border-radius: 99px; height: 6px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg,#7C3AED,var(--accent)); border-radius: 99px; transition: width 0.3s ease; width: 0; }
+
+/* ── SECTION ─────────────────────────────────────────────────── */
+.section { padding: 40px 80px; border-top: 1px solid var(--border); }
+.section .section-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.section .section-header h2 { margin-bottom: 0; }
+
+/* ── KPI GRID ────────────────────────────────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 20px; margin-top: 24px; }
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--kpi-color, linear-gradient(90deg,#7C3AED,var(--accent)));
+}
+.kpi-card:hover { background: var(--bg-card-hover); transform: translateY(-4px); box-shadow: var(--shadow-sm); }
+.kpi-icon { font-size: 1.6rem; margin-bottom: 12px; }
+.kpi-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); }
+.kpi-sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+.kpi-badge {
+  display: inline-block; margin-top: 8px;
+  padding: 2px 10px; border-radius: 99px;
+  font-size: 0.72rem; font-weight: 600;
+}
+.kpi-badge.up   { background: rgba(34,197,94,0.15);  color: var(--success); }
+.kpi-badge.down { background: rgba(239,68,68,0.15);   color: var(--danger); }
+.kpi-badge.warn { background: rgba(245,158,11,0.15);  color: var(--warning); }
+
+/* ── CHARTS GRID ─────────────────────────────────────────────── */
+.charts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px,1fr)); gap: 24px; margin-top: 24px; }
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: var(--transition);
+}
+.chart-card:hover { background: var(--bg-card-hover); }
+.chart-card.wide { grid-column: 1 / -1; }
+.chart-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 16px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.chart-container { position: relative; height: 280px; }
+
+/* ── INSIGHTS ────────────────────────────────────────────────── */
+.insights-tabs { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+.itab {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 8px 20px;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.itab.active, .itab:hover { background: var(--accent-dim); border-color: var(--border-focus); color: var(--accent); }
+.insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 16px; margin-top: 20px; }
+.insight-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: var(--transition);
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.insight-card:hover { background: var(--bg-card-hover); transform: translateY(-2px); }
+.insight-icon { font-size: 1.4rem; flex-shrink: 0; }
+.insight-body { flex: 1; }
+.insight-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+.insight-text  { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+.insight-tag {
+  display: inline-block; margin-top: 8px;
+  padding: 2px 10px; border-radius: 99px;
+  font-size: 0.68rem; font-weight: 600;
+  background: var(--accent-dim); color: var(--accent);
+}
+
+/* ── BUSINESS REPORT ─────────────────────────────────────────── */
+.report-body { padding: 40px; margin-top: 24px; }
+.export-btns { display: flex; gap: 10px; }
+.report-section { margin-bottom: 36px; }
+.report-section h3 { color: var(--accent); font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 16px; }
+.report-section p, .report-section li { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 6px; line-height: 1.7; }
+.report-section ul { padding-left: 20px; }
+.report-section li { list-style: disc; }
+.report-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }
+.report-meta span { font-size: 0.78rem; color: var(--text-dim); }
+.report-meta strong { color: var(--text-muted); }
+.report-kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 12px; margin-top: 12px; }
+.rkpi { background: var(--accent-glow); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+.rkpi-val { font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+.rkpi-lbl { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+
+/* ── DATA TABLE ──────────────────────────────────────────────── */
+.search-input {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  width: 240px;
+  transition: var(--transition);
+}
+.search-input:focus { outline: none; border-color: var(--border-focus); }
+.table-wrap { overflow-x: auto; margin-top: 20px; border-radius: var(--radius); border: 1px solid var(--border); }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  background: rgba(228,217,255,0.08);
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.78rem; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  cursor: pointer; user-select: none;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+.data-table th:hover { color: var(--accent); }
+.data-table td {
+  padding: 12px 16px;
+  font-size: 0.82rem; color: var(--text-muted);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  white-space: nowrap;
+}
+.data-table tr:hover td { background: var(--accent-glow); color: var(--text-primary); }
+.data-table tr:last-child td { border-bottom: none; }
+
+/* ── PAGINATION ──────────────────────────────────────────────── */
+.pagination { display: flex; gap: 8px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+.page-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: var(--radius-xs);
+  font-size: 0.8rem; cursor: pointer;
+  transition: var(--transition);
+}
+.page-btn:hover, .page-btn.active { background: var(--accent-dim); border-color: var(--border-focus); color: var(--accent); }
+.page-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* ── DATA QUALITY ────────────────────────────────────────────── */
+.quality-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 20px; margin-top: 24px; }
+.quality-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.qc-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; }
+.qc-score { font-size: 2.5rem; font-weight: 800; margin: 12px 0 4px; }
+.qc-bar-wrap { background: rgba(255,255,255,0.08); border-radius: 99px; height: 8px; overflow: hidden; margin: 8px 0; }
+.qc-bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+.qc-desc { font-size: 0.8rem; color: var(--text-dim); }
+.qc-list { margin-top: 12px; }
+.qc-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+.qc-item:last-child { border-bottom: none; }
+.qc-item-label { color: var(--text-muted); }
+.qc-item-val { font-weight: 700; }
+.qc-item-val.ok { color: var(--success); }
+.qc-item-val.warn { color: var(--warning); }
+.qc-item-val.bad  { color: var(--danger); }
+
+/* ── FOOTER ──────────────────────────────────────────────────── */
+.footer {
+  padding: 32px 80px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+}
+.footer-brand { font-size: 1rem; font-weight: 700; }
+.footer-copy  { font-size: 0.78rem; color: var(--text-dim); }
+
+/* ── TOAST ───────────────────────────────────────────────────── */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 20px;
+  min-width: 240px; max-width: 340px;
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 12px;
+  animation: slideIn 0.3s ease;
+  color: var(--text-primary); font-size: 0.85rem;
+}
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error   { border-left: 3px solid var(--danger); }
+.toast.info    { border-left: 3px solid var(--accent); }
+@keyframes slideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:none; } }
+
+/* ── SKELETON ────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes shimmer { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+
+/* ── UTILITY ─────────────────────────────────────────────────── */
+.hidden  { display: none !important; }
+.mt-16   { margin-top: 16px; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .hero { grid-template-columns: 1fr; padding: 100px 40px 60px; gap: 40px; }
+  .hero-preview { display: none; }
+  .upload-section, .section, .footer { padding-left: 40px; padding-right: 40px; }
+  .format-notice { margin-left: 40px; margin-right: 40px; }
+  .charts-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .navbar { padding: 14px 20px; }
+  .hero { padding: 90px 20px 50px; }
+  .hero-btns { flex-direction: column; }
+  .upload-section, .section, .footer { padding-left: 20px; padding-right: 20px; }
+  .format-notice { margin-left: 20px; margin-right: 20px; flex-direction: column; }
+  .fn-close { top: 8px; right: 8px; }
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .insights-grid { grid-template-columns: 1fr; }
+  .quality-grid  { grid-template-columns: 1fr; }
+  .report-body { padding: 20px; }
+  .hero-stats { flex-wrap: wrap; gap: 16px; }
+  .search-input { width: 100%; }
+}
+  </style>
+</head>
+
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <span class="nav-logo">⚡</span>
+      <span class="nav-title">InsightFlow <span class="accent">AI</span></span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-ghost" id="navUploadBtn">Upload CSV</button>
+      <button class="btn-primary" id="navDemoBtn">View Demo</button>
+    </div>
+  </nav>
+
+  <!-- ========== HERO ========== -->
+  <section class="hero" id="heroSection">
+    <div class="hero-content">
+      <div class="hero-badge">✨ AI-Powered Business Intelligence</div>
+      <h1 class="hero-title">
+        Transform Raw Data Into<br />
+        <span class="gradient-text">Business Intelligence</span>
+      </h1>
+      <p class="hero-subtitle">
+        Upload any CSV file and receive instant analytics, insights,<br />
+        visualizations, and executive reports — no backend required.
+      </p>
+      <div class="hero-btns">
+        <button class="btn-primary btn-lg" id="heroUploadBtn">
+          <span>📂</span> Upload CSV
+        </button>
+        <button class="btn-outline btn-lg" id="heroDemoBtn">
+          <span>▶</span> View Demo
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">10+</span><span class="stat-label">Chart Types</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">AI</span><span class="stat-label">Insights Engine</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">PDF</span><span class="stat-label">Export Ready</span></div>
+      </div>
+    </div>
+    <div class="hero-preview">
+      <div class="preview-card glass">
+        <div class="preview-header">
+          <span class="preview-dot red"></span>
+          <span class="preview-dot yellow"></span>
+          <span class="preview-dot green"></span>
+          <span class="preview-label">Dashboard Preview</span>
+        </div>
+        <div class="preview-kpis">
+          <div class="preview-kpi">
+            <div class="pkpi-val animate-pulse">₹4.2L</div>
+            <div class="pkpi-label">Revenue</div>
+          </div>
+          <div class="preview-kpi">
+            <div class="pkpi-val animate-pulse" style="animation-delay:.3s">89%</div>
+            <div class="pkpi-label">Quality</div>
+          </div>
+          <div class="preview-kpi">
+            <div class="pkpi-val animate-pulse" style="animation-delay:.6s">+18%</div>
+            <div class="pkpi-label">Growth</div>
+          </div>
+        </div>
+        <div class="preview-bars">
+          <div class="bar-wrap"><div class="bar-fill" style="width:85%;background:#E4D9FF"></div></div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:60%;background:#22C55E"></div></div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:72%;background:#F59E0B"></div></div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:45%;background:#EF4444"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FORMAT NOTICE ========== -->
+  <div class="format-notice glass" id="formatNotice">
+    <div class="fn-icon">📋</div>
+    <div class="fn-body">
+      <strong>Recommended CSV Format</strong>
+      <p>For best results, use this column structure:</p>
+      <code>Date, Order ID, Customer Name, Product, Category, Region, Quantity, Unit Price, Revenue, Cost, Profit</code>
+      <details>
+        <summary>See example rows</summary>
+        <pre>2026-01-05,ORD001,Rahul Sharma,Laptop,Electronics,South,2,50000,100000,80000,20000
+2026-01-07,ORD002,Priya Singh,Mobile,Electronics,North,3,25000,75000,60000,15000
+2026-01-10,ORD003,Amit Kumar,Headphones,Accessories,West,5,2000,10000,7000,3000</pre>
+      </details>
+      <span class="fn-note">Other CSVs also work — the engine auto-detects columns.</span>
+    </div>
+    <button class="fn-close" id="fnClose">✕</button>
+  </div>
+
+  <!-- ========== UPLOAD ZONE ========== -->
+  <section class="upload-section" id="uploadSection">
+    <div class="section-header">
+      <h2>Upload Your Data</h2>
+      <p>Drag & drop or click to select a CSV file</p>
+    </div>
+    <div class="drop-zone" id="dropZone">
+      <div class="dz-icon">📊</div>
+      <div class="dz-title">Drop your CSV file here</div>
+      <div class="dz-sub">or</div>
+      <button class="btn-primary" id="browseBtn">Browse File</button>
+      <div class="dz-hint">Supports CSV files · UTF-8 encoding · Any size</div>
+      <input type="file" id="fileInput" accept=".csv" hidden />
+    </div>
+    <div class="upload-progress hidden" id="uploadProgress">
+      <div class="up-label" id="upLabel">Parsing CSV…</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </section>
+
+  <!-- ========== DASHBOARD (hidden until data loaded) ========== -->
+  <div class="dashboard hidden" id="dashboard">
+
+    <!-- ===== DATA SUMMARY CARDS ===== -->
+    <section class="section" id="summarySection">
+      <div class="section-header">
+        <h2>📋 Data Overview</h2>
+        <button class="btn-ghost btn-sm" id="resetBtn">↩ New Upload</button>
+      </div>
+      <div class="kpi-grid" id="summaryCards"></div>
+    </section>
+
+    <!-- ===== EXECUTIVE KPIs ===== -->
+    <section class="section" id="kpiSection">
+      <div class="section-header">
+        <h2>📈 Key Performance Indicators</h2>
+      </div>
+      <div class="kpi-grid" id="kpiCards"></div>
+    </section>
+
+    <!-- ===== CHARTS ===== -->
+    <section class="section" id="chartsSection">
+      <div class="section-header">
+        <h2>📊 Visual Analytics</h2>
+      </div>
+      <div class="charts-grid" id="chartsGrid"></div>
+    </section>
+
+    <!-- ===== AI INSIGHTS ===== -->
+    <section class="section" id="insightsSection">
+      <div class="section-header">
+        <h2>🧠 AI Business Insights</h2>
+      </div>
+      <div class="insights-tabs">
+        <button class="itab active" data-tab="findings">Key Findings</button>
+        <button class="itab" data-tab="opportunities">Opportunities</button>
+        <button class="itab" data-tab="risks">Risks</button>
+        <button class="itab" data-tab="recommendations">Recommendations</button>
+      </div>
+      <div class="insights-grid" id="insightsGrid"></div>
+    </section>
+
+    <!-- ===== BUSINESS REPORT ===== -->
+    <section class="section" id="reportSection">
+      <div class="section-header">
+        <h2>📄 Business Analyst Report</h2>
+        <div class="export-btns">
+          <button class="btn-outline btn-sm" id="exportCSVBtn">⬇ Export CSV</button>
+          <button class="btn-primary btn-sm" id="exportPDFBtn">📄 Export PDF</button>
+        </div>
+      </div>
+      <div class="report-body glass" id="reportBody"></div>
+    </section>
+
+    <!-- ===== DATA TABLE ===== -->
+    <section class="section" id="tableSection">
+      <div class="section-header">
+        <h2>🗂 Data Explorer</h2>
+        <input type="text" class="search-input" id="tableSearch" placeholder="Search records…" />
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="dataTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </section>
+
+    <!-- ===== DATA QUALITY ===== -->
+    <section class="section" id="qualitySection">
+      <div class="section-header">
+        <h2>🛡 Data Quality Report</h2>
+      </div>
+      <div class="quality-grid" id="qualityGrid"></div>
+    </section>
+
+  </div><!-- /dashboard -->
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="footer-brand">⚡ InsightFlow <span class="accent">AI</span></div>
+    <div class="footer-copy">Built with Chart.js · PapaParse · jsPDF · Pure Frontend</div>
+  </footer>
+
+  <!-- ========== TOAST ========== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ========== SCRIPTS ========== -->
+<script>
+/**
+ * csvParser.js – CSV parsing + data-type detection
+ * Uses PapaParse for robust CSV handling.
+ */
+
+const CSVParser = (() => {
+
+  /**
+   * Parse CSV text/file via PapaParse.
+   * Returns { data, fields, meta }
+   */
+  function parse(input) {
+    return new Promise((resolve, reject) => {
+      const opts = {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: true,
+        transformHeader: h => h.trim(),
+        complete: result => resolve(result),
+        error:    err    => reject(err),
+      };
+      if (typeof input === 'string') {
+        Papa.parse(input, opts);
+      } else {
+        Papa.parse(input, opts); // File object
+      }
+    });
+  }
+
+  /**
+   * Classify a column's data type: 'date' | 'numeric' | 'categorical' | 'text'
+   */
+  function classifyColumn(values) {
+    const nonNull = values.filter(v => v !== null && v !== undefined && v !== '');
+    if (!nonNull.length) return 'text';
+
+    // Date detection
+    const datePatterns = [
+      /^\d{4}-\d{2}-\d{2}/,
+      /^\d{2}\/\d{2}\/\d{4}/,
+      /^\d{2}-\d{2}-\d{4}/,
+      /^\w+ \d{1,2},? \d{4}/,
+    ];
+    const dateLike = nonNull.filter(v => datePatterns.some(p => p.test(String(v))));
+    if (dateLike.length / nonNull.length > 0.7) return 'date';
+
+    // Numeric
+    const numLike = nonNull.filter(v => !isNaN(parseFloat(v)) && isFinite(v));
+    if (numLike.length / nonNull.length > 0.8) return 'numeric';
+
+    // Categorical vs text (by cardinality)
+    const unique = new Set(nonNull.map(v => String(v).toLowerCase()));
+    if (unique.size <= Math.max(20, nonNull.length * 0.3)) return 'categorical';
+
+    return 'text';
+  }
+
+  /**
+   * Build full column schema for all fields.
+   * Returns array: { name, type, unique, missing, values }
+   */
+  function buildSchema(data, fields) {
+    return fields.map(field => {
+      const values = data.map(row => row[field]);
+      const nonNull = values.filter(v => v !== null && v !== undefined && v !== '');
+      const type = classifyColumn(values);
+      const unique = new Set(nonNull.map(v => String(v).toLowerCase())).size;
+      return { name: field, type, unique, missing: values.length - nonNull.length, values };
+    });
+  }
+
+  /**
+   * Compute basic quality metrics.
+   */
+  function qualityReport(data, schema) {
+    const total = data.length;
+    if (!total) return {};
+
+    const totalCells = total * schema.length;
+    const totalMissing = schema.reduce((s, c) => s + c.missing, 0);
+    const missingPct = totalMissing / totalCells;
+
+    // Duplicate detection (stringify rows)
+    const seen = new Set();
+    let dupes = 0;
+    data.forEach(row => {
+      const key = JSON.stringify(row);
+      if (seen.has(key)) dupes++;
+      else seen.add(key);
+    });
+
+    // Quality score: start 100, deduct
+    let score = 100;
+    score -= Math.round(missingPct * 40);
+    score -= Math.round((dupes / total) * 20);
+    score = Math.max(0, Math.min(100, score));
+
+    return { total, totalCells, totalMissing, missingPct, dupes, score };
+  }
+
+  return { parse, buildSchema, qualityReport, classifyColumn };
+})();
+/**
+ * analytics.js – KPI computation, statistical summaries, growth rates.
+ */
+
+const Analytics = (() => {
+
+  // ── Numeric helpers ──────────────────────────────────────────
+  const sum  = arr => arr.reduce((a, b) => a + b, 0);
+  const mean = arr => arr.length ? sum(arr) / arr.length : 0;
+  const min  = arr => Math.min(...arr);
+  const max  = arr => Math.max(...arr);
+  const median = arr => {
+    if (!arr.length) return 0;
+    const s = [...arr].sort((a,b) => a - b);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m-1] + s[m]) / 2;
+  };
+
+  // ── Format helpers ───────────────────────────────────────────
+  function fmt(num, prefix = '') {
+    if (Math.abs(num) >= 1e7) return prefix + (num/1e7).toFixed(1) + 'Cr';
+    if (Math.abs(num) >= 1e5) return prefix + (num/1e5).toFixed(1) + 'L';
+    if (Math.abs(num) >= 1e3) return prefix + (num/1e3).toFixed(1) + 'K';
+    return prefix + num.toFixed(0);
+  }
+
+  function fmtPct(num) { return (num >= 0 ? '+' : '') + num.toFixed(1) + '%'; }
+
+  // ── Frequency map ────────────────────────────────────────────
+  function freqMap(values) {
+    const map = {};
+    values.forEach(v => { const k = String(v); map[k] = (map[k] || 0) + 1; });
+    return map;
+  }
+
+  // ── Most frequent value ──────────────────────────────────────
+  function mode(values) {
+    const m = freqMap(values);
+    return Object.entries(m).sort((a,b) => b[1]-a[1])[0]?.[0] ?? 'N/A';
+  }
+
+  // ── Group-by helper ──────────────────────────────────────────
+  function groupBy(data, field) {
+    return data.reduce((acc, row) => {
+      const k = String(row[field] ?? 'Unknown');
+      if (!acc[k]) acc[k] = [];
+      acc[k].push(row);
+      return acc;
+    }, {});
+  }
+
+  // ── Compute KPIs from schema + raw data ──────────────────────
+  function computeKPIs(data, schema) {
+    const kpis = [];
+    const numCols  = schema.filter(c => c.type === 'numeric');
+    const catCols  = schema.filter(c => c.type === 'categorical');
+    const dateCols = schema.filter(c => c.type === 'date');
+
+    // Smart column mapping
+    const colNames = schema.map(c => c.name.toLowerCase());
+    const find = (...keywords) => schema.find(c => keywords.some(k => c.name.toLowerCase().includes(k)));
+
+    const revenueCol  = find('revenue','sales','amount','income','total');
+    const profitCol   = find('profit','margin','net');
+    const costCol     = find('cost','expense');
+    const qtyCol      = find('quantity','qty','units','count','orders');
+    const priceCol    = find('price','rate','unit price','unitprice');
+    const regionCol   = catCols.find(c => c.name.toLowerCase().includes('region') || c.name.toLowerCase().includes('zone') || c.name.toLowerCase().includes('area'));
+    const catCol      = catCols.find(c => c.name.toLowerCase().includes('category') || c.name.toLowerCase().includes('type') || c.name.toLowerCase().includes('segment'));
+
+    // Revenue
+    if (revenueCol) {
+      const vals = revenueCol.values.filter(v => typeof v === 'number' && !isNaN(v));
+      kpis.push({ icon:'💰', label:'Total Revenue', value: fmt(sum(vals),'₹'), sub: `${vals.length} transactions`, color:'linear-gradient(90deg,#7C3AED,#A78BFA)' });
+      kpis.push({ icon:'📊', label:'Avg Revenue',   value: fmt(mean(vals),'₹'), sub: 'per order', color:'linear-gradient(90deg,#4F46E5,#7C3AED)' });
+      kpis.push({ icon:'🔺', label:'Max Revenue',   value: fmt(max(vals),'₹'),  sub: 'single order', color:'linear-gradient(90deg,#059669,#22C55E)' });
+      kpis.push({ icon:'🔻', label:'Min Revenue',   value: fmt(min(vals),'₹'),  sub: 'single order', color:'linear-gradient(90deg,#EF4444,#F59E0B)' });
+    }
+
+    // Profit
+    if (profitCol) {
+      const vals = profitCol.values.filter(v => typeof v === 'number' && !isNaN(v));
+      const totalP = sum(vals);
+      if (revenueCol) {
+        const revVals = revenueCol.values.filter(v => typeof v === 'number' && !isNaN(v));
+        const margin = (sum(vals) / sum(revVals)) * 100;
+        kpis.push({ icon:'📈', label:'Profit Margin', value: margin.toFixed(1) + '%', sub: `Total: ${fmt(totalP,'₹')}`, color:'linear-gradient(90deg,#22C55E,#059669)', badge: margin >= 20 ? 'up' : margin >= 10 ? 'warn' : 'down', badgeText: margin >= 20 ? 'Healthy' : margin >= 10 ? 'Moderate' : 'Low' });
+      }
+      kpis.push({ icon:'💵', label:'Total Profit', value: fmt(totalP,'₹'), sub: 'net earnings', color:'linear-gradient(90deg,#059669,#22C55E)' });
+    }
+
+    // Quantity
+    if (qtyCol) {
+      const vals = qtyCol.values.filter(v => typeof v === 'number' && !isNaN(v));
+      kpis.push({ icon:'📦', label:'Units Sold', value: fmt(sum(vals)), sub: `avg ${mean(vals).toFixed(0)}/order`, color:'linear-gradient(90deg,#0EA5E9,#6366F1)' });
+    }
+
+    // Top Category
+    if (catCol) {
+      const fm = freqMap(catCol.values.filter(v => v));
+      const top = Object.entries(fm).sort((a,b) => b[1]-a[1])[0];
+      if (top) kpis.push({ icon:'🏆', label:'Top Category', value: top[0], sub: `${top[1]} orders (${((top[1]/data.length)*100).toFixed(0)}%)`, color:'linear-gradient(90deg,#F59E0B,#EF4444)' });
+    }
+
+    // Top Region
+    if (regionCol) {
+      const grp = groupBy(data, regionCol.name);
+      if (revenueCol) {
+        const topReg = Object.entries(grp).map(([k,v]) => [k, sum(v.map(r => r[revenueCol.name] || 0))]).sort((a,b) => b[1]-a[1])[0];
+        if (topReg) kpis.push({ icon:'🌍', label:'Top Region', value: topReg[0], sub: `${fmt(topReg[1],'₹')} revenue`, color:'linear-gradient(90deg,#6366F1,#8B5CF6)' });
+      } else {
+        const top = mode(regionCol.values.filter(v => v));
+        kpis.push({ icon:'🌍', label:'Top Region', value: top, sub: 'most orders', color:'linear-gradient(90deg,#6366F1,#8B5CF6)' });
+      }
+    }
+
+    // If no smart columns found, fallback to raw numerics
+    if (kpis.length < 3 && numCols.length) {
+      numCols.slice(0, 3).forEach(col => {
+        const vals = col.values.filter(v => typeof v === 'number' && !isNaN(v));
+        if (!vals.length) return;
+        kpis.push({ icon:'🔢', label: col.name, value: fmt(sum(vals)), sub: `avg ${fmt(mean(vals))}`, color:'linear-gradient(90deg,#7C3AED,var(--accent))' });
+      });
+    }
+
+    // Growth rate if date exists
+    if (dateCols.length && revenueCol) {
+      const growth = computeGrowthRate(data, dateCols[0].name, revenueCol.name);
+      if (growth !== null) {
+        kpis.push({ icon:'📅', label:'MoM Growth', value: fmtPct(growth), sub: 'month-over-month revenue', color:'linear-gradient(90deg,#22C55E,#0EA5E9)', badge: growth >= 0 ? 'up' : 'down', badgeText: growth >= 0 ? `+${growth.toFixed(1)}%` : `${growth.toFixed(1)}%` });
+      }
+    }
+
+    return kpis;
+  }
+
+  // ── Month-over-month growth ──────────────────────────────────
+  function computeGrowthRate(data, dateField, valueField) {
+    try {
+      const monthly = {};
+      data.forEach(row => {
+        const d = new Date(row[dateField]);
+        if (isNaN(d)) return;
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        monthly[key] = (monthly[key] || 0) + (parseFloat(row[valueField]) || 0);
+      });
+      const months = Object.keys(monthly).sort();
+      if (months.length < 2) return null;
+      const last = monthly[months[months.length - 1]];
+      const prev = monthly[months[months.length - 2]];
+      if (!prev) return null;
+      return ((last - prev) / prev) * 100;
+    } catch { return null; }
+  }
+
+  // ── Time-series aggregation ──────────────────────────────────
+  function timeSeries(data, dateField, valueField, grouping = 'month') {
+    const agg = {};
+    data.forEach(row => {
+      const d = new Date(row[dateField]);
+      if (isNaN(d)) return;
+      let key;
+      if (grouping === 'month') key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      else if (grouping === 'week') {
+        const startOfYear = new Date(d.getFullYear(), 0, 1);
+        const week = Math.ceil(((d - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+        key = `W${String(week).padStart(2,'0')}`;
+      } else {
+        key = String(d.getFullYear());
+      }
+      agg[key] = (agg[key] || 0) + (parseFloat(row[valueField]) || 0);
+    });
+    const sorted = Object.entries(agg).sort((a,b) => a[0].localeCompare(b[0]));
+    return { labels: sorted.map(e => e[0]), values: sorted.map(e => e[1]) };
+  }
+
+  // ── Category aggregation ─────────────────────────────────────
+  function categoryAgg(data, catField, valueField) {
+    const agg = {};
+    data.forEach(row => {
+      const k = String(row[catField] ?? 'Unknown');
+      agg[k] = (agg[k] || 0) + (valueField ? (parseFloat(row[valueField]) || 0) : 1);
+    });
+    const sorted = Object.entries(agg).sort((a,b) => b[1]-a[1]);
+    return { labels: sorted.map(e => e[0]), values: sorted.map(e => e[1]) };
+  }
+
+  // ── Histogram buckets ────────────────────────────────────────
+  function histogram(values, bins = 10) {
+    const nums = values.filter(v => typeof v === 'number' && !isNaN(v));
+    if (!nums.length) return { labels: [], values: [] };
+    const lo = min(nums), hi = max(nums);
+    if (lo === hi) return { labels: [String(lo)], values: [nums.length] };
+    const step = (hi - lo) / bins;
+    const buckets = Array.from({ length: bins }, (_, i) => ({
+      label: fmt(lo + i * step) + '–' + fmt(lo + (i+1) * step),
+      count: 0,
+    }));
+    nums.forEach(v => {
+      let i = Math.floor((v - lo) / step);
+      if (i === bins) i = bins - 1;
+      buckets[i].count++;
+    });
+    return { labels: buckets.map(b => b.label), values: buckets.map(b => b.count) };
+  }
+
+  return { computeKPIs, timeSeries, categoryAgg, histogram, groupBy, freqMap, mode, sum, mean, min, max, median, fmt, fmtPct, computeGrowthRate };
+})();
+/**
+ * charts.js – Dynamic chart generation using Chart.js
+ * Auto-detects column types and creates appropriate visualisations.
+ */
+
+const Charts = (() => {
+
+  // Palette
+  const PALETTE = [
+    '#7C3AED','#E4D9FF','#22C55E','#F59E0B','#EF4444',
+    '#0EA5E9','#A78BFA','#6EE7B7','#FCD34D','#FCA5A5',
+    '#60A5FA','#C4B5FD','#86EFAC','#FDE68A','#FECACA',
+  ];
+  const GRID_COLOR = 'rgba(228,217,255,0.08)';
+  const TICK_COLOR = 'rgba(250,250,255,0.45)';
+
+  // Shared Chart.js defaults
+  Chart.defaults.color = TICK_COLOR;
+  Chart.defaults.borderColor = GRID_COLOR;
+  Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+  const chartInstances = {};
+
+  function destroyAll() {
+    Object.values(chartInstances).forEach(c => c?.destroy());
+    Object.keys(chartInstances).forEach(k => delete chartInstances[k]);
+  }
+
+  function registerChart(id, instance) {
+    if (chartInstances[id]) chartInstances[id].destroy();
+    chartInstances[id] = instance;
+  }
+
+  // ── Base chart options ───────────────────────────────────────
+  function baseOpts(extra = {}) {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: TICK_COLOR, boxWidth: 12, padding: 16, font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: 'rgba(30,30,46,0.95)',
+          borderColor: 'rgba(228,217,255,0.2)',
+          borderWidth: 1,
+          titleColor: '#FAFAFF',
+          bodyColor: 'rgba(250,250,255,0.7)',
+          padding: 12,
+          cornerRadius: 10,
+        },
+        ...extra.plugins,
+      },
+      scales: extra.scales || {},
+      ...extra,
+    };
+  }
+
+  // ── Axis scale ───────────────────────────────────────────────
+  const linearScale = (label = '') => ({
+    grid: { color: GRID_COLOR },
+    ticks: { color: TICK_COLOR, font: { size: 10 } },
+    title: label ? { display: true, text: label, color: TICK_COLOR, font: { size: 11 } } : undefined,
+  });
+  const catScale = () => ({
+    grid: { display: false },
+    ticks: { color: TICK_COLOR, font: { size: 10 }, maxRotation: 45 },
+  });
+
+  // ── Card builder ─────────────────────────────────────────────
+  function makeCard(id, title, wide = false) {
+    const card = document.createElement('div');
+    card.className = 'chart-card' + (wide ? ' wide' : '');
+    card.innerHTML = `<div class="chart-title">${title}</div><div class="chart-container"><canvas id="${id}"></canvas></div>`;
+    return card;
+  }
+
+  // ── Main render function ─────────────────────────────────────
+  function renderAll(container, data, schema) {
+    destroyAll();
+    container.innerHTML = '';
+
+    const numCols  = schema.filter(c => c.type === 'numeric');
+    const catCols  = schema.filter(c => c.type === 'categorical');
+    const dateCols = schema.filter(c => c.type === 'date');
+
+    // Smart column detection
+    const find = (...kws) => schema.find(c => kws.some(k => c.name.toLowerCase().includes(k)));
+    const revenueCol = find('revenue','sales','amount','income','total');
+    const profitCol  = find('profit','margin','net');
+    const qtyCol     = find('quantity','qty','units','count','orders');
+    const catCol     = catCols.find(c => ['category','type','segment','product'].some(k => c.name.toLowerCase().includes(k))) || catCols[0];
+    const regionCol  = catCols.find(c => ['region','zone','area','city','state'].some(k => c.name.toLowerCase().includes(k)));
+    const dateCol    = dateCols[0];
+
+    let chartsAdded = 0;
+
+    // 1. Revenue by Category (Bar)
+    if (revenueCol && catCol) {
+      const agg = Analytics.categoryAgg(data, catCol.name, revenueCol.name);
+      const card = makeCard('chartRevCat', `${revenueCol.name} by ${catCol.name}`);
+      container.appendChild(card);
+      const ctx = document.getElementById('chartRevCat').getContext('2d');
+      registerChart('chartRevCat', new Chart(ctx, {
+        type: 'bar',
+        data: { labels: agg.labels, datasets: [{ label: revenueCol.name, data: agg.values, backgroundColor: PALETTE, borderRadius: 8, borderSkipped: false }] },
+        options: baseOpts({ scales: { x: catScale(), y: linearScale(revenueCol.name) }, plugins: { legend: { display: false } } }),
+      }));
+      chartsAdded++;
+    }
+
+    // 2. Category Distribution (Doughnut)
+    if (catCol && catCol.unique <= 12) {
+      const agg = Analytics.categoryAgg(data, catCol.name, revenueCol?.name);
+      const top = { labels: agg.labels.slice(0,8), values: agg.values.slice(0,8) };
+      const card = makeCard('chartCatPie', `${catCol.name} Distribution`);
+      container.appendChild(card);
+      const ctx = document.getElementById('chartCatPie').getContext('2d');
+      registerChart('chartCatPie', new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: top.labels, datasets: [{ data: top.values, backgroundColor: PALETTE, borderWidth: 2, borderColor: '#30343F' }] },
+        options: baseOpts({ cutout: '60%', plugins: { legend: { position: 'right' } } }),
+      }));
+      chartsAdded++;
+    }
+
+    // 3. Revenue Time Series (Line) – if date column
+    if (dateCol && revenueCol) {
+      const ts = Analytics.timeSeries(data, dateCol.name, revenueCol.name, 'month');
+      if (ts.labels.length > 1) {
+        const card = makeCard('chartTimeline', `${revenueCol.name} Trend Over Time`, true);
+        container.appendChild(card);
+        const ctx = document.getElementById('chartTimeline').getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 0, 280);
+        grad.addColorStop(0, 'rgba(124,58,237,0.4)');
+        grad.addColorStop(1, 'rgba(124,58,237,0)');
+        registerChart('chartTimeline', new Chart(ctx, {
+          type: 'line',
+          data: { labels: ts.labels, datasets: [{ label: revenueCol.name, data: ts.values, borderColor: '#7C3AED', backgroundColor: grad, fill: true, tension: 0.4, pointBackgroundColor: '#E4D9FF', pointRadius: 4, pointHoverRadius: 7 }] },
+          options: baseOpts({ scales: { x: catScale(), y: linearScale(revenueCol.name) } }),
+        }));
+        chartsAdded++;
+      }
+    }
+
+    // 4. Profit Trend (Line)
+    if (dateCol && profitCol && profitCol !== revenueCol) {
+      const ts = Analytics.timeSeries(data, dateCol.name, profitCol.name, 'month');
+      if (ts.labels.length > 1) {
+        const card = makeCard('chartProfitTrend', `${profitCol.name} Trend`);
+        container.appendChild(card);
+        const ctx = document.getElementById('chartProfitTrend').getContext('2d');
+        registerChart('chartProfitTrend', new Chart(ctx, {
+          type: 'line',
+          data: { labels: ts.labels, datasets: [{ label: profitCol.name, data: ts.values, borderColor: '#22C55E', backgroundColor: 'rgba(34,197,94,0.15)', fill: true, tension: 0.4, pointBackgroundColor: '#6EE7B7', pointRadius: 4, pointHoverRadius: 7 }] },
+          options: baseOpts({ scales: { x: catScale(), y: linearScale(profitCol.name) } }),
+        }));
+        chartsAdded++;
+      }
+    }
+
+    // 5. Region Performance (Horizontal Bar)
+    if (regionCol) {
+      const valueCol = revenueCol || profitCol || qtyCol || numCols[0];
+      if (valueCol) {
+        const agg = Analytics.categoryAgg(data, regionCol.name, valueCol.name);
+        const card = makeCard('chartRegion', `${valueCol.name} by ${regionCol.name}`);
+        container.appendChild(card);
+        const ctx = document.getElementById('chartRegion').getContext('2d');
+        registerChart('chartRegion', new Chart(ctx, {
+          type: 'bar',
+          data: { labels: agg.labels, datasets: [{ label: valueCol.name, data: agg.values, backgroundColor: PALETTE, borderRadius: 8, borderSkipped: false }] },
+          options: baseOpts({ indexAxis: 'y', scales: { y: { grid: { display: false }, ticks: { color: TICK_COLOR, font: { size: 10 } } }, x: linearScale(valueCol.name) }, plugins: { legend: { display: false } } }),
+        }));
+        chartsAdded++;
+      }
+    }
+
+    // 6. Quantity Histogram
+    if (qtyCol) {
+      const hist = Analytics.histogram(qtyCol.values.filter(v => typeof v === 'number'), 8);
+      const card = makeCard('chartQtyHist', `${qtyCol.name} Distribution`);
+      container.appendChild(card);
+      const ctx = document.getElementById('chartQtyHist').getContext('2d');
+      registerChart('chartQtyHist', new Chart(ctx, {
+        type: 'bar',
+        data: { labels: hist.labels, datasets: [{ label: 'Frequency', data: hist.values, backgroundColor: 'rgba(14,165,233,0.7)', borderColor: '#0EA5E9', borderWidth: 1, borderRadius: 6 }] },
+        options: baseOpts({ scales: { x: catScale(), y: linearScale('Frequency') }, plugins: { legend: { display: false } } }),
+      }));
+      chartsAdded++;
+    }
+
+    // 7. Revenue vs Profit comparison (if both exist)
+    if (revenueCol && profitCol && catCol) {
+      const revAgg = Analytics.categoryAgg(data, catCol.name, revenueCol.name);
+      const proAgg = Analytics.categoryAgg(data, catCol.name, profitCol.name);
+      const labels = revAgg.labels.slice(0, 8);
+      const card = makeCard('chartRevProfit', `Revenue vs Profit by ${catCol.name}`, true);
+      container.appendChild(card);
+      const ctx = document.getElementById('chartRevProfit').getContext('2d');
+      registerChart('chartRevProfit', new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: revenueCol.name, data: revAgg.values.slice(0,8), backgroundColor: 'rgba(124,58,237,0.7)', borderRadius: 8, borderSkipped: false },
+            { label: profitCol.name,  data: proAgg.values.slice(0,8), backgroundColor: 'rgba(34,197,94,0.7)',   borderRadius: 8, borderSkipped: false },
+          ],
+        },
+        options: baseOpts({ scales: { x: catScale(), y: linearScale('Value (₹)') } }),
+      }));
+      chartsAdded++;
+    }
+
+    // 8. Fallback: first numeric histogram if nothing shown
+    if (chartsAdded === 0 && numCols.length) {
+      const col = numCols[0];
+      const hist = Analytics.histogram(col.values.filter(v => typeof v === 'number'), 10);
+      const card = makeCard('chartFallback', `${col.name} Distribution`, true);
+      container.appendChild(card);
+      const ctx = document.getElementById('chartFallback').getContext('2d');
+      registerChart('chartFallback', new Chart(ctx, {
+        type: 'bar',
+        data: { labels: hist.labels, datasets: [{ label: col.name, data: hist.values, backgroundColor: PALETTE, borderRadius: 6 }] },
+        options: baseOpts({ scales: { x: catScale(), y: linearScale('Count') }, plugins: { legend: { display: false } } }),
+      }));
+    }
+
+    // 9. Pie for second categorical if available
+    if (catCols.length > 1) {
+      const col2 = catCols.find(c => c !== catCol && c !== regionCol);
+      if (col2 && col2.unique <= 10) {
+        const agg = Analytics.categoryAgg(data, col2.name, revenueCol?.name);
+        const card = makeCard('chartCat2', `${col2.name} Breakdown`);
+        container.appendChild(card);
+        const ctx = document.getElementById('chartCat2').getContext('2d');
+        registerChart('chartCat2', new Chart(ctx, {
+          type: 'pie',
+          data: { labels: agg.labels.slice(0,8), datasets: [{ data: agg.values.slice(0,8), backgroundColor: PALETTE, borderWidth: 2, borderColor: '#30343F' }] },
+          options: baseOpts({ plugins: { legend: { position: 'right' } } }),
+        }));
+      }
+    }
+  }
+
+  return { renderAll, destroyAll };
+})();
+/**
+ * insights.js – Rule-based AI business insights engine.
+ * Generates findings, opportunities, risks, recommendations.
+ */
+
+const Insights = (() => {
+
+  const { sum, mean, min, max, categoryAgg, timeSeries, groupBy, freqMap, mode, fmt, fmtPct, computeGrowthRate } = Analytics;
+
+  // ── Find smart column helpers ────────────────────────────────
+  function find(schema, ...kws) {
+    return schema.find(c => kws.some(k => c.name.toLowerCase().includes(k)));
+  }
+  function catFind(schema, ...kws) {
+    return schema.filter(c => c.type === 'categorical').find(c => kws.some(k => c.name.toLowerCase().includes(k)));
+  }
+
+  // ── Generate all insights ────────────────────────────────────
+  function generate(data, schema) {
+    const findings       = [];
+    const opportunities  = [];
+    const risks          = [];
+    const recommendations= [];
+
+    const revenueCol = find(schema, 'revenue','sales','amount','income','total');
+    const profitCol  = find(schema, 'profit','margin','net');
+    const costCol    = find(schema, 'cost','expense');
+    const qtyCol     = find(schema, 'quantity','qty','units');
+    const priceCol   = find(schema, 'price','rate','unit price');
+    const catCol     = catFind(schema, 'category','type','segment','product');
+    const regionCol  = catFind(schema, 'region','zone','area','city');
+    const dateCol    = schema.find(c => c.type === 'date');
+    const numCols    = schema.filter(c => c.type === 'numeric');
+
+    // ── FINDINGS ──────────────────────────────────────────────
+
+    // Revenue concentration
+    if (revenueCol && catCol) {
+      const agg = categoryAgg(data, catCol.name, revenueCol.name);
+      const total = sum(agg.values);
+      if (total > 0 && agg.labels.length >= 3) {
+        const top3sum = sum(agg.values.slice(0, 3));
+        const pct = (top3sum / total * 100).toFixed(0);
+        findings.push({
+          icon: '🎯',
+          title: 'Revenue Concentration',
+          text: `Top 3 ${catCol.name.toLowerCase()}s — ${agg.labels.slice(0,3).join(', ')} — account for ${pct}% of total ${revenueCol.name}.`,
+          tag: 'Revenue',
+        });
+      }
+    }
+
+    // Top region
+    if (regionCol && revenueCol) {
+      const agg = categoryAgg(data, regionCol.name, revenueCol.name);
+      const total = sum(agg.values);
+      if (total > 0 && agg.labels.length > 1) {
+        const topPct = (agg.values[0] / total * 100).toFixed(0);
+        findings.push({
+          icon: '🌍',
+          title: `${regionCol.name} Leader`,
+          text: `${agg.labels[0]} is the strongest performing ${regionCol.name.toLowerCase()} contributing ${topPct}% of total ${revenueCol.name} (${fmt(agg.values[0], '₹')}).`,
+          tag: 'Regional',
+        });
+      }
+    }
+
+    // MoM growth
+    if (dateCol && revenueCol) {
+      const g = computeGrowthRate(data, dateCol.name, revenueCol.name);
+      if (g !== null) {
+        findings.push({
+          icon: g >= 0 ? '📈' : '📉',
+          title: 'Month-over-Month Growth',
+          text: `${revenueCol.name} ${g >= 0 ? 'grew' : 'declined'} by ${Math.abs(g).toFixed(1)}% compared to the previous month, indicating ${g >= 0 ? 'positive momentum' : 'a slowdown that warrants attention'}.`,
+          tag: 'Trend',
+        });
+      }
+    }
+
+    // Profit margin
+    if (profitCol && revenueCol) {
+      const revVals  = revenueCol.values.filter(v => typeof v === 'number');
+      const profVals = profitCol.values.filter(v => typeof v === 'number');
+      if (revVals.length && profVals.length) {
+        const margin = (sum(profVals) / sum(revVals)) * 100;
+        findings.push({
+          icon: '💰',
+          title: 'Profit Margin Analysis',
+          text: `Overall profit margin stands at ${margin.toFixed(1)}%. ${margin >= 25 ? 'This is a healthy margin above industry benchmarks.' : margin >= 15 ? 'Moderate margin; room exists to improve cost efficiency.' : 'Low margin suggests cost pressures or pricing challenges.'}`,
+          tag: 'Profitability',
+        });
+      }
+    }
+
+    // Data size finding
+    findings.push({
+      icon: '📋',
+      title: 'Dataset Overview',
+      text: `Dataset contains ${data.length.toLocaleString()} records across ${schema.length} columns. ${schema.filter(c => c.type === 'numeric').length} numeric and ${schema.filter(c => c.type === 'categorical').length} categorical dimensions identified for analysis.`,
+      tag: 'Data',
+    });
+
+    // Quantity analysis
+    if (qtyCol) {
+      const vals = qtyCol.values.filter(v => typeof v === 'number');
+      const avg = mean(vals);
+      const mx  = max(vals);
+      findings.push({
+        icon: '📦',
+        title: 'Order Volume Insights',
+        text: `Average order quantity is ${avg.toFixed(1)} units with a peak of ${mx} units. ${mx > avg * 3 ? 'Significant outlier orders detected — possible bulk purchases or data anomalies.' : 'Order sizes are reasonably distributed.'}`,
+        tag: 'Volume',
+      });
+    }
+
+    // ── OPPORTUNITIES ─────────────────────────────────────────
+
+    // Underperforming region
+    if (regionCol && revenueCol) {
+      const agg = categoryAgg(data, regionCol.name, revenueCol.name);
+      if (agg.labels.length > 2) {
+        const bottom = agg.labels[agg.labels.length - 1];
+        const topV   = agg.values[0];
+        const botV   = agg.values[agg.labels.length - 1];
+        const gap    = (topV - botV);
+        opportunities.push({
+          icon: '🚀',
+          title: `Grow ${bottom} ${regionCol.name}`,
+          text: `${bottom} lags ${agg.labels[0]} by ${fmt(gap, '₹')}. Targeted marketing, localised promotions, and regional partnerships could significantly close this gap.`,
+          tag: 'Growth',
+        });
+      }
+    }
+
+    // Low-performing category
+    if (catCol && revenueCol) {
+      const agg = categoryAgg(data, catCol.name, revenueCol.name);
+      if (agg.labels.length > 2) {
+        opportunities.push({
+          icon: '🏷',
+          title: `Expand ${agg.labels[agg.labels.length - 1]} Category`,
+          text: `${agg.labels[agg.labels.length - 1]} is the lowest-revenue category. Consider bundling with top sellers, running targeted promotions, or re-evaluating the product mix.`,
+          tag: 'Category',
+        });
+      }
+    }
+
+    // Seasonal opportunity
+    if (dateCol && revenueCol) {
+      const ts = timeSeries(data, dateCol.name, revenueCol.name, 'month');
+      if (ts.labels.length >= 3) {
+        const maxIdx = ts.values.indexOf(max(ts.values));
+        opportunities.push({
+          icon: '📅',
+          title: 'Seasonal Peak Opportunity',
+          text: `${ts.labels[maxIdx]} shows the highest revenue (${fmt(ts.values[maxIdx], '₹')}). Plan inventory build-up, marketing campaigns, and staffing around this peak period to maximise gains.`,
+          tag: 'Seasonal',
+        });
+      }
+    }
+
+    // Price optimisation
+    if (priceCol && qtyCol) {
+      opportunities.push({
+        icon: '💡',
+        title: 'Price Optimisation Potential',
+        text: `With an average unit price of ${fmt(mean(priceCol.values.filter(v => typeof v === 'number')), '₹')}, dynamic pricing strategies for high-volume SKUs could improve overall revenue 10–20% without volume changes.`,
+        tag: 'Pricing',
+      });
+    }
+
+    // Generic cross-sell
+    if (catCol && catCol.unique > 1) {
+      opportunities.push({
+        icon: '🤝',
+        title: 'Cross-Sell Strategy',
+        text: `With ${catCol.unique} distinct ${catCol.name.toLowerCase()} values, bundling complementary products/services can increase average order value and improve customer lifetime value.`,
+        tag: 'Sales',
+      });
+    }
+
+    // ── RISKS ─────────────────────────────────────────────────
+
+    // High concentration risk
+    if (catCol && revenueCol) {
+      const agg = categoryAgg(data, catCol.name, revenueCol.name);
+      const total = sum(agg.values);
+      if (total > 0) {
+        const topPct = agg.values[0] / total * 100;
+        if (topPct > 50) {
+          risks.push({
+            icon: '⚠️',
+            title: 'Revenue Concentration Risk',
+            text: `${agg.labels[0]} contributes ${topPct.toFixed(0)}% of revenue. Heavy reliance on a single ${catCol.name.toLowerCase()} creates vulnerability — diversification is strongly recommended.`,
+            tag: 'Risk',
+          });
+        }
+      }
+    }
+
+    // Missing data risk
+    const totalMissing = schema.reduce((s, c) => s + c.missing, 0);
+    const totalCells   = data.length * schema.length;
+    const missPct      = (totalMissing / totalCells * 100).toFixed(1);
+    if (totalMissing > 0) {
+      risks.push({
+        icon: '🕳',
+        title: 'Data Completeness Risk',
+        text: `${totalMissing} missing values detected across ${schema.length} columns (${missPct}% of dataset). Incomplete data may skew analytics accuracy and KPI calculations.`,
+        tag: 'Data Quality',
+      });
+    }
+
+    // Negative profit risk
+    if (profitCol) {
+      const negProfit = profitCol.values.filter(v => typeof v === 'number' && v < 0).length;
+      if (negProfit > 0) {
+        risks.push({
+          icon: '🔴',
+          title: 'Loss-Making Orders Detected',
+          text: `${negProfit} orders show negative profit. These transactions may indicate pricing errors, excessive discounts, or cost overruns. Immediate review recommended.`,
+          tag: 'Financial',
+        });
+      }
+    }
+
+    // Declining trend
+    if (dateCol && revenueCol) {
+      const ts = timeSeries(data, dateCol.name, revenueCol.name, 'month');
+      if (ts.values.length >= 3) {
+        const last3  = ts.values.slice(-3);
+        const trend  = last3[2] - last3[0];
+        if (trend < 0) {
+          risks.push({
+            icon: '📉',
+            title: 'Declining Revenue Trend',
+            text: `Revenue has declined over the last 3 periods (from ${fmt(last3[0], '₹')} to ${fmt(last3[2], '₹')}). Investigate root causes: market saturation, competition, or seasonal slowdown.`,
+            tag: 'Trend',
+          });
+        }
+      }
+    }
+
+    // ── RECOMMENDATIONS ───────────────────────────────────────
+
+    if (revenueCol && catCol) {
+      const agg = categoryAgg(data, catCol.name, revenueCol.name);
+      recommendations.push({
+        icon: '✅',
+        title: 'Double Down on Top Performers',
+        text: `Allocate 60–70% of marketing budget toward ${agg.labels.slice(0,2).join(' and ')}, which drive the most revenue. Expand inventory and promotional activity for these categories.`,
+        tag: 'Strategy',
+      });
+    }
+
+    if (regionCol && revenueCol) {
+      const agg = categoryAgg(data, regionCol.name, revenueCol.name);
+      const bottom = agg.labels[agg.labels.length - 1];
+      recommendations.push({
+        icon: '🗺',
+        title: `Regional Expansion — ${bottom}`,
+        text: `Launch dedicated campaigns in ${bottom} with region-specific pricing, language-localised marketing, and channel partnerships to capture underserved demand.`,
+        tag: 'Growth',
+      });
+    }
+
+    recommendations.push({
+      icon: '🔧',
+      title: 'Data Quality Improvement',
+      text: `${totalMissing > 0 ? `Address ${totalMissing} missing values by implementing mandatory fields in data entry workflows. ` : ''}Standardise date formats and category naming conventions to improve analytics accuracy.`,
+      tag: 'Operations',
+    });
+
+    if (profitCol && revenueCol) {
+      recommendations.push({
+        icon: '📊',
+        title: 'Margin Optimisation Programme',
+        text: `Review cost structures for low-margin items. Negotiate bulk purchasing agreements, explore supplier consolidation, and consider value-based pricing to improve overall margin by 3–5%.`,
+        tag: 'Finance',
+      });
+    }
+
+    recommendations.push({
+      icon: '📱',
+      title: 'Real-Time Analytics Dashboard',
+      text: `Implement automated weekly data pipelines to refresh this analytics dashboard. Stakeholder review cadence — monthly business review, quarterly strategy review — ensures data-driven decisions.`,
+      tag: 'Analytics',
+    });
+
+    return { findings, opportunities, risks, recommendations };
+  }
+
+  return { generate };
+})();
+/**
+ * export.js – PDF and CSV export utilities.
+ * PDF: jsPDF + html2canvas for charts snapshot.
+ * CSV: raw filtered data download.
+ */
+
+const Export = (() => {
+
+  // ── CSV export ───────────────────────────────────────────────
+  function downloadCSV(data, filename = 'insightflow-export.csv') {
+    if (!data || !data.length) return;
+    const headers = Object.keys(data[0]);
+    const rows = [
+      headers.join(','),
+      ...data.map(row => headers.map(h => {
+        const val = row[h] ?? '';
+        // Quote fields containing commas or quotes
+        return String(val).includes(',') || String(val).includes('"')
+          ? `"${String(val).replace(/"/g, '""')}"`
+          : val;
+      }).join(','))
+    ];
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    triggerDownload(blob, filename);
+    App.showToast('CSV exported successfully!', 'success');
+  }
+
+  // ── PDF export ───────────────────────────────────────────────
+  async function downloadPDF(reportData, kpis, insights, qualityReport) {
+    App.showToast('Generating PDF report…', 'info');
+    try {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+      const W = 210, H = 297;
+      const margin = 16;
+      let y = margin;
+
+      // ── Colors ────────────────────────────────────────────────
+      const C = {
+        bg:      [48,  52,  63],
+        accent:  [124, 58,  237],
+        light:   [228, 217, 255],
+        text:    [250, 250, 255],
+        muted:   [180, 180, 200],
+        success: [34,  197, 94],
+        warn:    [245, 158, 11],
+        danger:  [239, 68,  68],
+        white:   [255, 255, 255],
+        card:    [58,  62,  75],
+      };
+
+      // ── Helpers ───────────────────────────────────────────────
+      const setFont = (size, style='normal', color = C.text) => {
+        pdf.setFontSize(size);
+        pdf.setFont('helvetica', style);
+        pdf.setTextColor(...color);
+      };
+      const setFill = (color) => pdf.setFillColor(...color);
+      const setDraw = (color) => pdf.setDrawColor(...color);
+
+      const rect  = (x, ry, w, h, fill, draw) => {
+        if (fill) setFill(fill); if (draw) setDraw(draw);
+        pdf.roundedRect(x, ry, w, h, 3, 3, fill ? 'F' : 'S');
+      };
+      const line = (x1, ry, x2, color = C.light) => {
+        setDraw(color); pdf.setLineWidth(0.3); pdf.line(x1, ry, x2, ry);
+      };
+      const addPage = () => { pdf.addPage(); y = margin; drawPageBg(); };
+      const drawPageBg = () => {
+        setFill(C.bg);
+        pdf.rect(0, 0, W, H, 'F');
+      };
+
+      const checkBreak = (needed) => { if (y + needed > H - margin) addPage(); };
+
+      // ── Cover page ────────────────────────────────────────────
+      drawPageBg();
+
+      // Gradient bar top
+      setFill([80, 40, 180]);
+      pdf.rect(0, 0, W, 3, 'F');
+
+      // Logo / Brand
+      y = 40;
+      setFont(28, 'bold', C.accent);
+      pdf.text('InsightFlow AI', margin, y);
+      setFont(11, 'normal', C.muted);
+      pdf.text('Smart CSV Business Analytics Dashboard', margin, y + 8);
+
+      // Divider
+      y += 18;
+      line(margin, y, W - margin, C.accent);
+
+      // Report title
+      y += 14;
+      setFont(20, 'bold', C.text);
+      pdf.text('Executive Business Report', margin, y);
+
+      // Meta
+      y += 10;
+      setFont(9, 'normal', C.muted);
+      pdf.text(`Generated: ${new Date().toLocaleString()}`, margin, y);
+      pdf.text(`Dataset: ${reportData.fileName || 'Uploaded CSV'}`, margin, y + 5);
+      pdf.text(`Records: ${(reportData.totalRows || 0).toLocaleString()}  |  Columns: ${reportData.totalCols || 0}  |  Quality Score: ${qualityReport.score || 0}/100`, margin, y + 10);
+
+      // KPI snapshot cards on cover
+      y += 24;
+      setFont(11, 'bold', C.light);
+      pdf.text('Key Performance Indicators', margin, y);
+      y += 6;
+
+      const kpiSlice = kpis.slice(0, 6);
+      const kpiW = (W - margin * 2 - 5 * (kpiSlice.length > 3 ? 3 : kpiSlice.length > 1 ? kpiSlice.length - 1 : 0)) / (kpiSlice.length > 3 ? 3 : kpiSlice.length);
+      const cols = kpiSlice.length > 3 ? 3 : kpiSlice.length;
+      kpiSlice.forEach((kpi, i) => {
+        const cx = margin + (i % cols) * (kpiW + 4);
+        const cy = y + Math.floor(i / cols) * 28;
+        rect(cx, cy, kpiW, 24, C.card);
+        setFont(7, 'normal', C.muted);
+        pdf.text(kpi.label.toUpperCase().substring(0,22), cx + 4, cy + 6);
+        setFont(11, 'bold', C.accent);
+        pdf.text(String(kpi.value).substring(0,14), cx + 4, cy + 14);
+        if (kpi.sub) {
+          setFont(6, 'normal', C.muted);
+          pdf.text(String(kpi.sub).substring(0,22), cx + 4, cy + 20);
+        }
+      });
+      y += Math.ceil(kpiSlice.length / cols) * 28 + 8;
+
+      // ── Executive Summary ─────────────────────────────────────
+      checkBreak(50);
+      line(margin, y, W - margin);
+      y += 8;
+      setFont(13, 'bold', C.accent);
+      pdf.text('Executive Summary', margin, y);
+      y += 7;
+      setFont(9, 'normal', C.muted);
+      const summaryLines = pdf.splitTextToSize(reportData.summary || 'This report provides a comprehensive analysis of the uploaded dataset.', W - margin * 2);
+      summaryLines.forEach(l => { checkBreak(6); pdf.text(l, margin, y); y += 5; });
+
+      // ── Key Findings ──────────────────────────────────────────
+      y += 6; checkBreak(20);
+      line(margin, y, W - margin);
+      y += 8;
+      setFont(13, 'bold', C.accent);
+      pdf.text('Key Findings', margin, y);
+      y += 7;
+
+      (insights.findings || []).slice(0, 5).forEach(ins => {
+        checkBreak(20);
+        setFill(C.card);
+        pdf.roundedRect(margin, y, W - margin * 2, 18, 2, 2, 'F');
+        setFont(8, 'bold', C.light);
+        pdf.text(`${ins.icon}  ${ins.title}`, margin + 4, y + 6);
+        setFont(7, 'normal', C.muted);
+        const lines = pdf.splitTextToSize(ins.text, W - margin * 2 - 8);
+        pdf.text(lines[0] || '', margin + 4, y + 12);
+        y += 21;
+      });
+
+      // ── Opportunities ─────────────────────────────────────────
+      y += 4; checkBreak(20);
+      line(margin, y, W - margin);
+      y += 8;
+      setFont(13, 'bold', [34, 197, 94]);
+      pdf.text('Opportunities', margin, y);
+      y += 7;
+
+      (insights.opportunities || []).slice(0, 4).forEach(ins => {
+        checkBreak(18);
+        setFill(C.card);
+        pdf.roundedRect(margin, y, W - margin * 2, 16, 2, 2, 'F');
+        setFont(8, 'bold', C.light);
+        pdf.text(`${ins.icon}  ${ins.title}`, margin + 4, y + 5);
+        setFont(7, 'normal', C.muted);
+        const lines = pdf.splitTextToSize(ins.text, W - margin * 2 - 8);
+        pdf.text(lines[0] || '', margin + 4, y + 11);
+        y += 19;
+      });
+
+      // ── Risks ─────────────────────────────────────────────────
+      y += 4; checkBreak(20);
+      line(margin, y, W - margin);
+      y += 8;
+      setFont(13, 'bold', C.danger);
+      pdf.text('Risks & Alerts', margin, y);
+      y += 7;
+
+      (insights.risks || []).slice(0, 3).forEach(ins => {
+        checkBreak(18);
+        setFill([70, 30, 30]);
+        pdf.roundedRect(margin, y, W - margin * 2, 16, 2, 2, 'F');
+        setFont(8, 'bold', [255, 150, 150]);
+        pdf.text(`${ins.icon}  ${ins.title}`, margin + 4, y + 5);
+        setFont(7, 'normal', C.muted);
+        const lines = pdf.splitTextToSize(ins.text, W - margin * 2 - 8);
+        pdf.text(lines[0] || '', margin + 4, y + 11);
+        y += 19;
+      });
+
+      // ── Recommendations ───────────────────────────────────────
+      checkBreak(20);
+      line(margin, y, W - margin);
+      y += 8;
+      setFont(13, 'bold', C.light);
+      pdf.text('Recommendations', margin, y);
+      y += 7;
+
+      (insights.recommendations || []).slice(0, 4).forEach((rec, idx) => {
+        checkBreak(20);
+        setFill(C.card);
+        pdf.roundedRect(margin, y, W - margin * 2, 18, 2, 2, 'F');
+        setFill(C.accent);
+        pdf.circle(margin + 7, y + 9, 4, 'F');
+        setFont(8, 'bold', C.bg);
+        pdf.text(String(idx + 1), margin + 5.5, y + 10);
+        setFont(8, 'bold', C.light);
+        pdf.text(rec.title, margin + 14, y + 6);
+        setFont(7, 'normal', C.muted);
+        const lines = pdf.splitTextToSize(rec.text, W - margin * 2 - 16);
+        pdf.text(lines[0] || '', margin + 14, y + 12);
+        y += 21;
+      });
+
+      // ── Data Quality ──────────────────────────────────────────
+      checkBreak(30);
+      line(margin, y, W - margin);
+      y += 8;
+      setFont(13, 'bold', C.light);
+      pdf.text('Data Quality Report', margin, y);
+      y += 8;
+      const q = qualityReport;
+      const qColor = q.score >= 80 ? C.success : q.score >= 60 ? C.warn : C.danger;
+      rect(margin, y, W - margin * 2, 28, C.card);
+      setFont(22, 'bold', qColor);
+      pdf.text(`${q.score}/100`, margin + 6, y + 14);
+      setFont(8, 'normal', C.muted);
+      pdf.text('Quality Score', margin + 6, y + 21);
+      setFont(8, 'normal', C.muted);
+      pdf.text(`Missing Values: ${q.totalMissing || 0}`, margin + 50, y + 10);
+      pdf.text(`Duplicate Rows: ${q.dupes || 0}`, margin + 50, y + 17);
+      pdf.text(`Total Records: ${(q.total || 0).toLocaleString()}`, margin + 50, y + 24);
+
+      // ── Footer on last page ───────────────────────────────────
+      setFont(7, 'normal', C.muted);
+      pdf.text('InsightFlow AI  ·  Confidential Business Report  ·  Generated Automatically', margin, H - 8);
+
+      // Page numbers
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        pdf.setPage(p);
+        setFont(7, 'normal', C.muted);
+        pdf.text(`Page ${p} of ${totalPages}`, W - margin - 20, H - 8);
+      }
+
+      pdf.save('InsightFlow-AI-Report.pdf');
+      App.showToast('PDF report downloaded!', 'success');
+    } catch (err) {
+      console.error('PDF export error:', err);
+      App.showToast('PDF export failed. Try again.', 'error');
+    }
+  }
+
+  // ── Trigger download helper ──────────────────────────────────
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  return { downloadCSV, downloadPDF };
+})();
+/**
+ * app.js – Main application controller.
+ * Orchestrates upload → parse → analyse → render pipeline.
+ */
+
+const App = (() => {
+
+  // ── State ─────────────────────────────────────────────────────
+  let state = {
+    rawData:       [],
+    filteredData:  [],
+    schema:        [],
+    quality:       {},
+    kpis:          [],
+    insights:      {},
+    currentTab:    'findings',
+    sortCol:       null,
+    sortDir:       'asc',
+    searchQuery:   '',
+    page:          1,
+    pageSize:      20,
+    fileName:      '',
+  };
+
+  // ── Demo data ─────────────────────────────────────────────────
+  const DEMO_CSV = `Date,Order ID,Customer Name,Product,Category,Region,Quantity,Unit Price,Revenue,Cost,Profit
+2026-01-05,ORD001,Rahul Sharma,Laptop,Electronics,South,2,50000,100000,80000,20000
+2026-01-07,ORD002,Priya Singh,Mobile,Electronics,North,3,25000,75000,60000,15000
+2026-01-10,ORD003,Amit Kumar,Headphones,Accessories,West,5,2000,10000,7000,3000
+2026-01-12,ORD004,Deepika Rao,Tablet,Electronics,East,1,35000,35000,28000,7000
+2026-01-15,ORD005,Suresh Nair,Keyboard,Accessories,South,8,1500,12000,8500,3500
+2026-01-18,ORD006,Anita Gupta,Monitor,Electronics,North,2,18000,36000,28000,8000
+2026-01-20,ORD007,Vijay Mehta,Mouse,Accessories,West,10,800,8000,5600,2400
+2026-01-22,ORD008,Kavya Iyer,Laptop,Electronics,South,1,55000,55000,44000,11000
+2026-01-25,ORD009,Ravi Patel,Mobile,Electronics,East,4,22000,88000,70000,18000
+2026-01-28,ORD010,Sneha Sharma,Speaker,Accessories,North,6,3000,18000,12600,5400
+2026-02-03,ORD011,Arjun Singh,Laptop,Electronics,West,3,48000,144000,115000,29000
+2026-02-05,ORD012,Meera Nair,Tablet,Electronics,South,2,32000,64000,51200,12800
+2026-02-08,ORD013,Kiran Kumar,Headphones,Accessories,East,7,2500,17500,12250,5250
+2026-02-10,ORD014,Pooja Iyer,Monitor,Electronics,North,1,20000,20000,16000,4000
+2026-02-12,ORD015,Rajesh Gupta,Keyboard,Accessories,West,12,1200,14400,10080,4320
+2026-02-15,ORD016,Sunita Rao,Mobile,Electronics,South,5,28000,140000,112000,28000
+2026-02-18,ORD017,Naresh Mehta,Speaker,Accessories,East,4,3500,14000,9800,4200
+2026-02-20,ORD018,Lakshmi Singh,Laptop,Electronics,North,2,52000,104000,83200,20800
+2026-02-22,ORD019,Arun Patel,Mouse,Accessories,West,15,750,11250,7875,3375
+2026-02-25,ORD020,Divya Kumar,Tablet,Electronics,South,3,30000,90000,72000,18000
+2026-03-02,ORD021,Harish Sharma,Laptop,Electronics,East,1,58000,58000,46400,11600
+2026-03-05,ORD022,Bhavna Gupta,Mobile,Electronics,North,6,24000,144000,115200,28800
+2026-03-08,ORD023,Girish Nair,Headphones,Accessories,West,9,2200,19800,13860,5940
+2026-03-10,ORD024,Rekha Singh,Monitor,Electronics,South,2,22000,44000,35200,8800
+2026-03-12,ORD025,Sunil Iyer,Keyboard,Accessories,East,10,1300,13000,9100,3900
+2026-03-15,ORD026,Madhuri Patel,Speaker,Accessories,North,5,4000,20000,14000,6000
+2026-03-18,ORD027,Rohit Kumar,Tablet,Electronics,West,2,36000,72000,57600,14400
+2026-03-20,ORD028,Geeta Mehta,Mobile,Electronics,South,3,26000,78000,62400,15600
+2026-03-22,ORD029,Sanjay Sharma,Laptop,Electronics,East,2,47000,94000,75200,18800
+2026-03-25,ORD030,Usha Nair,Mouse,Accessories,North,20,700,14000,9800,4200`;
+
+  // ── Init ──────────────────────────────────────────────────────
+  function init() {
+    bindNavButtons();
+    bindUploadZone();
+    bindInsightsTabs();
+    bindTableControls();
+    bindExportButtons();
+    bindFormatNotice();
+    initScrollNav();
+  }
+
+  // ── Navbar scroll effect ──────────────────────────────────────
+  function initScrollNav() {
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('navbar');
+      nav.style.boxShadow = window.scrollY > 40 ? '0 4px 24px rgba(0,0,0,0.4)' : '';
+    }, { passive: true });
+  }
+
+  // ── Buttons ───────────────────────────────────────────────────
+  function bindNavButtons() {
+    document.getElementById('navUploadBtn').onclick  = () => scrollTo('uploadSection');
+    document.getElementById('navDemoBtn').onclick    = loadDemo;
+    document.getElementById('heroUploadBtn').onclick = () => scrollTo('uploadSection');
+    document.getElementById('heroDemoBtn').onclick   = loadDemo;
+  }
+
+  function scrollTo(id) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── Format notice ─────────────────────────────────────────────
+  function bindFormatNotice() {
+    document.getElementById('fnClose').onclick = () => {
+      document.getElementById('formatNotice').style.display = 'none';
+    };
+  }
+
+  // ── Upload zone ───────────────────────────────────────────────
+  function bindUploadZone() {
+    const zone  = document.getElementById('dropZone');
+    const input = document.getElementById('fileInput');
+    const btn   = document.getElementById('browseBtn');
+
+    btn.onclick = () => input.click();
+    zone.onclick = (e) => { if (e.target !== btn) input.click(); };
+    input.onchange = (e) => { if (e.target.files[0]) processFile(e.target.files[0]); };
+
+    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', ()  => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) processFile(file);
+    });
+  }
+
+  // ── Process uploaded file ─────────────────────────────────────
+  async function processFile(file) {
+    if (!file.name.endsWith('.csv')) {
+      showToast('Only CSV files are supported.', 'error');
+      return;
+    }
+    state.fileName = file.name;
+    setProgress(0, `Reading ${file.name}…`);
+    showProgress();
+
+    try {
+      setProgress(15, 'Parsing CSV…');
+      const result = await CSVParser.parse(file);
+      if (!result.data || !result.data.length) throw new Error('CSV appears to be empty.');
+
+      setProgress(35, 'Analysing columns…');
+      await delay(200);
+
+      const data   = result.data;
+      const fields = result.meta.fields || Object.keys(data[0]);
+      const schema = CSVParser.buildSchema(data, fields);
+      const quality = CSVParser.qualityReport(data, schema);
+
+      setProgress(55, 'Computing KPIs…');
+      await delay(200);
+      const kpis = Analytics.computeKPIs(data, schema);
+
+      setProgress(70, 'Generating insights…');
+      await delay(200);
+      const insights = Insights.generate(data, schema);
+
+      setProgress(85, 'Rendering dashboard…');
+      await delay(300);
+
+      // Store state
+      state.rawData      = data;
+      state.filteredData = [...data];
+      state.schema       = schema;
+      state.quality      = quality;
+      state.kpis         = kpis;
+      state.insights     = insights;
+      state.page         = 1;
+      state.sortCol      = null;
+      state.searchQuery  = '';
+
+      renderDashboard();
+      setProgress(100, 'Done!');
+      await delay(500);
+      hideProgress();
+      showDashboard();
+      scrollTo('summarySection');
+      showToast(`✅ ${file.name} analysed — ${data.length} records loaded!`, 'success');
+
+    } catch (err) {
+      hideProgress();
+      showToast('Error: ' + err.message, 'error');
+      console.error(err);
+    }
+  }
+
+  // ── Load demo ─────────────────────────────────────────────────
+  async function loadDemo() {
+    state.fileName = 'demo-sales-data.csv';
+    showProgress(); setProgress(10, 'Loading demo data…');
+    await delay(300);
+
+    const result = Papa.parse(DEMO_CSV, { header: true, skipEmptyLines: true, dynamicTyping: true, transformHeader: h => h.trim() });
+    const data   = result.data;
+    const fields = result.meta.fields;
+    const schema = CSVParser.buildSchema(data, fields);
+    const quality = CSVParser.qualityReport(data, schema);
+
+    setProgress(50, 'Computing analytics…');
+    await delay(400);
+    const kpis    = Analytics.computeKPIs(data, schema);
+    const insights = Insights.generate(data, schema);
+
+    setProgress(90, 'Rendering dashboard…');
+    await delay(300);
+
+    state.rawData      = data;
+    state.filteredData = [...data];
+    state.schema       = schema;
+    state.quality      = quality;
+    state.kpis         = kpis;
+    state.insights     = insights;
+    state.page         = 1;
+    state.sortCol      = null;
+    state.searchQuery  = '';
+
+    renderDashboard();
+    setProgress(100, 'Done!');
+    await delay(400);
+    hideProgress();
+    showDashboard();
+    scrollTo('summarySection');
+    showToast('Demo data loaded — 30 sales orders analysed!', 'success');
+  }
+
+  // ── Render full dashboard ─────────────────────────────────────
+  function renderDashboard() {
+    renderSummaryCards();
+    renderKPICards();
+    Charts.renderAll(document.getElementById('chartsGrid'), state.rawData, state.schema);
+    renderInsights('findings');
+    renderReport();
+    renderTable();
+    renderQuality();
+  }
+
+  // ── Summary cards ─────────────────────────────────────────────
+  function renderSummaryCards() {
+    const q = state.quality;
+    const cards = [
+      { icon: '📋', label: 'Total Records', value: (q.total || 0).toLocaleString(), color: 'linear-gradient(90deg,#7C3AED,#A78BFA)' },
+      { icon: '📐', label: 'Total Columns', value: state.schema.length, color: 'linear-gradient(90deg,#0EA5E9,#6366F1)' },
+      { icon: '🕳', label: 'Missing Values', value: q.totalMissing || 0, sub: `${((q.missingPct || 0) * 100).toFixed(1)}% of data`, color: q.totalMissing ? 'linear-gradient(90deg,#F59E0B,#EF4444)' : 'linear-gradient(90deg,#22C55E,#059669)' },
+      { icon: '🛡', label: 'Quality Score', value: (q.score || 0) + '/100', badge: q.score >= 80 ? 'up' : q.score >= 60 ? 'warn' : 'down', badgeText: q.score >= 80 ? 'Excellent' : q.score >= 60 ? 'Good' : 'Needs Work', color: `linear-gradient(90deg,${q.score >= 80 ? '#22C55E,#059669' : q.score >= 60 ? '#F59E0B,#EF4444' : '#EF4444,#F59E0B'})` },
+    ];
+    document.getElementById('summaryCards').innerHTML = cards.map(kpiCardHTML).join('');
+    animateCounters();
+  }
+
+  // ── KPI cards ─────────────────────────────────────────────────
+  function renderKPICards() {
+    document.getElementById('kpiCards').innerHTML = state.kpis.map(kpiCardHTML).join('');
+    animateCounters();
+  }
+
+  function kpiCardHTML(k) {
+    return `
+      <div class="kpi-card" style="--kpi-color:${k.color || 'linear-gradient(90deg,#7C3AED,var(--accent))'}">
+        <div class="kpi-icon">${k.icon}</div>
+        <div class="kpi-label">${escHtml(k.label)}</div>
+        <div class="kpi-value">${escHtml(String(k.value))}</div>
+        ${k.sub ? `<div class="kpi-sub">${escHtml(k.sub)}</div>` : ''}
+        ${k.badge ? `<span class="kpi-badge ${k.badge}">${escHtml(k.badgeText || '')}</span>` : ''}
+      </div>`;
+  }
+
+  function animateCounters() {
+    // Simple animated counter for numeric values
+    document.querySelectorAll('.kpi-value').forEach(el => {
+      const text = el.textContent;
+      el.style.opacity = '0';
+      setTimeout(() => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '1'; }, 50);
+    });
+  }
+
+  // ── Insights ──────────────────────────────────────────────────
+  function bindInsightsTabs() {
+    document.querySelectorAll('.itab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.itab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        state.currentTab = tab.dataset.tab;
+        renderInsights(state.currentTab);
+      };
+    });
+  }
+
+  function renderInsights(tab) {
+    const data = state.insights[tab] || [];
+    const grid = document.getElementById('insightsGrid');
+    if (!data.length) {
+      grid.innerHTML = '<div class="insight-card"><div class="insight-body"><div class="insight-text">No insights in this category for the current dataset.</div></div></div>';
+      return;
+    }
+    grid.innerHTML = data.map(ins => `
+      <div class="insight-card">
+        <div class="insight-icon">${ins.icon}</div>
+        <div class="insight-body">
+          <div class="insight-title">${escHtml(ins.title)}</div>
+          <div class="insight-text">${escHtml(ins.text)}</div>
+          <span class="insight-tag">${escHtml(ins.tag)}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Business Report ───────────────────────────────────────────
+  function renderReport() {
+    const d = state;
+    const q = d.quality;
+    const numCols = d.schema.filter(c => c.type === 'numeric');
+    const catCols = d.schema.filter(c => c.type === 'categorical');
+    const dateCol = d.schema.find(c => c.type === 'date');
+
+    const find = (...kws) => d.schema.find(c => kws.some(k => c.name.toLowerCase().includes(k)));
+    const revCol = find('revenue','sales','amount','total');
+    const proCol = find('profit','margin','net');
+
+    const summary = `This report covers ${(q.total||0).toLocaleString()} records across ${d.schema.length} dimensions sourced from "${d.fileName}". The dataset contains ${numCols.length} numeric and ${catCols.length} categorical columns${dateCol ? ` with time-series data spanning multiple periods` : ''}. Data quality score is ${q.score}/100 with ${q.totalMissing||0} missing values detected.`;
+
+    const kpiRows = d.kpis.slice(0,6).map(k => `<div class="rkpi"><div class="rkpi-val">${escHtml(String(k.value))}</div><div class="rkpi-lbl">${escHtml(k.label)}</div></div>`).join('');
+
+    const findingsList = (d.insights.findings||[]).map(f => `<li><strong>${escHtml(f.title)}:</strong> ${escHtml(f.text)}</li>`).join('');
+    const opList = (d.insights.opportunities||[]).map(o => `<li><strong>${escHtml(o.title)}:</strong> ${escHtml(o.text)}</li>`).join('');
+    const riskList = (d.insights.risks||[]).map(r => `<li><strong>${escHtml(r.title)}:</strong> ${escHtml(r.text)}</li>`).join('');
+    const recList  = (d.insights.recommendations||[]).map((r,i) => `<li><strong>${i+1}. ${escHtml(r.title)}:</strong> ${escHtml(r.text)}</li>`).join('');
+
+    document.getElementById('reportBody').innerHTML = `
+      <div class="report-meta">
+        <span><strong>Report Date:</strong> ${new Date().toLocaleDateString()}</span>
+        <span><strong>File:</strong> ${escHtml(d.fileName)}</span>
+        <span><strong>Records:</strong> ${(q.total||0).toLocaleString()}</span>
+        <span><strong>Quality:</strong> ${q.score}/100</span>
+      </div>
+      <div class="report-section">
+        <h3>📋 Executive Summary</h3>
+        <p>${escHtml(summary)}</p>
+      </div>
+      <div class="report-section">
+        <h3>📈 Key Metrics</h3>
+        <div class="report-kpi-row">${kpiRows}</div>
+      </div>
+      <div class="report-section">
+        <h3>🔍 Trend & Category Analysis</h3>
+        <ul>${findingsList}</ul>
+      </div>
+      <div class="report-section">
+        <h3>🚀 Opportunities</h3>
+        <ul>${opList}</ul>
+      </div>
+      <div class="report-section">
+        <h3>⚠️ Risk Analysis</h3>
+        <ul>${riskList}</ul>
+      </div>
+      <div class="report-section">
+        <h3>✅ Recommendations</h3>
+        <ul>${recList}</ul>
+      </div>`;
+  }
+
+  // ── Data table ────────────────────────────────────────────────
+  function bindTableControls() {
+    document.getElementById('tableSearch').oninput = (e) => {
+      state.searchQuery = e.target.value.toLowerCase();
+      state.page = 1;
+      applyFilter();
+    };
+    document.getElementById('resetBtn').onclick = resetDashboard;
+  }
+
+  function applyFilter() {
+    const q = state.searchQuery;
+    state.filteredData = q
+      ? state.rawData.filter(row => Object.values(row).some(v => String(v).toLowerCase().includes(q)))
+      : [...state.rawData];
+    state.page = 1;
+    renderTable();
+  }
+
+  function renderTable() {
+    const { filteredData, schema, page, pageSize } = state;
+    const cols   = schema.map(c => c.name);
+    const start  = (page - 1) * pageSize;
+    const slice  = filteredData.slice(start, start + pageSize);
+
+    // Header
+    document.getElementById('tableHead').innerHTML = `<tr>${cols.map(c => `<th onclick="App.sortTable('${c}')" title="Sort by ${c}">${escHtml(c)} ${state.sortCol === c ? (state.sortDir === 'asc' ? '↑' : '↓') : '↕'}</th>`).join('')}</tr>`;
+
+    // Body
+    document.getElementById('tableBody').innerHTML = slice.map(row =>
+      `<tr>${cols.map(c => `<td>${escHtml(String(row[c] ?? ''))}</td>`).join('')}</tr>`
+    ).join('');
+
+    renderPagination(filteredData.length, pageSize);
+  }
+
+  function sortTable(col) {
+    if (state.sortCol === col) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+    else { state.sortCol = col; state.sortDir = 'asc'; }
+    state.filteredData.sort((a, b) => {
+      const av = a[col], bv = b[col];
+      const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv));
+      return state.sortDir === 'asc' ? cmp : -cmp;
+    });
+    state.page = 1;
+    renderTable();
+  }
+
+  function renderPagination(total, size) {
+    const pages = Math.ceil(total / size);
+    if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" onclick="App.goPage(${state.page - 1})" ${state.page === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+    for (let i = 1; i <= Math.min(pages, 7); i++) {
+      html += `<button class="page-btn ${i === state.page ? 'active' : ''}" onclick="App.goPage(${i})">${i}</button>`;
+    }
+    if (pages > 7) html += `<span class="page-btn" style="opacity:.5">…${pages}</span>`;
+    html += `<button class="page-btn" onclick="App.goPage(${state.page + 1})" ${state.page === pages ? 'disabled' : ''}>Next ›</button>`;
+    document.getElementById('pagination').innerHTML = html;
+  }
+
+  function goPage(p) {
+    const pages = Math.ceil(state.filteredData.length / state.pageSize);
+    state.page = Math.max(1, Math.min(pages, p));
+    renderTable();
+  }
+
+  // ── Quality section ───────────────────────────────────────────
+  function renderQuality() {
+    const q = state.quality;
+    const scoreColor = q.score >= 80 ? '#22C55E' : q.score >= 60 ? '#F59E0B' : '#EF4444';
+    const scoreLabel = q.score >= 80 ? 'Excellent' : q.score >= 60 ? 'Good' : 'Needs Improvement';
+
+    const colIssues = state.schema.map(c => `
+      <div class="qc-item">
+        <span class="qc-item-label">${escHtml(c.name)}</span>
+        <span class="qc-item-val ${c.missing === 0 ? 'ok' : c.missing < 3 ? 'warn' : 'bad'}">
+          ${c.missing === 0 ? '✓ Complete' : `${c.missing} missing`}
+        </span>
+      </div>`).join('');
+
+    document.getElementById('qualityGrid').innerHTML = `
+      <div class="quality-card glass">
+        <div class="qc-title">Overall Quality Score</div>
+        <div class="qc-score" style="color:${scoreColor}">${q.score}<span style="font-size:1rem;color:var(--text-muted)">/100</span></div>
+        <div class="qc-bar-wrap"><div class="qc-bar-fill" style="width:${q.score}%;background:${scoreColor}"></div></div>
+        <div class="qc-desc">${scoreLabel} — ${q.score >= 80 ? 'Data is clean and reliable for analysis.' : q.score >= 60 ? 'Minor issues found. Review missing values.' : 'Significant data quality issues detected.'}</div>
+      </div>
+      <div class="quality-card glass">
+        <div class="qc-title">Quality Metrics</div>
+        <div class="qc-list">
+          <div class="qc-item"><span class="qc-item-label">Total Records</span><span class="qc-item-val ok">${(q.total||0).toLocaleString()}</span></div>
+          <div class="qc-item"><span class="qc-item-label">Missing Values</span><span class="qc-item-val ${q.totalMissing===0?'ok':q.totalMissing<10?'warn':'bad'}">${q.totalMissing||0}</span></div>
+          <div class="qc-item"><span class="qc-item-label">Duplicate Rows</span><span class="qc-item-val ${q.dupes===0?'ok':q.dupes<5?'warn':'bad'}">${q.dupes||0}</span></div>
+          <div class="qc-item"><span class="qc-item-label">Completeness</span><span class="qc-item-val ok">${(100 - (q.missingPct||0)*100).toFixed(1)}%</span></div>
+          <div class="qc-item"><span class="qc-item-label">Numeric Columns</span><span class="qc-item-val ok">${state.schema.filter(c=>c.type==='numeric').length}</span></div>
+          <div class="qc-item"><span class="qc-item-label">Categorical Columns</span><span class="qc-item-val ok">${state.schema.filter(c=>c.type==='categorical').length}</span></div>
+        </div>
+      </div>
+      <div class="quality-card glass">
+        <div class="qc-title">Column Completeness</div>
+        <div class="qc-list">${colIssues}</div>
+      </div>`;
+  }
+
+  // ── Export bindings ───────────────────────────────────────────
+  function bindExportButtons() {
+    document.getElementById('exportCSVBtn').onclick = () => Export.downloadCSV(state.filteredData, state.fileName || 'export.csv');
+    document.getElementById('exportPDFBtn').onclick = () => Export.downloadPDF(
+      { fileName: state.fileName, totalRows: state.rawData.length, totalCols: state.schema.length, summary: buildSummaryText() },
+      state.kpis,
+      state.insights,
+      state.quality
+    );
+  }
+
+  function buildSummaryText() {
+    const q = state.quality;
+    return `This report analyses "${state.fileName}" containing ${(q.total||0).toLocaleString()} records across ${state.schema.length} dimensions. Data quality score: ${q.score}/100. ${q.totalMissing} missing values and ${q.dupes} duplicate rows were detected. Key metrics and actionable insights are provided below.`;
+  }
+
+  // ── Dashboard show/hide ───────────────────────────────────────
+  function showDashboard() {
+    document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('heroSection').style.minHeight = '50vh';
+  }
+
+  function resetDashboard() {
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('heroSection').style.minHeight = '';
+    Charts.destroyAll();
+    state = { rawData:[], filteredData:[], schema:[], quality:{}, kpis:[], insights:{}, currentTab:'findings', sortCol:null, sortDir:'asc', searchQuery:'', page:1, pageSize:20, fileName:'' };
+    scrollTo('uploadSection');
+    showToast('Dashboard reset. Upload a new CSV.', 'info');
+  }
+
+  // ── Progress ──────────────────────────────────────────────────
+  function showProgress() { document.getElementById('uploadProgress').classList.remove('hidden'); }
+  function hideProgress() { document.getElementById('uploadProgress').classList.add('hidden'); }
+  function setProgress(pct, label) {
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('upLabel').textContent = label;
+  }
+
+  // ── Toast ──────────────────────────────────────────────────────
+  function showToast(message, type = 'info') {
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icons[type]}</span><span>${escHtml(message)}</span>`;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; setTimeout(() => toast.remove(), 400); }, 4000);
+  }
+
+  // ── Utilities ─────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // Public API
+  return { init, showToast, sortTable, goPage };
+})();
+
+document.addEventListener('DOMContentLoaded', App.init);
+</script>
+</body>
+</html>

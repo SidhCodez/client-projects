@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PennyPilot — Expense Tracker</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+<script src="script.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+</head>
+<body>
+<div id="notif-bar" class="notif-bar"></div>
+
+<!-- MOBILE HEADER -->
+<header class="mobile-header" role="banner">
+  <div class="mobile-logo">PennyPilot</div>
+  <div class="mobile-header-actions">
+    <button class="hamburger-btn" onclick="toggleDrawer()" aria-label="Open menu" id="hamburger-btn">☰</button>
+    <button class="hamburger-btn" onclick="toggleTheme()" aria-label="Toggle theme" style="font-size:15px"><span id="theme-icon-m">☀</span></button>
+  </div>
+</header>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-drawer" id="mobile-drawer" role="dialog" aria-label="Navigation menu" aria-modal="true">
+  <div class="drawer-backdrop" onclick="closeDrawer()"></div>
+  <nav class="drawer-panel">
+    <div class="logo" style="padding:0 20px 20px">PennyPilot<span>expense tracker</span></div>
+    <div class="sidebar-section">Main</div>
+    <div class="nav-item" data-drawer-page="dashboard" role="button" tabindex="0"><span class="nav-icon">◈</span> Dashboard</div>
+    <div class="nav-item" data-drawer-page="transactions" role="button" tabindex="0"><span class="nav-icon">⟆</span> Transactions</div>
+    <div class="nav-item" data-drawer-page="budgets" role="button" tabindex="0"><span class="nav-icon">◎</span> Budgets</div>
+    <div class="sidebar-section">Insights</div>
+    <div class="nav-item" data-drawer-page="analytics" role="button" tabindex="0"><span class="nav-icon">◬</span> Analytics</div>
+    <div class="nav-item" data-drawer-page="insights" role="button" tabindex="0"><span class="nav-icon">◆</span> Insights</div>
+    <div class="nav-item" data-drawer-page="calendar" role="button" tabindex="0"><span class="nav-icon">▦</span> Calendar</div>
+    <div class="sidebar-section">Tools</div>
+    <div class="nav-item" data-drawer-page="voice" role="button" tabindex="0"><span class="nav-icon">◉</span> Voice Input</div>
+    <div class="nav-item" data-drawer-page="goals" role="button" tabindex="0"><span class="nav-icon">★</span> Goals</div>
+    <div class="nav-item" data-drawer-page="export" role="button" tabindex="0"><span class="nav-icon">↗</span> Export / Import</div>
+  </nav>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" aria-label="Bottom navigation">
+  <button class="bottom-nav-item active" data-bnav="dashboard" aria-label="Dashboard">
+    <span class="nav-icon-b">◈</span>Home
+  </button>
+  <button class="bottom-nav-item" data-bnav="transactions" aria-label="Transactions">
+    <span class="nav-icon-b">⟆</span>Txns
+  </button>
+  <button class="bottom-nav-item add-btn" onclick="openAddModal()" aria-label="Add transaction">+</button>
+  <button class="bottom-nav-item" data-bnav="budgets" aria-label="Budgets">
+    <span class="nav-icon-b">◎</span>Budget
+  </button>
+  <button class="bottom-nav-item" data-bnav="analytics" aria-label="Analytics">
+    <span class="nav-icon-b">◬</span>Stats
+  </button>
+</nav>
+
+<div class="app">
+<!-- SIDEBAR -->
+<aside class="sidebar" role="navigation" aria-label="Main navigation">
+  <div class="logo">PennyPilot<span>expense tracker</span></div>
+  <div class="sidebar-section">Main</div>
+  <div class="nav-item active" data-page="dashboard" role="button" tabindex="0" aria-current="page">
+    <span class="nav-icon">◈</span> Dashboard
+  </div>
+  <div class="nav-item" data-page="transactions" role="button" tabindex="0">
+    <span class="nav-icon">⟆</span> Transactions
+  </div>
+  <div class="nav-item" data-page="budgets" role="button" tabindex="0">
+    <span class="nav-icon">◎</span> Budgets
+  </div>
+  <div class="sidebar-section">Insights</div>
+  <div class="nav-item" data-page="analytics" role="button" tabindex="0">
+    <span class="nav-icon">◬</span> Analytics
+  </div>
+  <div class="nav-item" data-page="insights" role="button" tabindex="0">
+    <span class="nav-icon">◆</span> Insights
+  </div>
+  <div class="nav-item" data-page="calendar" role="button" tabindex="0">
+    <span class="nav-icon">▦</span> Calendar
+  </div>
+  <div class="sidebar-section">Tools</div>
+  <div class="nav-item" data-page="voice" role="button" tabindex="0">
+    <span class="nav-icon">◉</span> Voice Input
+  </div>
+  <div class="nav-item" data-page="goals" role="button" tabindex="0">
+    <span class="nav-icon">★</span> Goals
+  </div>
+  <div class="nav-item" data-page="export" role="button" tabindex="0">
+    <span class="nav-icon">↗</span> Export / Import
+  </div>
+  <div class="sidebar-footer">
+    <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle dark/light mode">
+      <span id="theme-icon">☀</span> <span id="theme-label">Light mode</span>
+    </button>
+  </div>
+</aside>
+
+<main class="main" role="main">
+
+<!-- DASHBOARD -->
+<section class="page active" id="page-dashboard" aria-labelledby="dash-title">
+  <div class="page-header">
+    <h1 class="page-title" id="dash-title">Dashboard</h1>
+    <p class="page-sub" id="dash-date"></p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card balance">
+      <div class="stat-label">Total Balance</div>
+      <div class="stat-value" id="stat-balance">₹0</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card income">
+      <div class="stat-label">Total Income</div>
+      <div class="stat-value" id="stat-income">₹0</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card expense">
+      <div class="stat-label">Total Expenses</div>
+      <div class="stat-value" id="stat-expense">₹0</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card savings">
+      <div class="stat-label">Savings</div>
+      <div class="stat-value" id="stat-savings">₹0</div>
+      <div class="stat-sub" id="stat-savings-rate">0% rate</div>
+    </div>
+    <div class="stat-card monthly">
+      <div class="stat-label">This Month</div>
+      <div class="stat-value" id="stat-monthly">₹0</div>
+      <div class="stat-sub">Spending</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Spending by category</div>
+      <div class="chart-wrap"><canvas id="chart-pie"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Income vs Expenses</div>
+      <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Monthly trend</div>
+      <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Weekly spending</div>
+      <div class="chart-wrap"><canvas id="chart-weekly"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <span class="section-title">Recent Transactions</span>
+    <button class="btn btn-ghost btn-sm" onclick="navigate('transactions')">View all</button>
+  </div>
+  <div id="recent-tx"></div>
+</section>
+
+<!-- TRANSACTIONS -->
+<section class="page" id="page-transactions" aria-labelledby="tx-title">
+  <div class="page-header">
+    <h1 class="page-title" id="tx-title">Transactions</h1>
+    <p class="page-sub">Manage all your income and expenses</p>
+  </div>
+
+  <div class="filter-bar" role="search" aria-label="Filter transactions">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-input" placeholder="Search transactions…" aria-label="Search transactions" oninput="renderTransactions()">
+    </div>
+    <select id="filter-type" aria-label="Filter by type" onchange="renderTransactions()">
+      <option value="">All types</option>
+      <option value="income">Income</option>
+      <option value="expense">Expense</option>
+    </select>
+    <select id="filter-cat" aria-label="Filter by category" onchange="renderTransactions()">
+      <option value="">All categories</option>
+    </select>
+    <select id="filter-method" aria-label="Filter by payment method" onchange="renderTransactions()">
+      <option value="">All methods</option>
+      <option value="Cash">Cash</option>
+      <option value="UPI">UPI</option>
+      <option value="Card">Card</option>
+      <option value="Net Banking">Net Banking</option>
+      <option value="Wallet">Wallet</option>
+    </select>
+    <select id="sort-by" aria-label="Sort transactions" onchange="renderTransactions()">
+      <option value="latest">Latest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="highest">Highest amount</option>
+      <option value="lowest">Lowest amount</option>
+    </select>
+    <input type="date" id="filter-from" aria-label="From date" onchange="renderTransactions()">
+    <input type="date" id="filter-to" aria-label="To date" onchange="renderTransactions()">
+    <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    <button class="btn btn-danger btn-sm" onclick="confirmBulkClear()">Clear all</button>
+  </div>
+
+  <div id="tx-list"></div>
+</section>
+
+<!-- BUDGETS -->
+<section class="page" id="page-budgets" aria-labelledby="budget-title">
+  <div class="page-header">
+    <div class="section-header" style="margin-bottom:4px">
+      <h1 class="page-title" id="budget-title">Budgets</h1>
+      <button class="btn btn-primary btn-sm" onclick="openBudgetModal()">+ Set budget</button>
+    </div>
+    <p class="page-sub">Set spending limits per category</p>
+  </div>
+  <div class="budget-grid" id="budget-grid"></div>
+</section>
+
+<!-- ANALYTICS -->
+<section class="page" id="page-analytics" aria-labelledby="analytics-title">
+  <div class="page-header">
+    <h1 class="page-title" id="analytics-title">Analytics</h1>
+    <p class="page-sub">Deep dive into your spending patterns</p>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Expense breakdown</div>
+      <div class="chart-wrap"><canvas id="chart-pie2"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">6-month trend</div>
+      <div class="chart-wrap"><canvas id="chart-trend2"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Income vs Expenses (6M)</div>
+      <div class="chart-wrap"><canvas id="chart-bar2"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Category comparison</div>
+      <div class="chart-wrap"><canvas id="chart-hbar"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- INSIGHTS -->
+<section class="page" id="page-insights" aria-labelledby="insights-title">
+  <div class="page-header">
+    <h1 class="page-title" id="insights-title">Insights</h1>
+    <p class="page-sub">Smart analysis of your finances</p>
+  </div>
+  <div class="insight-grid" id="insight-cards"></div>
+  <div id="smart-insights"></div>
+</section>
+
+<!-- CALENDAR -->
+<section class="page" id="page-calendar" aria-labelledby="cal-title">
+  <div class="page-header">
+    <div class="section-header" style="margin-bottom:4px">
+      <h1 class="page-title" id="cal-title">Calendar</h1>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1)" aria-label="Previous month">‹</button>
+        <span id="cal-month-label" style="font-size:14px;font-weight:600;min-width:120px;text-align:center"></span>
+        <button class="btn btn-ghost btn-sm" onclick="changeMonth(1)" aria-label="Next month">›</button>
+      </div>
+    </div>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+</section>
+
+<!-- VOICE -->
+<section class="page" id="page-voice" aria-labelledby="voice-title">
+  <div class="page-header">
+    <h1 class="page-title" id="voice-title">Voice Input</h1>
+    <p class="page-sub">Add expenses using your voice</p>
+  </div>
+  <div class="voice-panel">
+    <button class="voice-btn" id="voice-btn" onclick="toggleVoice()" aria-label="Start voice input">🎙</button>
+    <div class="voice-transcript" id="voice-transcript">Say something like "Spent 250 rupees on food"</div>
+    <div id="voice-result" style="margin-top:12px;font-size:13px;color:var(--green)"></div>
+  </div>
+  <div class="smart-card" style="max-width:480px">
+    <strong>Try saying:</strong><br>
+    "Spent 500 rupees on food"<br>
+    "Received 50000 salary"<br>
+    "Paid 1200 for transport"
+  </div>
+</section>
+
+<!-- GOALS / GAMIFICATION -->
+<section class="page" id="page-goals" aria-labelledby="goals-title">
+  <div class="page-header">
+    <h1 class="page-title" id="goals-title">Goals & Achievements</h1>
+    <p class="page-sub">Your savings journey gamified</p>
+  </div>
+  <div class="streak-card">
+    <div class="streak-num" id="streak-num">0</div>
+    <div class="streak-info">
+      <div class="label">Day streak 🔥</div>
+      <div class="val">Keep logging daily!</div>
+    </div>
+  </div>
+  <div class="section-header" style="margin-bottom:12px">
+    <span class="section-title">Achievements</span>
+  </div>
+  <div class="badge-grid" id="badge-grid"></div>
+</section>
+
+<!-- EXPORT -->
+<section class="page" id="page-export" aria-labelledby="export-title">
+  <div class="page-header">
+    <h1 class="page-title" id="export-title">Export & Import</h1>
+    <p class="page-sub">Backup and restore your data</p>
+  </div>
+  <div class="section-header" style="margin-bottom:16px"><span class="section-title">Export</span></div>
+  <div class="export-grid" style="margin-bottom:28px">
+    <div class="export-card">
+      <div class="export-icon">📄</div>
+      <div class="export-name">JSON Backup</div>
+      <div class="export-desc">Full data backup including budgets</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:auto" onclick="exportJSON()">Download</button>
+    </div>
+    <div class="export-card">
+      <div class="export-icon">📊</div>
+      <div class="export-name">CSV Export</div>
+      <div class="export-desc">Transactions as spreadsheet</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:auto" onclick="exportCSV()">Download</button>
+    </div>
+    <div class="export-card">
+      <div class="export-icon">🧾</div>
+      <div class="export-name">PDF Summary</div>
+      <div class="export-desc">Monthly report (print-ready)</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:auto" onclick="exportPDF()">Download</button>
+    </div>
+  </div>
+  <div class="section-header" style="margin-bottom:12px"><span class="section-title">Import</span></div>
+  <div class="receipt-upload" onclick="document.getElementById('import-file').click()" role="button" tabindex="0" aria-label="Import JSON backup file">
+    <div style="font-size:28px;margin-bottom:8px">📁</div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px">Drop JSON backup here</div>
+    <div style="font-size:12px;color:var(--text3)">Or click to browse</div>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+  </div>
+</section>
+
+</main>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openAddModal()" aria-label="Add new transaction" title="Add transaction">+</button>
+
+<!-- ADD/EDIT TRANSACTION MODAL -->
+<div class="overlay" id="tx-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add Transaction</div>
+      <button class="close-btn" onclick="closeModal('tx-modal')" aria-label="Close">×</button>
+    </div>
+    <div class="type-toggle" role="group" aria-label="Transaction type">
+      <button id="toggle-income" class="active income" onclick="setType('income')">+ Income</button>
+      <button id="toggle-expense" onclick="setType('expense')">− Expense</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="f-title">Title *</label>
+        <input type="text" id="f-title" placeholder="e.g. Salary, Groceries" required>
+      </div>
+      <div class="form-group">
+        <label for="f-amount">Amount (₹) *</label>
+        <input type="number" id="f-amount" placeholder="0" min="0" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label for="f-category">Category *</label>
+        <select id="f-category" aria-label="Category"></select>
+      </div>
+      <div class="form-group">
+        <label for="f-date">Date *</label>
+        <input type="date" id="f-date" required>
+      </div>
+      <div class="form-group">
+        <label for="f-method">Payment Method</label>
+        <select id="f-method">
+          <option value="Cash">Cash</option>
+          <option value="UPI">UPI</option>
+          <option value="Card">Card</option>
+          <option value="Net Banking">Net Banking</option>
+          <option value="Wallet">Wallet</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="f-recurring">Recurring</label>
+        <select id="f-recurring">
+          <option value="">None</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label for="f-notes">Notes</label>
+        <textarea id="f-notes" placeholder="Optional notes…" rows="2" style="resize:vertical"></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Receipt (optional)</label>
+        <div class="receipt-upload" onclick="document.getElementById('receipt-input').click()" id="receipt-upload-area" role="button" tabindex="0" style="padding:12px" aria-label="Upload receipt image">
+          <span style="font-size:13px">📎 Attach receipt image</span>
+          <input type="file" id="receipt-input" accept="image/*" style="display:none" onchange="previewReceipt(event)">
+        </div>
+        <div id="receipt-preview" style="display:none" class="receipt-preview">
+          <span>🖼</span> <span id="receipt-name"></span>
+          <button class="btn btn-ghost btn-sm" onclick="clearReceipt()" aria-label="Remove receipt" style="margin-left:auto">×</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('tx-modal')">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveTransaction()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUDGET MODAL -->
+<div class="overlay" id="budget-modal" role="dialog" aria-modal="true" aria-labelledby="bmodal-title">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title" id="bmodal-title">Set Budget</div>
+      <button class="close-btn" onclick="closeModal('budget-modal')" aria-label="Close">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="b-category">Category</label>
+        <select id="b-category" aria-label="Budget category"></select>
+      </div>
+      <div class="form-group">
+        <label for="b-amount">Monthly Limit (₹)</label>
+        <input type="number" id="b-amount" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('budget-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBudget()">Save Budget</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="overlay" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal confirm-modal">
+    <div class="modal-header">
+      <div class="modal-title" id="confirm-title">Confirm</div>
+      <button class="close-btn" onclick="closeModal('confirm-modal')" aria-label="Close">×</button>
+    </div>
+    <p class="confirm-msg" id="confirm-msg"></p>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('confirm-modal')">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

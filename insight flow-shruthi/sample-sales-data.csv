@@ -1,0 +1,111 @@
+Date,Order ID,Customer Name,Product,Category,Region,Quantity,Unit Price,Revenue,Cost,Profit
+2026-01-02,ORD001,Rahul Sharma,Laptop Pro 15,Electronics,South,2,52000,104000,83200,20800
+2026-01-03,ORD002,Priya Singh,Samsung Galaxy S25,Electronics,North,3,28000,84000,67200,16800
+2026-01-03,ORD003,Amit Kumar,Sony Headphones,Accessories,West,5,2200,11000,7700,3300
+2026-01-04,ORD004,Deepika Rao,iPad Air,Electronics,East,1,38000,38000,30400,7600
+2026-01-05,ORD005,Suresh Nair,Mechanical Keyboard,Accessories,South,8,1800,14400,10080,4320
+2026-01-05,ORD006,Anita Gupta,Dell Monitor 27",Electronics,North,2,19500,39000,31200,7800
+2026-01-06,ORD007,Vijay Mehta,Logitech Mouse,Accessories,West,10,900,9000,6300,2700
+2026-01-06,ORD008,Kavya Iyer,MacBook Air M3,Electronics,South,1,95000,95000,76000,19000
+2026-01-07,ORD009,Ravi Patel,OnePlus 13,Electronics,East,4,45000,180000,144000,36000
+2026-01-07,ORD010,Sneha Sharma,JBL Speaker,Accessories,North,6,3500,21000,14700,6300
+2026-01-08,ORD011,Arjun Singh,Laptop Pro 15,Electronics,West,3,52000,156000,124800,31200
+2026-01-08,ORD012,Meera Nair,iPad Air,Electronics,South,2,38000,76000,60800,15200
+2026-01-09,ORD013,Kiran Kumar,Sony Headphones,Accessories,East,7,2200,15400,10780,4620
+2026-01-09,ORD014,Pooja Iyer,Dell Monitor 27",Electronics,North,1,19500,19500,15600,3900
+2026-01-10,ORD015,Rajesh Gupta,Mechanical Keyboard,Accessories,West,12,1800,21600,15120,6480
+2026-01-10,ORD016,Sunita Rao,Samsung Galaxy S25,Electronics,South,5,28000,140000,112000,28000
+2026-01-11,ORD017,Naresh Mehta,JBL Speaker,Accessories,East,4,3500,14000,9800,4200
+2026-01-12,ORD018,Lakshmi Singh,MacBook Air M3,Electronics,North,2,95000,190000,152000,38000
+2026-01-13,ORD019,Arun Patel,Logitech Mouse,Accessories,West,15,900,13500,9450,4050
+2026-01-13,ORD020,Divya Kumar,iPad Air,Electronics,South,3,38000,114000,91200,22800
+2026-01-14,ORD021,Harish Sharma,Laptop Pro 15,Electronics,East,1,52000,52000,41600,10400
+2026-01-14,ORD022,Bhavna Gupta,OnePlus 13,Electronics,North,6,45000,270000,216000,54000
+2026-01-15,ORD023,Girish Nair,Sony Headphones,Accessories,West,9,2200,19800,13860,5940
+2026-01-15,ORD024,Rekha Singh,Dell Monitor 27",Electronics,South,2,19500,39000,31200,7800
+2026-01-16,ORD025,Sunil Iyer,Mechanical Keyboard,Accessories,East,10,1800,18000,12600,5400
+2026-01-17,ORD026,Madhuri Patel,JBL Speaker,Accessories,North,5,3500,17500,12250,5250
+2026-01-17,ORD027,Rohit Kumar,iPad Air,Electronics,West,2,38000,76000,60800,15200
+2026-01-18,ORD028,Geeta Mehta,Samsung Galaxy S25,Electronics,South,3,28000,84000,67200,16800
+2026-01-19,ORD029,Sanjay Sharma,Laptop Pro 15,Electronics,East,2,52000,104000,83200,20800
+2026-01-19,ORD030,Usha Nair,Logitech Mouse,Accessories,North,20,900,18000,12600,5400
+2026-01-20,ORD031,Venkat Rao,MacBook Air M3,Electronics,West,1,95000,95000,76000,19000
+2026-01-20,ORD032,Nandini Iyer,Sony Headphones,Accessories,South,6,2200,13200,9240,3960
+2026-01-21,ORD033,Prasad Kumar,OnePlus 13,Electronics,East,2,45000,90000,72000,18000
+2026-01-21,ORD034,Saritha Nair,Dell Monitor 27",Electronics,North,3,19500,58500,46800,11700
+2026-01-22,ORD035,Mohan Singh,Mechanical Keyboard,Accessories,West,7,1800,12600,8820,3780
+2026-01-22,ORD036,Kavitha Sharma,iPad Air,Electronics,South,1,38000,38000,30400,7600
+2026-01-23,ORD037,Dinesh Patel,JBL Speaker,Accessories,East,8,3500,28000,19600,8400
+2026-01-23,ORD038,Revathi Gupta,Samsung Galaxy S25,Electronics,North,4,28000,112000,89600,22400
+2026-01-24,ORD039,Subramaniam R,Logitech Mouse,Accessories,West,12,900,10800,7560,3240
+2026-01-24,ORD040,Padma Singh,Laptop Pro 15,Electronics,South,2,52000,104000,83200,20800
+2026-01-25,ORD041,Ganesh Kumar,MacBook Air M3,Electronics,East,1,95000,95000,76000,19000
+2026-01-25,ORD042,Ambika Rao,Sony Headphones,Accessories,North,4,2200,8800,6160,2640
+2026-01-26,ORD043,Ramesh Iyer,OnePlus 13,Electronics,West,3,45000,135000,108000,27000
+2026-01-26,ORD044,Chitra Nair,Mechanical Keyboard,Accessories,South,15,1800,27000,18900,8100
+2026-01-27,ORD045,Vignesh Mehta,Dell Monitor 27",Electronics,East,2,19500,39000,31200,7800
+2026-01-27,ORD046,Sangeetha Patel,iPad Air,Electronics,North,4,38000,152000,121600,30400
+2026-01-28,ORD047,Balaji Singh,JBL Speaker,Accessories,West,3,3500,10500,7350,3150
+2026-01-28,ORD048,Mythili Sharma,Samsung Galaxy S25,Electronics,South,2,28000,56000,44800,11200
+2026-01-29,ORD049,Kartik Gupta,Laptop Pro 15,Electronics,East,3,52000,156000,124800,31200
+2026-01-29,ORD050,Anandhi Kumar,Logitech Mouse,Accessories,North,18,900,16200,11340,4860
+2026-01-30,ORD051,Selvam Rao,MacBook Air M3,Electronics,West,2,95000,190000,152000,38000
+2026-01-30,ORD052,Kamala Iyer,Sony Headphones,Accessories,South,5,2200,11000,7700,3300
+2026-01-31,ORD053,Murugan Nair,OnePlus 13,Electronics,East,1,45000,45000,36000,9000
+2026-01-31,ORD054,Vasantha Singh,Dell Monitor 27",Electronics,North,4,19500,78000,62400,15600
+2026-02-01,ORD055,Karthikeyan P,Laptop Pro 15,Electronics,West,1,52000,52000,41600,10400
+2026-02-01,ORD056,Sumathi Sharma,Mechanical Keyboard,Accessories,South,9,1800,16200,11340,4860
+2026-02-02,ORD057,Raman Gupta,Samsung Galaxy S25,Electronics,East,5,28000,140000,112000,28000
+2026-02-02,ORD058,Geetha Patel,JBL Speaker,Accessories,North,7,3500,24500,17150,7350
+2026-02-03,ORD059,Sridhar Kumar,iPad Air,Electronics,West,2,38000,76000,60800,15200
+2026-02-03,ORD060,Alamelu Nair,Logitech Mouse,Accessories,South,25,900,22500,15750,6750
+2026-02-04,ORD061,Periyasamy R,MacBook Air M3,Electronics,East,1,95000,95000,76000,19000
+2026-02-04,ORD062,Komalavalli S,Sony Headphones,Accessories,North,8,2200,17600,12320,5280
+2026-02-05,ORD063,Annamalai K,OnePlus 13,Electronics,West,3,45000,135000,108000,27000
+2026-02-05,ORD064,Saraswathi M,Dell Monitor 27",Electronics,South,1,19500,19500,15600,3900
+2026-02-06,ORD065,Shanmugam T,Laptop Pro 15,Electronics,East,4,52000,208000,166400,41600
+2026-02-06,ORD066,Meenakshi D,Mechanical Keyboard,Accessories,North,6,1800,10800,7560,3240
+2026-02-07,ORD067,Pandian A,Samsung Galaxy S25,Electronics,West,2,28000,56000,44800,11200
+2026-02-07,ORD068,Vijayalakshmi B,iPad Air,Electronics,South,3,38000,114000,91200,22800
+2026-02-08,ORD069,Duraisamy C,JBL Speaker,Accessories,East,5,3500,17500,12250,5250
+2026-02-08,ORD070,Rajeswari E,Logitech Mouse,Accessories,North,14,900,12600,8820,3780
+2026-02-09,ORD071,Marimuthu F,MacBook Air M3,Electronics,West,2,95000,190000,152000,38000
+2026-02-09,ORD072,Thilagavathi G,Sony Headphones,Accessories,South,10,2200,22000,15400,6600
+2026-02-10,ORD073,Arumugam H,OnePlus 13,Electronics,East,4,45000,180000,144000,36000
+2026-02-10,ORD074,Pushpavalli I,Dell Monitor 27",Electronics,North,2,19500,39000,31200,7800
+2026-02-11,ORD075,Chellapandi J,Laptop Pro 15,Electronics,West,1,52000,52000,41600,10400
+2026-02-11,ORD076,Veerammal K,Mechanical Keyboard,Accessories,South,11,1800,19800,13860,5940
+2026-02-12,ORD077,Govindasamy L,Samsung Galaxy S25,Electronics,East,6,28000,168000,134400,33600
+2026-02-12,ORD078,Parvathavarthini M,iPad Air,Electronics,North,1,38000,38000,30400,7600
+2026-02-13,ORD079,Kupusamy N,JBL Speaker,Accessories,West,9,3500,31500,22050,9450
+2026-02-13,ORD080,Ramalakshmi O,Logitech Mouse,Accessories,South,16,900,14400,10080,4320
+2026-02-14,ORD081,Krishnaswamy P,MacBook Air M3,Electronics,East,3,95000,285000,228000,57000
+2026-02-14,ORD082,Saradhambal Q,Sony Headphones,Accessories,North,6,2200,13200,9240,3960
+2026-02-15,ORD083,Ayyasamy R,OnePlus 13,Electronics,West,2,45000,90000,72000,18000
+2026-02-15,ORD084,Muthumari S,Dell Monitor 27",Electronics,South,3,19500,58500,46800,11700
+2026-02-16,ORD085,Thangavelu T,Laptop Pro 15,Electronics,East,2,52000,104000,83200,20800
+2026-02-16,ORD086,Ponnammal U,Mechanical Keyboard,Accessories,North,8,1800,14400,10080,4320
+2026-02-17,ORD087,Velayutham V,Samsung Galaxy S25,Electronics,West,4,28000,112000,89600,22400
+2026-02-17,ORD088,Kannamma W,iPad Air,Electronics,South,2,38000,76000,60800,15200
+2026-02-18,ORD089,Elumalai X,JBL Speaker,Accessories,East,4,3500,14000,9800,4200
+2026-02-18,ORD090,Nallamuthu Y,Logitech Mouse,Accessories,North,22,900,19800,13860,5940
+2026-02-19,ORD091,Palanichamy Z,MacBook Air M3,Electronics,West,1,95000,95000,76000,19000
+2026-02-19,ORD092,Ramasamy A,Sony Headphones,Accessories,South,7,2200,15400,10780,4620
+2026-02-20,ORD093,Ilangovan B,OnePlus 13,Electronics,East,5,45000,225000,180000,45000
+2026-02-20,ORD094,Sembiyan C,Dell Monitor 27",Electronics,North,1,19500,19500,15600,3900
+2026-02-21,ORD095,Thillaivasan D,Laptop Pro 15,Electronics,West,3,52000,156000,124800,31200
+2026-02-21,ORD096,Kuppammal E,Mechanical Keyboard,Accessories,South,13,1800,23400,16380,7020
+2026-02-22,ORD097,Murugesan F,Samsung Galaxy S25,Electronics,East,3,28000,84000,67200,16800
+2026-02-22,ORD098,Gomathi G,iPad Air,Electronics,North,4,38000,152000,121600,30400
+2026-02-23,ORD099,Saminathan H,JBL Speaker,Accessories,West,6,3500,21000,14700,6300
+2026-02-23,ORD100,Chellathurai I,Logitech Mouse,Accessories,South,20,900,18000,12600,5400
+2026-02-24,ORD101,Natarajan J,MacBook Air M3,Electronics,East,2,95000,190000,152000,38000
+2026-02-24,ORD102,Kavithamani K,Sony Headphones,Accessories,North,5,2200,11000,7700,3300
+2026-02-25,ORD103,Soundararajan L,OnePlus 13,Electronics,West,3,45000,135000,108000,27000
+2026-02-25,ORD104,Neelaveni M,Dell Monitor 27",Electronics,South,2,19500,39000,31200,7800
+2026-02-26,ORD105,Palanivel N,Laptop Pro 15,Electronics,East,1,52000,52000,41600,10400
+2026-02-26,ORD106,Bhuvaneswari O,Mechanical Keyboard,Accessories,North,10,1800,18000,12600,5400
+2026-02-27,ORD107,Sugumar P,Samsung Galaxy S25,Electronics,West,5,28000,140000,112000,28000
+2026-02-27,ORD108,Malligai Q,iPad Air,Electronics,South,3,38000,114000,91200,22800
+2026-02-28,ORD109,Thirunavukkarasu R,JBL Speaker,Accessories,East,7,3500,24500,17150,7350
+2026-02-28,ORD110,Vennila S,Logitech Mouse,Accessories,North,18,900,16200,11340,4860
